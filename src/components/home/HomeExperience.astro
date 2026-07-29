@@ -1,0 +1,604 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import { ArrowDownRight, Radio, Star } from "@lucide/astro";
+import heroDay from "../../assets/demo/hero-day.png";
+import heroNight from "../../assets/demo/hero-night.jpg";
+import memoryPortrait from "../../assets/demo/elysia-portrait.png";
+import ArticleCard from "../ArticleCard.astro";
+import ConceptSwitcher from "../ConceptSwitcher.astro";
+import DirectedPointer from "../DirectedPointer.astro";
+import MusicDock from "../MusicDock.astro";
+import OpeningSequence from "../OpeningSequence.astro";
+import QuoteLoop from "../QuoteLoop.astro";
+import SiteHeader from "../SiteHeader.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+interface Props {
+  reviewMode?: boolean;
+}
+
+const { reviewMode = false } = Astro.props;
+const posts = (await getCollection("posts", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+---
+
+<BaseLayout
+  title={reviewMode ? "混合型首页" : undefined}
+  description="技术、生成媒体、图形学与那些仍被珍藏的故事。"
+  bodyClass="hybrid-page"
+  directedPointer
+  noIndex={reviewMode}
+>
+  <SiteHeader variant="overlay" />
+  <main id="main-content">
+    <section class="hybrid-hero" aria-labelledby="hybrid-title">
+      <div class="hybrid-hero__art" aria-hidden="true">
+        <Image
+          class="hybrid-hero__day"
+          src={heroDay}
+          alt=""
+          widths={[960, 1440, 1920, 2560]}
+          sizes="100vw"
+          loading="eager"
+          data-critical-image
+        />
+        <Image
+          class="hybrid-hero__night"
+          src={heroNight}
+          alt=""
+          widths={[960, 1440, 1942]}
+          sizes="100vw"
+          loading="eager"
+        />
+      </div>
+      <div class="hybrid-hero__shade" aria-hidden="true"></div>
+      <div class="hybrid-hero__frame" aria-hidden="true"></div>
+
+      <div class="hybrid-hero__rail" aria-hidden="true">
+        <span>TECH</span>
+        <span>MEDIA</span>
+        <span>MEMORY</span>
+      </div>
+
+      <div class="hybrid-hero__content page-width">
+        <div class="hybrid-hero__copy">
+          <div class="hybrid-hero__signal">
+            <Radio aria-hidden="true" size={17} stroke-width={1.8} />
+            <span>OPEN CHANNEL / 017</span>
+          </div>
+          <h1 id="hybrid-title">
+            <span>17号的</span>
+            <span>航行日志</span>
+          </h1>
+          <p class="hybrid-hero__intro">
+            技术、生成媒体、图形学与那些仍被珍藏的故事。
+          </p>
+          <a class="hybrid-hero__action" href="/posts/">
+            <span>进入航行记录</span>
+            <ArrowDownRight aria-hidden="true" size={20} stroke-width={2} />
+          </a>
+        </div>
+
+        <div class="hybrid-hero__quote">
+          <Star aria-hidden="true" size={16} fill="currentColor" />
+          <QuoteLoop prefix="ARCHIVE" />
+        </div>
+      </div>
+
+      <div class="hybrid-hero__footer">
+        <span>SCROLL TO RECEIVE</span>
+        <span>SHANGHAI / UTC+8</span>
+      </div>
+    </section>
+
+    <section class="hybrid-feed">
+      <div class="hybrid-feed__inner page-width">
+        <header class="hybrid-feed__header">
+          <div>
+            <span>02 / RECENT NOTES</span>
+            <h2>新的信号已经抵达</h2>
+          </div>
+          <a href="/posts/">浏览全部记录 →</a>
+        </header>
+
+        <div class="hybrid-feed__layout">
+          <ArticleCard post={posts[0]} eager />
+          <div class="hybrid-feed__stack">
+            {
+              posts.slice(1).map((post) => (
+                <ArticleCard post={post} variant="compact" />
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hybrid-memory" aria-labelledby="memory-title">
+      <div class="hybrid-memory__image">
+        <Image
+          src={memoryPortrait}
+          alt="花园茶会中的爱莉希雅"
+          widths={[540, 810, 1080]}
+          sizes="(max-width: 760px) 100vw, 46vw"
+          loading="lazy"
+        />
+      </div>
+      <div class="hybrid-memory__copy">
+        <span>03 / COLLECTION</span>
+        <h2 id="memory-title">图像也是记忆的索引</h2>
+        <p>
+          相册并不是文章系统的附件。它保存角色、构图与偶然遇见的视觉片段，也为之后的创作留下可以重新检索的线索。
+        </p>
+        <a href="/gallery/">打开相册 →</a>
+      </div>
+      <div class="hybrid-memory__stamp" aria-hidden="true">
+        KEEP<br />THE<br />LIGHT
+      </div>
+    </section>
+  </main>
+
+  <footer class="hybrid-footer">
+    <div class="page-width">
+      <strong>17号的航行日志</strong>
+      <span>ELYSIAFOLLOWER © 2026</span>
+    </div>
+  </footer>
+
+  <DirectedPointer />
+  <MusicDock />
+  {reviewMode && <ConceptSwitcher />}
+  <OpeningSequence label="少女祈祷中..." code="BROADCAST // 017" />
+</BaseLayout>
+
+<style>
+  .hybrid-page {
+    background: var(--color-bg);
+  }
+
+  .hybrid-hero {
+    position: relative;
+    display: grid;
+    height: min(88svh, 900px);
+    min-height: 640px;
+    overflow: hidden;
+    color: #fff;
+    isolation: isolate;
+  }
+
+  .hybrid-hero__art,
+  .hybrid-hero__shade,
+  .hybrid-hero__frame {
+    position: absolute;
+    inset: 0;
+  }
+
+  .hybrid-hero__art {
+    z-index: -3;
+  }
+
+  .hybrid-hero__art :global(img) {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    animation: hybrid-scene 18s ease-in-out infinite alternate;
+  }
+
+  .hybrid-hero__night {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .hybrid-hero__day {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .hybrid-hero__night {
+    display: block;
+  }
+
+  .hybrid-hero__shade {
+    z-index: -2;
+    background: rgb(6 12 18 / 26%);
+    box-shadow:
+      inset 0 -180px 150px rgb(7 10 15 / 40%),
+      inset 0 130px 120px rgb(7 10 15 / 22%);
+  }
+
+  :global([data-theme="dark"]) .hybrid-hero__shade {
+    background: rgb(24 6 12 / 32%);
+  }
+
+  .hybrid-hero__frame {
+    z-index: 2;
+    inset: 86px var(--page-inline) 60px;
+    border: 1px solid #ffffff85;
+    pointer-events: none;
+  }
+
+  .hybrid-hero__frame::before,
+  .hybrid-hero__frame::after {
+    position: absolute;
+    width: 58px;
+    height: 10px;
+    background: #ff76a4;
+    content: "";
+  }
+
+  .hybrid-hero__frame::before {
+    top: -5px;
+    left: 18%;
+  }
+
+  .hybrid-hero__frame::after {
+    right: 12%;
+    bottom: -5px;
+    background: #75d4d2;
+  }
+
+  .hybrid-hero__rail {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: calc(var(--page-inline) - 12px);
+    display: flex;
+    gap: 22px;
+    font-family: var(--font-mono);
+    font-size: 0.61rem;
+    font-weight: 850;
+    transform: translate(-50%, -50%) rotate(-90deg);
+  }
+
+  .hybrid-hero__content {
+    position: relative;
+    z-index: 3;
+    display: grid;
+    padding-top: 74px;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.52fr);
+    align-items: center;
+    gap: 40px;
+  }
+
+  .hybrid-hero__copy {
+    justify-self: end;
+    width: min(100%, 620px);
+    text-align: left;
+  }
+
+  :global([data-theme="dark"]) .hybrid-hero__copy {
+    justify-self: start;
+  }
+
+  .hybrid-hero__signal {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 9px;
+    margin-bottom: 18px;
+    background: #75d4d2;
+    color: #17161a;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 850;
+  }
+
+  .hybrid-hero h1 {
+    margin: 0;
+    font-size: clamp(4.2rem, 8.6vw, 8.5rem);
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: 0;
+    text-shadow: 0 3px 28px rgb(0 0 0 / 36%);
+  }
+
+  .hybrid-hero h1 span {
+    display: table;
+  }
+
+  .hybrid-hero h1 span:last-child {
+    padding: 4px 12px 9px;
+    margin-top: 6px;
+    background: #f7f2f4;
+    box-shadow: 8px 8px 0 #ff76a4;
+    color: #17161a;
+    text-shadow: none;
+    transform: translateX(4%);
+  }
+
+  .hybrid-hero__intro {
+    max-width: 480px;
+    margin: 28px 0 0;
+    font-weight: 650;
+    line-height: 1.7;
+    text-shadow: 0 2px 18px rgb(0 0 0 / 56%);
+  }
+
+  .hybrid-hero__action {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0 7px;
+    margin-top: 24px;
+    border-bottom: 3px solid #fff;
+    color: #fff;
+    font-weight: 850;
+    text-decoration: none;
+    text-shadow: 0 2px 12px rgb(0 0 0 / 48%);
+  }
+
+  .hybrid-hero__action:hover {
+    color: #ffb0c9;
+  }
+
+  .hybrid-hero__quote {
+    align-self: end;
+    padding: 20px 0 88px;
+    color: #fff;
+    text-shadow: 0 2px 18px rgb(0 0 0 / 62%);
+  }
+
+  .hybrid-hero__quote > :global(svg) {
+    margin-bottom: 12px;
+    color: #f0c15a;
+  }
+
+  .hybrid-hero__quote :global(.quote-loop__index) {
+    color: #75d4d2;
+  }
+
+  .hybrid-hero__footer {
+    position: absolute;
+    z-index: 4;
+    right: calc(var(--page-inline) + 16px);
+    bottom: 36px;
+    left: calc(var(--page-inline) + 16px);
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 800;
+  }
+
+  .hybrid-feed {
+    padding-block: clamp(78px, 11vw, 142px);
+    background: color-mix(in srgb, var(--color-bg) 95%, var(--color-cyan) 5%);
+  }
+
+  .hybrid-feed__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 32px;
+    margin-bottom: 44px;
+  }
+
+  .hybrid-feed__header span {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--color-cyan);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 850;
+  }
+
+  .hybrid-feed__header h2 {
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(2.15rem, 5vw, 4.3rem);
+    line-height: 1.12;
+  }
+
+  .hybrid-feed__header > a {
+    color: var(--color-muted);
+    font-size: 0.82rem;
+    text-decoration: none;
+  }
+
+  .hybrid-feed__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+    gap: 24px;
+  }
+
+  .hybrid-feed__stack {
+    display: grid;
+    gap: 24px;
+  }
+
+  .hybrid-memory {
+    position: relative;
+    display: grid;
+    min-height: 680px;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    background: #17151a;
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .hybrid-memory__image {
+    min-height: 680px;
+    overflow: hidden;
+  }
+
+  .hybrid-memory__image :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 38%;
+  }
+
+  .hybrid-memory__copy {
+    display: flex;
+    max-width: 640px;
+    padding: clamp(54px, 8vw, 112px);
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .hybrid-memory__copy > span {
+    color: #75d4d2;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 850;
+  }
+
+  .hybrid-memory__copy h2 {
+    max-width: 9ch;
+    margin: 18px 0 24px;
+    font-size: clamp(2.9rem, 6vw, 5.8rem);
+    line-height: 0.98;
+  }
+
+  .hybrid-memory__copy p {
+    max-width: 480px;
+    margin: 0;
+    color: #cfc4ca;
+    line-height: 1.85;
+  }
+
+  .hybrid-memory__copy a {
+    width: max-content;
+    margin-top: 28px;
+    color: #ff8db3;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .hybrid-memory__stamp {
+    position: absolute;
+    right: 4vw;
+    bottom: 36px;
+    padding: 11px 14px;
+    border: 3px solid #17161a;
+    background: #f0c15a;
+    color: #17161a;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 900;
+    line-height: 1.05;
+    transform: rotate(-7deg);
+  }
+
+  .hybrid-footer {
+    padding: 32px 0 96px;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .hybrid-footer > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 22px;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+  }
+
+  @keyframes hybrid-scene {
+    to {
+      transform: scale(1.045) translateY(-0.5%);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .hybrid-hero__content {
+      grid-template-columns: 1fr;
+      align-items: end;
+      padding-bottom: 92px;
+    }
+
+    .hybrid-hero__copy,
+    :global([data-theme="dark"]) .hybrid-hero__copy {
+      align-self: end;
+      justify-self: start;
+    }
+
+    .hybrid-hero__quote {
+      display: none;
+    }
+
+    .hybrid-feed__layout {
+      grid-template-columns: 1fr;
+    }
+
+    .hybrid-memory {
+      min-height: 0;
+      grid-template-columns: 1fr;
+    }
+
+    .hybrid-memory__image {
+      min-height: 540px;
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .hybrid-hero {
+      height: 84svh;
+      min-height: 610px;
+    }
+
+    .hybrid-hero__art :global(img) {
+      object-position: 43% center;
+    }
+
+    :global([data-theme="dark"]) .hybrid-hero__art :global(img) {
+      object-position: 60% center;
+    }
+
+    .hybrid-hero__frame {
+      inset: 74px 14px 46px;
+    }
+
+    .hybrid-hero__rail {
+      display: none;
+    }
+
+    .hybrid-hero__content {
+      padding-bottom: 74px;
+    }
+
+    .hybrid-hero h1 {
+      font-size: clamp(3.5rem, 16vw, 5.6rem);
+    }
+
+    .hybrid-hero__intro {
+      max-width: 300px;
+      font-size: 0.86rem;
+    }
+
+    .hybrid-hero__footer {
+      right: 26px;
+      bottom: 25px;
+      left: 26px;
+    }
+
+    .hybrid-hero__footer span:last-child {
+      display: none;
+    }
+
+    .hybrid-feed__header {
+      display: grid;
+    }
+
+    .hybrid-memory__image {
+      min-height: 430px;
+    }
+
+    .hybrid-memory__copy {
+      padding: 48px var(--page-inline) 100px;
+    }
+
+    .hybrid-memory__stamp {
+      right: 20px;
+      bottom: 24px;
+    }
+
+    .hybrid-footer > div {
+      display: grid;
+    }
+  }
+</style>

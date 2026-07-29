@@ -9,6 +9,7 @@ export const siteConfig = {
     { label: "首页", href: "/" },
     { label: "文章", href: "/posts/" },
     { label: "相册", href: "/gallery/" },
+    { label: "关于", href: "/about/" },
     { label: "友链", href: "/friends/" },
   ],
   quotes: [
