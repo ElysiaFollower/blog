@@ -24,17 +24,31 @@ const { label = "少女祈祷中...", code = "LOADING // 017" } = Astro.props;
   );
 
   if (opening) {
-    const close = () => {
-      opening.dataset.state = "leaving";
-      sessionStorage.setItem("opening-seen", "true");
-      opening.addEventListener("transitionend", () => opening.remove(), {
-        once: true,
-      });
-    };
-
     if (sessionStorage.getItem("opening-seen")) {
       opening.remove();
     } else {
+      const startedAt = performance.now();
+      const minimumDuration = 900;
+      let closing = false;
+
+      const close = () => {
+        if (closing) return;
+        closing = true;
+
+        const remaining = Math.max(
+          0,
+          minimumDuration - (performance.now() - startedAt),
+        );
+
+        window.setTimeout(() => {
+          opening.dataset.state = "leaving";
+          sessionStorage.setItem("opening-seen", "true");
+          opening.addEventListener("transitionend", () => opening.remove(), {
+            once: true,
+          });
+        }, remaining);
+      };
+
       const criticalImages = Array.from(
         document.querySelectorAll<HTMLImageElement>(
           "img[data-critical-image]",
@@ -68,7 +82,7 @@ const { label = "少女祈祷中...", code = "LOADING // 017" } = Astro.props;
       visibility 420ms ease;
   }
 
-  :global(.js) .opening-sequence {
+  :global(.js:not(.opening-seen)) .opening-sequence {
     display: grid;
   }
 

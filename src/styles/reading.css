@@ -76,10 +76,10 @@
 
 .reading-grid {
   display: grid;
-  width: min(calc(100% - (2 * var(--page-inline))), 1180px);
+  width: min(calc(100% - (2 * var(--page-inline))), 1260px);
   margin-inline: auto;
-  grid-template-columns: 160px minmax(0, 720px) 240px;
-  gap: 36px;
+  grid-template-columns: 140px minmax(0, 780px) 220px;
+  gap: 32px;
   justify-content: center;
 }
 
@@ -133,8 +133,8 @@
   min-width: 0;
   grid-column: 2;
   font-family: var(--font-reading);
-  font-size: clamp(1.04rem, 1.8vw, 1.14rem);
-  line-height: 1.95;
+  font-size: clamp(1.03rem, 1.55vw, 1.12rem);
+  line-height: 1.82;
 }
 
 .prose > :first-child {
@@ -149,7 +149,7 @@
 .prose table,
 .prose .content-callout {
   margin-top: 0;
-  margin-bottom: 1.65em;
+  margin-bottom: 1.45em;
 }
 
 .prose h2,
@@ -162,14 +162,14 @@
 }
 
 .prose h2 {
-  padding-top: 1.5em;
-  margin: 2.1em 0 0.8em;
+  padding-top: 1.3em;
+  margin: 1.85em 0 0.75em;
   border-top: 1px solid var(--color-line);
   font-size: clamp(1.65rem, 3vw, 2.15rem);
 }
 
 .prose h3 {
-  margin: 1.9em 0 0.7em;
+  margin: 1.65em 0 0.65em;
   font-size: 1.38rem;
 }
 
@@ -276,8 +276,8 @@
 .sidenote {
   float: right;
   clear: right;
-  width: 220px;
-  margin: 0 -276px 24px 30px;
+  width: 200px;
+  margin: 0 -252px 24px 28px;
   border-top: 2px solid var(--color-rose);
   padding-top: 12px;
   color: var(--color-muted);
@@ -301,7 +301,7 @@
 }
 
 .post-footer {
-  width: min(calc(100% - (2 * var(--page-inline))), 720px);
+  width: min(calc(100% - (2 * var(--page-inline))), 780px);
   padding-top: 40px;
   margin: 72px auto 0;
   border-top: 1px solid var(--color-line);
@@ -311,7 +311,7 @@
 
 @media (max-width: 1120px) {
   .reading-grid {
-    grid-template-columns: minmax(0, 720px);
+    grid-template-columns: minmax(0, 780px);
   }
 
   .post-toc {

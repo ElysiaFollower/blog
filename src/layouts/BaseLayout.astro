@@ -36,6 +36,9 @@ const pageTitle = title ? `${title} · ${siteConfig.title}` : siteConfig.title;
     <script is:inline>
       (() => {
         document.documentElement.classList.add("js");
+        if (sessionStorage.getItem("opening-seen")) {
+          document.documentElement.classList.add("opening-seen");
+        }
         const stored = localStorage.getItem("theme");
         const preferred = matchMedia("(prefers-color-scheme: dark)").matches
           ? "dark"
