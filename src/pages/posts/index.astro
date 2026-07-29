@@ -1,12 +1,16 @@
 ---
-import { getCollection } from "astro:content";
+import { Search, X } from "@lucide/astro";
 import ArticleCard from "../../components/ArticleCard.astro";
+import ContentDirectory from "../../components/content/ContentDirectory.astro";
+import ContentPageHeader from "../../components/content/ContentPageHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
+import { getPublishedPosts, getTaxonomy } from "../../lib/posts";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
-  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-);
+const posts = await getPublishedPosts();
+const categories = getTaxonomy(posts, "categories");
+const tags = getTaxonomy(posts, "tags");
 ---
 
 <BaseLayout
@@ -16,73 +20,203 @@ const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
 >
   <SiteHeader variant="reading" />
   <main id="main-content">
-    <header class="archive-hero page-width">
-      <p>ARCHIVE // {String(posts.length).padStart(2, "0")}</p>
-      <h1>文章</h1>
-      <div>
-        <span>技术文章、课程笔记与偶尔出现的想法。</span>
-        <span>按时间排列，也可以从标签与分类进入。</span>
-      </div>
-    </header>
+    <ContentPageHeader
+      kicker={`LATEST // ${String(posts.length).padStart(2, "0")}`}
+      title="文章"
+      description="技术文章、课程笔记与偶尔出现的想法。"
+      note="按时间排列，也可以从标签与分类进入。"
+    />
+    <ContentDirectory
+      current="latest"
+      postCount={posts.length}
+      categoryCount={categories.length}
+      tagCount={tags.length}
+    />
+
+    <section class="post-search page-width" aria-label="搜索文章" data-post-search>
+      <label>
+        <Search aria-hidden="true" size={19} stroke-width={1.8} />
+        <span class="visually-hidden">搜索文章</span>
+        <input
+          type="search"
+          placeholder="搜索标题、分类或标签"
+          autocomplete="off"
+          data-post-search-input
+        />
+      </label>
+      <button
+        type="button"
+        aria-label="清空搜索"
+        title="清空搜索"
+        data-post-search-clear
+        hidden
+      >
+        <X aria-hidden="true" size={18} stroke-width={1.8} />
+      </button>
+      <p aria-live="polite">
+        <span data-post-search-count>{posts.length}</span> 篇记录
+      </p>
+    </section>
 
     <section class="archive-list page-width" aria-label="文章列表">
-      {posts.map((post) => <ArticleCard post={post} />)}
+      {
+        posts.map((post) => (
+          <div
+            data-post-search-item
+            data-search-text={[
+              post.data.title,
+              post.data.description,
+              post.data.category,
+              ...post.data.tags,
+            ]
+              .join(" ")
+              .toLocaleLowerCase("zh-CN")}
+          >
+            <ArticleCard post={post} />
+          </div>
+        ))
+      }
     </section>
+    <p class="post-search-empty page-width" data-post-search-empty hidden>
+      没有找到匹配的记录。
+    </p>
   </main>
+  <SiteFooter />
 </BaseLayout>
+
+<script>
+  const searchRoot = document.querySelector<HTMLElement>("[data-post-search]");
+  const searchInput = searchRoot?.querySelector<HTMLInputElement>(
+    "[data-post-search-input]",
+  );
+  const clearButton = searchRoot?.querySelector<HTMLButtonElement>(
+    "[data-post-search-clear]",
+  );
+  const count = searchRoot?.querySelector<HTMLElement>(
+    "[data-post-search-count]",
+  );
+  const empty = document.querySelector<HTMLElement>("[data-post-search-empty]");
+  const items = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-post-search-item]"),
+  );
+
+  const filterPosts = () => {
+    const query = searchInput?.value.trim().toLocaleLowerCase("zh-CN") ?? "";
+    let visible = 0;
+
+    items.forEach((item) => {
+      const matches = !query || item.dataset.searchText?.includes(query);
+      item.hidden = !matches;
+      if (matches) visible += 1;
+    });
+
+    if (count) count.textContent = String(visible);
+    if (clearButton) clearButton.hidden = !query;
+    if (empty) empty.hidden = visible !== 0;
+  };
+
+  searchInput?.addEventListener("input", filterPosts);
+  clearButton?.addEventListener("click", () => {
+    if (!searchInput) return;
+    searchInput.value = "";
+    filterPosts();
+    searchInput.focus();
+  });
+</script>
 
 <style>
   .archive-page {
     background: var(--color-bg);
   }
 
-  .archive-hero {
+  .post-search {
+    display: none;
+  }
+
+  :global(.js) .post-search {
     display: grid;
-    padding-block: clamp(58px, 9vw, 112px);
-    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.7fr);
-    align-items: end;
-    gap: 36px;
-    border-bottom: 1px solid var(--color-line);
+    padding-block: 48px 0;
+    grid-template-columns: minmax(0, 560px) auto 1fr;
+    align-items: center;
+    gap: 8px;
   }
 
-  .archive-hero > p {
-    grid-column: 1 / -1;
-    margin: 0;
-    color: var(--color-rose);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 800;
-  }
-
-  .archive-hero h1 {
-    margin: 0;
-    font-family: var(--font-reading);
-    font-size: clamp(3.8rem, 10vw, 8rem);
-    font-weight: 700;
-    line-height: 0.9;
-  }
-
-  .archive-hero div {
+  .post-search label {
     display: grid;
-    gap: 7px;
+    min-height: 52px;
+    padding-inline: 16px;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+  }
+
+  .post-search input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+  }
+
+  .post-search button {
+    display: grid;
+    width: 52px;
+    height: 52px;
+    place-items: center;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    cursor: pointer;
+  }
+
+  .post-search button[hidden] {
+    display: none;
+  }
+
+  .post-search p {
+    justify-self: end;
+    margin: 0;
     color: var(--color-muted);
-    font-size: 0.92rem;
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
   }
 
   .archive-list {
     display: grid;
-    padding-block: clamp(48px, 8vw, 100px);
+    padding-block: 68px 108px;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: clamp(22px, 4vw, 44px);
+    gap: 40px;
+  }
+
+  .archive-list > div[hidden] {
+    display: none;
+  }
+
+  .post-search-empty {
+    padding-bottom: 120px;
+    margin-top: -56px;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  .post-search-empty[hidden] {
+    display: none;
   }
 
   @media (max-width: 760px) {
-    .archive-hero {
-      grid-template-columns: 1fr;
+    :global(.js) .post-search {
+      padding-top: 34px;
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .post-search p {
+      display: none;
     }
 
     .archive-list {
+      padding-block: 46px 84px;
       grid-template-columns: 1fr;
+      gap: 28px;
     }
   }
 </style>

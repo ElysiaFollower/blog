@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import { ArrowUpRight } from "@lucide/astro";
+import { taxonomyHref } from "../lib/posts";
 
 interface Props {
   post: CollectionEntry<"posts">;
@@ -33,7 +34,7 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
   </a>
   <div class="article-card__body">
     <div class="article-card__meta">
-      <span>{data.category}</span>
+      <a href={taxonomyHref("categories", data.category)}>{data.category}</a>
       <time datetime={data.pubDate.toISOString()}>{formattedDate}</time>
     </div>
     <h2>
@@ -42,7 +43,13 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
     <p>{data.description}</p>
     <div class="article-card__footer">
       <ul aria-label="标签">
-        {data.tags.slice(0, 3).map((tag) => <li>#{tag}</li>)}
+        {
+          data.tags.slice(0, 3).map((tag) => (
+            <li>
+              <a href={taxonomyHref("tags", tag)}>#{tag}</a>
+            </li>
+          ))
+        }
       </ul>
       <a
         class="article-card__open"
@@ -99,9 +106,10 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
     font-size: 0.72rem;
   }
 
-  .article-card__meta span {
+  .article-card__meta > a {
     color: var(--color-rose);
     font-weight: 800;
+    text-decoration: none;
     text-transform: uppercase;
   }
 
@@ -139,6 +147,14 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
     color: var(--color-muted);
     font-size: 0.76rem;
     list-style: none;
+  }
+
+  .article-card__footer ul a {
+    text-decoration: none;
+  }
+
+  .article-card__footer ul a:hover {
+    color: var(--color-rose);
   }
 
   .article-card__open {

@@ -1,0 +1,108 @@
+---
+import { Check, Copy } from "@lucide/astro";
+---
+
+<template data-code-copy-icon>
+  <Copy aria-hidden="true" size={16} stroke-width={1.8} />
+</template>
+<template data-code-check-icon>
+  <Check aria-hidden="true" size={16} stroke-width={2} />
+</template>
+
+<script>
+  const copyIcon = document.querySelector<HTMLTemplateElement>(
+    "[data-code-copy-icon]",
+  );
+  const checkIcon = document.querySelector<HTMLTemplateElement>(
+    "[data-code-check-icon]",
+  );
+
+  document.querySelectorAll<HTMLElement>(".prose pre").forEach((pre) => {
+    if (pre.parentElement?.classList.contains("code-block")) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "code-block";
+    pre.before(wrapper);
+    wrapper.append(pre);
+
+    const button = document.createElement("button");
+    button.className = "code-copy";
+    button.type = "button";
+    button.title = "复制代码";
+    button.setAttribute("aria-label", "复制代码");
+    if (copyIcon) button.append(copyIcon.content.cloneNode(true));
+    wrapper.append(button);
+
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(pre.textContent ?? "");
+        button.replaceChildren(
+          ...(checkIcon
+            ? [checkIcon.content.cloneNode(true)]
+            : [document.createTextNode("OK")]),
+        );
+        button.dataset.state = "success";
+        button.title = "已复制";
+        button.setAttribute("aria-label", "代码已复制");
+      } catch {
+        button.dataset.state = "error";
+        button.title = "复制失败";
+        button.setAttribute("aria-label", "复制失败");
+      }
+
+      window.setTimeout(() => {
+        button.replaceChildren(
+          ...(copyIcon
+            ? [copyIcon.content.cloneNode(true)]
+            : [document.createTextNode("COPY")]),
+        );
+        delete button.dataset.state;
+        button.title = "复制代码";
+        button.setAttribute("aria-label", "复制代码");
+      }, 1600);
+    });
+  });
+</script>
+
+<style is:global>
+  .code-block {
+    position: relative;
+    margin-bottom: 1.45em;
+  }
+
+  .prose .code-block pre {
+    padding-right: 68px;
+    margin-bottom: 0;
+  }
+
+  .code-copy {
+    position: absolute;
+    z-index: 2;
+    top: 10px;
+    right: 10px;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 1px solid var(--color-line);
+    border-radius: 4px;
+    background: var(--color-surface);
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+
+  .code-copy:hover {
+    border-color: var(--color-cyan);
+    color: var(--color-cyan);
+  }
+
+  .code-copy[data-state="success"] {
+    border-color: var(--color-cyan);
+    color: var(--color-cyan);
+  }
+
+  .code-copy[data-state="error"] {
+    border-color: var(--color-rose);
+    color: var(--color-rose);
+  }
+</style>

@@ -1,28 +1,9 @@
 ---
 import { ArrowUpRight } from "@lucide/astro";
+import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
+import { friendLinks } from "../../config/friends";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-
-const links = [
-  {
-    title: "ElysiaFollower",
-    description: "开源项目与实验代码。",
-    href: "https://github.com/ElysiaFollower",
-    label: "GitHub",
-  },
-  {
-    title: "Academic",
-    description: "研究经历、发表与学术信息。",
-    href: "/Academic/",
-    label: "Academic page",
-  },
-  {
-    title: "旧航行日志",
-    description: "主题重构前的博客现场。",
-    href: "https://elysiafollower.github.io/",
-    label: "Archive",
-  },
-];
 ---
 
 <BaseLayout
@@ -35,13 +16,13 @@ const links = [
     <header class="friends-header page-width">
       <p>LINKS // SIGNALS</p>
       <h1>友链</h1>
-      <span>沿途遇见的人与站点。</span>
+      <span>沿途遇见的人，以及他们认真维护的小小世界。</span>
     </header>
 
     <section class="friends-list page-width" aria-label="友链列表">
       {
-        links.map((link, index) => (
-          <a href={link.href}>
+        friendLinks.map((link, index) => (
+          <a href={link.href} target="_blank" rel="noreferrer">
             <span>{String(index + 1).padStart(2, "0")}</span>
             <div>
               <small>{link.label}</small>
@@ -54,6 +35,7 @@ const links = [
       }
     </section>
   </main>
+  <SiteFooter />
 </BaseLayout>
 
 <style>

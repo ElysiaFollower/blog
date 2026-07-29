@@ -6,7 +6,12 @@ import { defineConfig } from "astro/config";
 export default defineConfig({
   site: "https://elysiafollower.github.io",
   output: "static",
-  integrations: [mdx(), sitemap()],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !new URL(page).pathname.startsWith("/concepts/"),
+    }),
+  ],
   markdown: {
     shikiConfig: {
       themes: {

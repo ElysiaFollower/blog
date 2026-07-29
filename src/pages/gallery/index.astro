@@ -1,6 +1,6 @@
 ---
 import { Image } from "astro:assets";
-import { X } from "@lucide/astro";
+import { ChevronLeft, ChevronRight, X } from "@lucide/astro";
 import coverCylien from "../../assets/demo/cover-cylien.png";
 import coverGeometry from "../../assets/demo/cover-geometry.jpeg";
 import coverMeme from "../../assets/demo/cover-meme.png";
@@ -9,6 +9,7 @@ import coverSeele from "../../assets/demo/cover-seele.png";
 import elysiaPoster from "../../assets/demo/elysia-logo.png";
 import elysiaPortrait from "../../assets/demo/elysia-portrait.png";
 import sparklePortrait from "../../assets/demo/sparkle-portrait.png";
+import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
@@ -39,13 +40,14 @@ const images = [
 
     <section class="gallery-grid page-width" aria-label="图片收藏">
       {
-        images.map((image) => (
+        images.map((image, index) => (
           <a
             class="gallery-item"
             href={image.src.src}
             data-gallery-item
             data-full-src={image.src.src}
             data-alt={image.alt}
+            data-index={index}
             aria-label={`查看大图：${image.alt}`}
           >
             <Image
@@ -55,6 +57,9 @@ const images = [
               sizes="(max-width: 620px) 50vw, (max-width: 980px) 33vw, 25vw"
               loading="lazy"
             />
+            <span class="gallery-item__index" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </span>
           </a>
         ))
       }
@@ -65,8 +70,33 @@ const images = [
     <button type="button" data-gallery-close aria-label="关闭大图" title="关闭">
       <X aria-hidden="true" size={22} stroke-width={1.8} />
     </button>
-    <img alt="" hidden data-gallery-image />
+    <button
+      class="gallery-lightbox__previous"
+      type="button"
+      data-gallery-previous
+      aria-label="查看上一张"
+      title="上一张"
+    >
+      <ChevronLeft aria-hidden="true" size={26} stroke-width={1.7} />
+    </button>
+    <figure>
+      <img alt="" hidden data-gallery-image />
+      <figcaption>
+        <span data-gallery-caption></span>
+        <small data-gallery-count></small>
+      </figcaption>
+    </figure>
+    <button
+      class="gallery-lightbox__next"
+      type="button"
+      data-gallery-next
+      aria-label="查看下一张"
+      title="下一张"
+    >
+      <ChevronRight aria-hidden="true" size={26} stroke-width={1.7} />
+    </button>
   </dialog>
+  <SiteFooter />
 </BaseLayout>
 
 <script>
@@ -76,29 +106,60 @@ const images = [
     dialog?.querySelector<HTMLImageElement>("[data-gallery-image]");
   const closeButton =
     dialog?.querySelector<HTMLButtonElement>("[data-gallery-close]");
-
-  document.querySelectorAll<HTMLAnchorElement>("[data-gallery-item]").forEach(
-    (item) => {
-      item.addEventListener("click", (event) => {
-        if (!dialog || !dialogImage) return;
-        event.preventDefault();
-        dialogImage.src = item.dataset.fullSrc ?? "";
-        dialogImage.alt = item.dataset.alt ?? "";
-        dialogImage.hidden = false;
-        dialog.showModal();
-      });
-    },
+  const previousButton = dialog?.querySelector<HTMLButtonElement>(
+    "[data-gallery-previous]",
   );
+  const nextButton = dialog?.querySelector<HTMLButtonElement>(
+    "[data-gallery-next]",
+  );
+  const caption = dialog?.querySelector<HTMLElement>("[data-gallery-caption]");
+  const count = dialog?.querySelector<HTMLElement>("[data-gallery-count]");
+  const galleryItems = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>("[data-gallery-item]"),
+  );
+  let currentIndex = 0;
+
+  const showImage = (index: number) => {
+    if (!dialogImage || galleryItems.length === 0) return;
+    currentIndex = (index + galleryItems.length) % galleryItems.length;
+    const item = galleryItems[currentIndex];
+    const alt = item.dataset.alt ?? "";
+
+    dialogImage.src = item.dataset.fullSrc ?? "";
+    dialogImage.alt = alt;
+    dialogImage.hidden = false;
+    if (caption) caption.textContent = alt;
+    if (count) {
+      count.textContent = `${String(currentIndex + 1).padStart(2, "0")} / ${String(galleryItems.length).padStart(2, "0")}`;
+    }
+  };
+
+  galleryItems.forEach((item, index) => {
+    item.addEventListener("click", (event) => {
+      if (!dialog || !dialogImage) return;
+      event.preventDefault();
+      showImage(index);
+      dialog.showModal();
+    });
+  });
 
   closeButton?.addEventListener("click", () => dialog?.close());
+  previousButton?.addEventListener("click", () => showImage(currentIndex - 1));
+  nextButton?.addEventListener("click", () => showImage(currentIndex + 1));
   dialog?.addEventListener("click", (event) => {
     if (event.target === dialog) dialog.close();
+  });
+  dialog?.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") showImage(currentIndex - 1);
+    if (event.key === "ArrowRight") showImage(currentIndex + 1);
   });
   dialog?.addEventListener("close", () => {
     if (!dialogImage) return;
     dialogImage.hidden = true;
     dialogImage.removeAttribute("src");
     dialogImage.alt = "";
+    if (caption) caption.textContent = "";
+    if (count) count.textContent = "";
   });
 </script>
 
@@ -144,6 +205,7 @@ const images = [
   }
 
   .gallery-item {
+    position: relative;
     display: block;
     width: 100%;
     padding: 0;
@@ -167,6 +229,24 @@ const images = [
     transform: scale(1.025);
   }
 
+  .gallery-item__index {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 3px 7px;
+    background: rgb(15 13 16 / 72%);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.61rem;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .gallery-item:hover .gallery-item__index,
+  .gallery-item:focus-visible .gallery-item__index {
+    opacity: 1;
+  }
+
   .gallery-lightbox {
     width: 100vw;
     max-width: none;
@@ -187,17 +267,24 @@ const images = [
     place-items: center;
   }
 
+  .gallery-lightbox figure {
+    display: grid;
+    max-width: min(92vw, 1500px);
+    max-height: 92vh;
+    margin: 0;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
   .gallery-lightbox img {
     max-width: min(92vw, 1500px);
-    max-height: 88vh;
+    max-height: 82vh;
     object-fit: contain;
   }
 
   .gallery-lightbox button {
     position: fixed;
     z-index: 2;
-    top: 20px;
-    right: 20px;
     display: grid;
     width: 44px;
     height: 44px;
@@ -207,6 +294,39 @@ const images = [
     background: #17151a;
     color: #fff;
     cursor: pointer;
+  }
+
+  .gallery-lightbox [data-gallery-close] {
+    top: 20px;
+    right: 20px;
+  }
+
+  .gallery-lightbox__previous,
+  .gallery-lightbox__next {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .gallery-lightbox__previous {
+    left: 20px;
+  }
+
+  .gallery-lightbox__next {
+    right: 20px;
+  }
+
+  .gallery-lightbox figcaption {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    color: #ddd4da;
+    font-size: 0.8rem;
+  }
+
+  .gallery-lightbox figcaption small {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
   }
 
   @media (max-width: 620px) {
@@ -226,6 +346,29 @@ const images = [
 
     .gallery-lightbox {
       padding: 12px;
+    }
+
+    .gallery-item__index {
+      opacity: 1;
+    }
+
+    .gallery-lightbox__previous,
+    .gallery-lightbox__next {
+      top: auto;
+      bottom: 18px;
+      transform: none;
+    }
+
+    .gallery-lightbox__previous {
+      left: 18px;
+    }
+
+    .gallery-lightbox__next {
+      right: 18px;
+    }
+
+    .gallery-lightbox figcaption {
+      padding-bottom: 60px;
     }
   }
 </style>

@@ -1,0 +1,32 @@
+---
+import TaxonomyPage from "../../components/content/TaxonomyPage.astro";
+import { getPublishedPosts, getTaxonomy } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  const categories = getTaxonomy(posts, "categories");
+  const tags = getTaxonomy(posts, "tags");
+
+  return tags.map((entry, index) => ({
+    params: { tag: entry.slug },
+    props: {
+      entry,
+      index,
+      postCount: posts.length,
+      categoryCount: categories.length,
+      tagCount: tags.length,
+    },
+  }));
+}
+
+const { entry, index, postCount, categoryCount, tagCount } = Astro.props;
+---
+
+<TaxonomyPage
+  {entry}
+  {index}
+  {postCount}
+  {categoryCount}
+  {tagCount}
+  kind="tags"
+/>

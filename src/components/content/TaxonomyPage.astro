@@ -1,0 +1,68 @@
+---
+import ContentDirectory from "./ContentDirectory.astro";
+import ContentPageHeader from "./ContentPageHeader.astro";
+import PostList from "./PostList.astro";
+import SiteFooter from "../SiteFooter.astro";
+import SiteHeader from "../SiteHeader.astro";
+import type {
+  TaxonomyEntry,
+  TaxonomyKind,
+} from "../../lib/posts";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+interface Props {
+  entry: TaxonomyEntry;
+  kind: TaxonomyKind;
+  postCount: number;
+  categoryCount: number;
+  tagCount: number;
+  index: number;
+}
+
+const { entry, kind, postCount, categoryCount, tagCount, index } = Astro.props;
+const isCategory = kind === "categories";
+const label = isCategory ? "分类" : "标签";
+const kicker = `${isCategory ? "CATEGORY" : "TAG"} // ${String(index + 1).padStart(2, "0")}`;
+---
+
+<BaseLayout
+  title={`${label}：${entry.name}`}
+  description={`收录在${label}“${entry.name}”下的 ${entry.posts.length} 篇文章。`}
+  bodyClass="taxonomy-page"
+>
+  <SiteHeader variant="reading" />
+  <main id="main-content">
+    <ContentPageHeader
+      {kicker}
+      title={entry.name}
+      description={`这里收录了 ${entry.posts.length} 篇与“${entry.name}”相关的文章。`}
+      note={`${label.toUpperCase()} / ${entry.slug}`}
+    />
+    <ContentDirectory
+      current={kind}
+      {postCount}
+      {categoryCount}
+      {tagCount}
+    />
+    <section class="taxonomy-page__posts page-width" aria-label={`${label}文章`}>
+      <PostList posts={entry.posts} showCategory={!isCategory} />
+    </section>
+  </main>
+  <SiteFooter />
+</BaseLayout>
+
+<style>
+  .taxonomy-page {
+    background: var(--color-bg);
+  }
+
+  .taxonomy-page__posts {
+    padding-block: 68px 112px;
+  }
+
+  @media (max-width: 620px) {
+    .taxonomy-page__posts {
+      padding-block: 46px 84px;
+    }
+  }
+</style>

@@ -2,8 +2,16 @@
 import { Image } from "astro:assets";
 import type { MarkdownHeading } from "astro";
 import type { CollectionEntry } from "astro:content";
+import { ArrowLeft, ArrowRight } from "@lucide/astro";
 import BaseLayout from "./BaseLayout.astro";
+import CodeCopy from "../components/content/CodeCopy.astro";
+import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import {
+  estimateReadingMinutes,
+  getPublishedPosts,
+  taxonomyHref,
+} from "../lib/posts";
 import "../styles/reading.css";
 
 interface Props {
@@ -19,26 +27,61 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
   month: "long",
   day: "numeric",
 }).format(data.pubDate);
+const formattedUpdatedDate = data.updatedDate
+  ? new Intl.DateTimeFormat("zh-CN", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }).format(data.updatedDate)
+  : undefined;
+const readingMinutes = estimateReadingMinutes(post);
+const posts = await getPublishedPosts();
+const currentIndex = posts.findIndex((entry) => entry.id === post.id);
+const newerPost = currentIndex > 0 ? posts[currentIndex - 1] : undefined;
+const olderPost =
+  currentIndex >= 0 && currentIndex < posts.length - 1
+    ? posts[currentIndex + 1]
+    : undefined;
 ---
 
 <BaseLayout
   title={data.title}
   description={data.description}
   bodyClass="reading-page"
+  image={data.cover}
+  pageType="article"
 >
   <SiteHeader variant="reading" />
   <main id="main-content" class="post-shell">
     <article>
       <header class="post-header">
         <div class="post-header__eyebrow">
-          <span>{data.category}</span>
+          <a href={taxonomyHref("categories", data.category)}>
+            {data.category}
+          </a>
           <time datetime={data.pubDate.toISOString()}>{formattedDate}</time>
-          <span>约 8 分钟</span>
+          <span>约 {readingMinutes} 分钟阅读</span>
+          {
+            data.updatedDate && (
+              <span>
+                更新于{" "}
+                <time datetime={data.updatedDate.toISOString()}>
+                  {formattedUpdatedDate}
+                </time>
+              </span>
+            )
+          }
         </div>
         <h1>{data.title}</h1>
         <p class="post-header__description">{data.description}</p>
         <ul class="post-header__tags" aria-label="标签">
-          {data.tags.map((tag) => <li>#{tag}</li>)}
+          {
+            data.tags.map((tag) => (
+              <li>
+                <a href={taxonomyHref("tags", tag)}>#{tag}</a>
+              </li>
+            ))
+          }
         </ul>
       </header>
 
@@ -79,6 +122,34 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
       <p>
         写于 {formattedDate}。文章仍可能继续修订；若发现技术错误，欢迎联系讨论。
       </p>
+      {
+        (newerPost || olderPost) && (
+          <nav class="post-navigation" aria-label="相邻文章">
+            {newerPost ? (
+              <a href={`/posts/${newerPost.id}/`} rel="prev">
+                <ArrowLeft aria-hidden="true" size={18} stroke-width={1.7} />
+                <span>
+                  <small>较新一篇</small>
+                  <strong>{newerPost.data.title}</strong>
+                </span>
+              </a>
+            ) : (
+              <span />
+            )}
+            {olderPost && (
+              <a href={`/posts/${olderPost.id}/`} rel="next">
+                <span>
+                  <small>较早一篇</small>
+                  <strong>{olderPost.data.title}</strong>
+                </span>
+                <ArrowRight aria-hidden="true" size={18} stroke-width={1.7} />
+              </a>
+            )}
+          </nav>
+        )
+      }
     </footer>
   </main>
+  <CodeCopy />
+  <SiteFooter />
 </BaseLayout>

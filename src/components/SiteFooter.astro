@@ -1,0 +1,162 @@
+---
+import { ArrowUp, Rss, Sparkles } from "@lucide/astro";
+import { siteConfig } from "../config/site";
+---
+
+<footer class="site-footer">
+  <div class="site-footer__main page-width">
+    <div>
+      <a class="site-footer__brand" href="/">
+        <Sparkles aria-hidden="true" size={18} stroke-width={1.8} />
+        <strong>{siteConfig.title}</strong>
+      </a>
+      <p>{siteConfig.description}</p>
+    </div>
+    <nav aria-label="页脚导航">
+      <a href="/posts/">最新文章</a>
+      <a href="/archives/">归档</a>
+      <a href="/gallery/">相册</a>
+      <a href="/about/">关于</a>
+      <a href="/rss.xml">
+        <Rss aria-hidden="true" size={15} stroke-width={1.8} />
+        RSS
+      </a>
+    </nav>
+  </div>
+  <div class="site-footer__meta page-width">
+    <span>ELYSIAFOLLOWER © 2026</span>
+    <span>END OF CURRENT TRANSMISSION</span>
+    <a href="#top" aria-label="回到页面顶部" title="回到顶部">
+      <ArrowUp aria-hidden="true" size={18} stroke-width={1.8} />
+    </a>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    padding: 68px 0 28px;
+    overflow: hidden;
+    background: #17151a;
+    color: #f8f3f6;
+  }
+
+  .site-footer::before {
+    position: absolute;
+    top: 0;
+    left: var(--page-inline);
+    width: 38px;
+    height: 5px;
+    background: #75d4d2;
+    box-shadow:
+      38px 0 #ff78a5,
+      76px 0 #efbd43;
+    content: "";
+  }
+
+  .site-footer__main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 64px;
+  }
+
+  .site-footer__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .site-footer__brand :global(svg) {
+    color: #ff78a5;
+  }
+
+  .site-footer__brand strong {
+    font-family: var(--font-reading);
+    font-size: 1.25rem;
+  }
+
+  .site-footer__main p {
+    max-width: 520px;
+    margin: 12px 0 0;
+    color: #bcb3b9;
+    font-size: 0.82rem;
+  }
+
+  .site-footer nav {
+    display: grid;
+    min-width: 330px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 1px solid #ffffff38;
+  }
+
+  .site-footer nav a {
+    display: flex;
+    min-height: 46px;
+    align-items: center;
+    gap: 7px;
+    border-bottom: 1px solid #ffffff38;
+    color: #d8d0d5;
+    font-size: 0.78rem;
+    text-decoration: none;
+  }
+
+  .site-footer nav a:nth-child(even) {
+    padding-left: 18px;
+    border-left: 1px solid #ffffff38;
+  }
+
+  .site-footer nav a:hover {
+    color: #75d4d2;
+  }
+
+  .site-footer__meta {
+    display: grid;
+    padding-top: 64px;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 24px;
+    color: #9f959c;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+  }
+
+  .site-footer__meta a {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid #ffffff4a;
+    border-radius: 50%;
+    color: #fff;
+  }
+
+  .site-footer__meta a:hover {
+    border-color: #ff78a5;
+    color: #ff78a5;
+  }
+
+  @media (max-width: 700px) {
+    .site-footer {
+      padding-top: 56px;
+    }
+
+    .site-footer__main {
+      grid-template-columns: 1fr;
+      gap: 38px;
+    }
+
+    .site-footer nav {
+      min-width: 0;
+    }
+
+    .site-footer__meta {
+      padding-top: 52px;
+      grid-template-columns: 1fr auto;
+    }
+
+    .site-footer__meta > span:nth-child(2) {
+      display: none;
+    }
+  }
+</style>

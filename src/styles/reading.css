@@ -23,9 +23,10 @@
   font-size: 0.76rem;
 }
 
-.post-header__eyebrow span:first-child {
+.post-header__eyebrow > a:first-child {
   color: var(--color-rose);
   font-weight: 800;
+  text-decoration: none;
   text-transform: uppercase;
 }
 
@@ -58,6 +59,14 @@
   color: var(--color-muted);
   font-size: 0.78rem;
   list-style: none;
+}
+
+.post-header__tags a {
+  text-decoration: none;
+}
+
+.post-header__tags a:hover {
+  color: var(--color-rose);
 }
 
 .post-cover {
@@ -301,12 +310,69 @@
 }
 
 .post-footer {
-  width: min(calc(100% - (2 * var(--page-inline))), 780px);
+  width: min(calc(100% - (2 * var(--page-inline))), 960px);
   padding-top: 40px;
   margin: 72px auto 0;
   border-top: 1px solid var(--color-line);
   color: var(--color-muted);
   font-size: 0.84rem;
+}
+
+.post-footer > p {
+  width: min(100%, 780px);
+  margin: 0 auto;
+}
+
+.post-navigation {
+  display: grid;
+  margin-top: 42px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.post-navigation > a {
+  display: grid;
+  min-height: 112px;
+  padding: 20px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.post-navigation > a:last-child {
+  grid-template-columns: minmax(0, 1fr) auto;
+  text-align: right;
+}
+
+.post-navigation > a + a,
+.post-navigation > span + a {
+  border-left: 1px solid var(--color-line);
+}
+
+.post-navigation small,
+.post-navigation strong {
+  display: block;
+}
+
+.post-navigation small {
+  color: var(--color-rose);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
+.post-navigation strong {
+  margin-top: 5px;
+  font-family: var(--font-reading);
+  font-size: 0.96rem;
+  line-height: 1.5;
+}
+
+.post-navigation a:hover {
+  background: var(--color-surface-soft);
 }
 
 @media (max-width: 1120px) {
@@ -339,6 +405,22 @@
     border-top-width: 1px;
     border-left: 3px solid var(--color-rose);
     background: color-mix(in srgb, var(--color-rose) 6%, var(--color-surface));
+  }
+}
+
+@media (max-width: 620px) {
+  .post-navigation {
+    grid-template-columns: 1fr;
+  }
+
+  .post-navigation > span {
+    display: none;
+  }
+
+  .post-navigation > a + a,
+  .post-navigation > span + a {
+    border-top: 1px solid var(--color-line);
+    border-left: 0;
   }
 }
 

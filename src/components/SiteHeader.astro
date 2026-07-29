@@ -36,10 +36,15 @@ const icons = {
       {
         siteConfig.navigation.map((item) => {
           const Icon = icons[item.href as keyof typeof icons];
+          const articleRoute =
+            item.href === "/posts/" &&
+            ["/posts/", "/archives/", "/categories/", "/tags/"].some(
+              (path) => currentPath.startsWith(path),
+            );
           const active =
             item.href === "/"
               ? currentPath === "/"
-              : currentPath.startsWith(item.href);
+              : articleRoute || currentPath.startsWith(item.href);
 
           return (
             <a
