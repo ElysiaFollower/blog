@@ -1,0 +1,123 @@
+<div class="directed-pointer" aria-hidden="true" data-directed-pointer-dot></div>
+
+<script>
+  const finePointer = matchMedia(
+    "(pointer: fine) and (prefers-reduced-motion: no-preference)",
+  );
+  const pointer = document.querySelector<HTMLElement>(
+    "[data-directed-pointer-dot]",
+  );
+
+  if (finePointer.matches && pointer) {
+    let x = -100;
+    let y = -100;
+    let frame = 0;
+
+    const render = () => {
+      pointer.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      frame = 0;
+    };
+
+    window.addEventListener(
+      "pointermove",
+      (event) => {
+        x = event.clientX;
+        y = event.clientY;
+        if (!frame) frame = requestAnimationFrame(render);
+      },
+      { passive: true },
+    );
+
+    document.addEventListener("pointerdown", (event) => {
+      const burst = document.createElement("span");
+      burst.className = "directed-click";
+      burst.style.left = `${event.clientX}px`;
+      burst.style.top = `${event.clientY}px`;
+      document.body.append(burst);
+      burst.addEventListener("animationend", () => burst.remove(), {
+        once: true,
+      });
+    });
+
+    document.addEventListener("pointerover", (event) => {
+      const target = event.target as Element | null;
+      pointer.dataset.interactive = String(
+        Boolean(target?.closest("a, button, input, textarea, select")),
+      );
+    });
+  }
+</script>
+
+<style is:global>
+  .directed-pointer {
+    display: none;
+  }
+
+  @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    .js body[data-directed-pointer="true"],
+    .js body[data-directed-pointer="true"] a,
+    .js body[data-directed-pointer="true"] button {
+      cursor: none;
+    }
+
+    .js .directed-pointer {
+      position: fixed;
+      z-index: 10000;
+      top: -9px;
+      left: -9px;
+      display: block;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #fff;
+      border-radius: 50%;
+      pointer-events: none;
+      mix-blend-mode: difference;
+      transition:
+        width 120ms ease,
+        height 120ms ease,
+        top 120ms ease,
+        left 120ms ease;
+      will-change: transform;
+    }
+
+    .directed-pointer[data-interactive="true"] {
+      top: -15px;
+      left: -15px;
+      width: 30px;
+      height: 30px;
+    }
+
+    .directed-pointer::after {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #fff;
+      content: "";
+      transform: translate(-50%, -50%);
+    }
+
+    .directed-click {
+      position: fixed;
+      z-index: 9999;
+      width: 12px;
+      height: 12px;
+      border: 2px solid var(--color-rose-bright);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: directed-click 480ms ease-out forwards;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  @keyframes directed-click {
+    to {
+      width: 58px;
+      height: 58px;
+      border-width: 0;
+      opacity: 0;
+    }
+  }
+</style>

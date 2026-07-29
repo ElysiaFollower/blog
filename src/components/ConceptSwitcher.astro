@@ -1,0 +1,87 @@
+---
+const currentPath = Astro.url.pathname;
+const concepts = [
+  { key: "A", label: "氛围", href: "/concepts/atmosphere/" },
+  { key: "B", label: "图形", href: "/concepts/graphic/" },
+  { key: "C", label: "混合", href: "/concepts/hybrid/" },
+] as const;
+---
+
+<nav class="concept-switcher" aria-label="首页设计方向">
+  {
+    concepts.map((concept) => (
+      <a
+        class:list={[
+          "concept-switcher__item",
+          { "is-active": currentPath === concept.href },
+        ]}
+        href={concept.href}
+        aria-current={currentPath === concept.href ? "page" : undefined}
+      >
+        <strong>{concept.key}</strong>
+        <span>{concept.label}</span>
+      </a>
+    ))
+  }
+</nav>
+
+<style>
+  .concept-switcher {
+    position: fixed;
+    z-index: 200;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    display: flex;
+    border: 1px solid #fff6;
+    background: #17151ae8;
+    box-shadow: 0 12px 30px rgb(0 0 0 / 24%);
+    color: #fff;
+    backdrop-filter: blur(14px);
+  }
+
+  .concept-switcher__item {
+    display: grid;
+    min-width: 58px;
+    min-height: 50px;
+    padding: 6px 10px;
+    place-items: center;
+    border-right: 1px solid #fff3;
+    color: inherit;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  .concept-switcher__item:last-child {
+    border-right: 0;
+  }
+
+  .concept-switcher__item strong {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+  }
+
+  .concept-switcher__item span {
+    font-size: 0.72rem;
+  }
+
+  .concept-switcher__item:hover,
+  .concept-switcher__item.is-active {
+    background: #ff709f;
+    color: #17151a;
+  }
+
+  @media (max-width: 620px) {
+    .concept-switcher {
+      position: absolute;
+      top: 74px;
+      right: 10px;
+      bottom: auto;
+    }
+
+    .concept-switcher__item {
+      min-width: 48px;
+      min-height: 46px;
+      padding-inline: 8px;
+    }
+  }
+</style>

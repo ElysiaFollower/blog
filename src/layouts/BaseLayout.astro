@@ -1,0 +1,54 @@
+---
+import "../styles/global.css";
+import { siteConfig } from "../config/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  bodyClass?: string;
+  directedPointer?: boolean;
+  noIndex?: boolean;
+}
+
+const {
+  title,
+  description = siteConfig.description,
+  bodyClass = "",
+  directedPointer = false,
+  noIndex = false,
+} = Astro.props;
+
+const pageTitle = title ? `${title} · ${siteConfig.title}` : siteConfig.title;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    {noIndex && <meta name="robots" content="noindex, nofollow" />}
+    <meta name="theme-color" content="#fafafd" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <title>{pageTitle}</title>
+    <script is:inline>
+      (() => {
+        document.documentElement.classList.add("js");
+        const stored = localStorage.getItem("theme");
+        const preferred = matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+        document.documentElement.dataset.theme = stored || preferred;
+      })();
+    </script>
+  </head>
+  <body
+    class={bodyClass}
+    data-directed-pointer={directedPointer ? "true" : undefined}
+  >
+    <a class="skip-link" href="#main-content">跳到正文</a>
+    <slot />
+  </body>
+</html>

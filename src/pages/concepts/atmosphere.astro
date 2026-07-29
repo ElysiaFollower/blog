@@ -1,0 +1,360 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import { ArrowDown } from "@lucide/astro";
+import heroDay from "../../assets/demo/hero-day.png";
+import heroNight from "../../assets/demo/hero-night.jpg";
+import ArticleCard from "../../components/ArticleCard.astro";
+import ConceptSwitcher from "../../components/ConceptSwitcher.astro";
+import DirectedPointer from "../../components/DirectedPointer.astro";
+import MusicDock from "../../components/MusicDock.astro";
+import OpeningSequence from "../../components/OpeningSequence.astro";
+import QuoteLoop from "../../components/QuoteLoop.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const posts = (await getCollection("posts", ({ data }) => !data.draft))
+  .filter((post) => post.data.featured)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+---
+
+<BaseLayout
+  title="氛围型首页"
+  description="以大幅角色美术、昼夜场景与克制动效构成的首页方向。"
+  bodyClass="atmosphere-page"
+  directedPointer
+  noIndex
+>
+  <SiteHeader variant="overlay" />
+  <main id="main-content">
+    <section class="atmosphere-hero" aria-labelledby="atmosphere-title">
+      <div class="atmosphere-hero__art" aria-hidden="true">
+        <Image
+          class="atmosphere-hero__day"
+          src={heroDay}
+          alt=""
+          widths={[960, 1440, 1920, 2560]}
+          sizes="100vw"
+          loading="eager"
+          data-critical-image
+        />
+        <Image
+          class="atmosphere-hero__night"
+          src={heroNight}
+          alt=""
+          widths={[960, 1440, 1942]}
+          sizes="100vw"
+          loading="eager"
+        />
+      </div>
+      <div class="atmosphere-hero__veil" aria-hidden="true"></div>
+      <div class="atmosphere-hero__content page-width">
+        <div class="atmosphere-hero__copy">
+          <p>PERSONAL LOG // 017</p>
+          <h1 id="atmosphere-title">17号的<br />航行日志</h1>
+          <QuoteLoop prefix="MEMORY" />
+        </div>
+      </div>
+      <a class="atmosphere-hero__scroll" href="#latest" aria-label="浏览最新文章">
+        <span>SCROLL</span>
+        <ArrowDown aria-hidden="true" size={18} stroke-width={1.8} />
+      </a>
+    </section>
+
+    <section id="latest" class="atmosphere-latest">
+      <div class="atmosphere-latest__inner page-width">
+        <header class="atmosphere-latest__header">
+          <div>
+            <p>RECENT NOTES</p>
+            <h2>沿途拾得的片段</h2>
+          </div>
+          <a href="/posts/">查看全部文章 →</a>
+        </header>
+        <div class="atmosphere-latest__grid">
+          {
+            posts.map((post, index) => (
+              <div class:list={["atmosphere-latest__item", `is-${index + 1}`]}>
+                <ArticleCard
+                  post={post}
+                  variant={index === 0 ? "standard" : "compact"}
+                  eager={index === 0}
+                />
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="atmosphere-footer">
+    <div class="page-width">
+      <span>ELYSIAFOLLOWER © 2026</span>
+      <span>STILL FLYING TOWARD THE SKY.</span>
+    </div>
+  </footer>
+
+  <DirectedPointer />
+  <MusicDock />
+  <ConceptSwitcher />
+  <OpeningSequence />
+</BaseLayout>
+
+<style>
+  .atmosphere-page {
+    background: var(--color-bg);
+  }
+
+  .atmosphere-hero {
+    position: relative;
+    display: grid;
+    height: min(88svh, 900px);
+    min-height: 620px;
+    overflow: hidden;
+    color: #fff;
+    isolation: isolate;
+  }
+
+  .atmosphere-hero__art,
+  .atmosphere-hero__veil {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+  }
+
+  .atmosphere-hero__art :global(img) {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: scale(1.025);
+    animation: atmosphere-breathe 16s ease-in-out infinite alternate;
+  }
+
+  .atmosphere-hero__night {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .atmosphere-hero__day {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .atmosphere-hero__night {
+    display: block;
+  }
+
+  .atmosphere-hero__veil {
+    z-index: -1;
+    background: rgb(12 18 27 / 24%);
+    box-shadow: inset 0 -160px 150px rgb(10 15 22 / 30%);
+  }
+
+  :global([data-theme="dark"]) .atmosphere-hero__veil {
+    background: rgb(22 6 12 / 28%);
+  }
+
+  .atmosphere-hero__content {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-top: 68px;
+  }
+
+  :global([data-theme="dark"]) .atmosphere-hero__content {
+    justify-content: flex-start;
+  }
+
+  .atmosphere-hero__copy {
+    width: min(47%, 580px);
+    text-shadow: 0 2px 24px rgb(0 0 0 / 52%);
+  }
+
+  .atmosphere-hero__copy > p {
+    margin: 0 0 14px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .atmosphere-hero h1 {
+    margin: 0 0 28px;
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 8.5vw, 7.7rem);
+    font-weight: 400;
+    line-height: 0.92;
+    letter-spacing: 0;
+  }
+
+  .atmosphere-hero :global(.quote-loop__index) {
+    color: #ffe17f;
+  }
+
+  :global([data-theme="dark"])
+    .atmosphere-hero
+    :global(.quote-loop__index) {
+    color: #ff9aba;
+  }
+
+  .atmosphere-hero__scroll {
+    position: absolute;
+    right: var(--page-inline);
+    bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .atmosphere-hero__scroll :global(svg) {
+    animation: atmosphere-scroll 1.5s ease-in-out infinite;
+  }
+
+  .atmosphere-latest {
+    position: relative;
+    padding-block: clamp(70px, 10vw, 132px);
+    border-top: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-bg) 94%, var(--color-rose) 6%);
+  }
+
+  .atmosphere-latest__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 28px;
+    margin-bottom: 42px;
+  }
+
+  .atmosphere-latest__header p {
+    margin: 0 0 6px;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  .atmosphere-latest__header h2 {
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    line-height: 1.15;
+  }
+
+  .atmosphere-latest__header > a {
+    color: var(--color-muted);
+    font-size: 0.84rem;
+    text-decoration: none;
+  }
+
+  .atmosphere-latest__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
+    gap: 24px;
+  }
+
+  .atmosphere-latest__item :global(.article-card) {
+    height: 100%;
+  }
+
+  .atmosphere-latest__item.is-1 {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .atmosphere-latest__item.is-2 {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .atmosphere-latest__item.is-3 {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .atmosphere-footer {
+    padding: 32px 0 96px;
+    border-top: 1px solid var(--color-line);
+    background: var(--color-bg);
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+  }
+
+  .atmosphere-footer > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  @keyframes atmosphere-breathe {
+    to {
+      transform: scale(1.065) translate3d(0, -0.4%, 0);
+    }
+  }
+
+  @keyframes atmosphere-scroll {
+    50% {
+      transform: translateY(5px);
+    }
+  }
+
+  @media (max-width: 820px) {
+    .atmosphere-hero {
+      height: 84svh;
+      min-height: 590px;
+    }
+
+    .atmosphere-hero__art :global(img) {
+      object-position: 45% center;
+    }
+
+    :global([data-theme="dark"]) .atmosphere-hero__art :global(img) {
+      object-position: 60% center;
+    }
+
+    .atmosphere-hero__content,
+    :global([data-theme="dark"]) .atmosphere-hero__content {
+      align-items: end;
+      justify-content: flex-start;
+      padding-bottom: 90px;
+    }
+
+    .atmosphere-hero__copy {
+      width: min(100%, 620px);
+    }
+
+    .atmosphere-hero h1 {
+      font-size: clamp(3.8rem, 17vw, 6rem);
+    }
+
+    .atmosphere-latest__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .atmosphere-latest__grid > .atmosphere-latest__item.is-1,
+    .atmosphere-latest__grid > .atmosphere-latest__item.is-2,
+    .atmosphere-latest__grid > .atmosphere-latest__item.is-3 {
+      grid-column: 1;
+      grid-row: auto;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .atmosphere-hero__scroll {
+      display: none;
+    }
+
+    .atmosphere-latest__header {
+      display: grid;
+    }
+
+    .atmosphere-footer > div {
+      display: grid;
+    }
+  }
+</style>

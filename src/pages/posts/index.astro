@@ -1,0 +1,88 @@
+---
+import { getCollection } from "astro:content";
+import ArticleCard from "../../components/ArticleCard.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const posts = (await getCollection("posts", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<BaseLayout
+  title="文章"
+  description="技术文章、课程笔记与偶尔出现的想法。"
+  bodyClass="archive-page"
+>
+  <SiteHeader variant="reading" />
+  <main id="main-content">
+    <header class="archive-hero page-width">
+      <p>ARCHIVE // {String(posts.length).padStart(2, "0")}</p>
+      <h1>文章</h1>
+      <div>
+        <span>技术文章、课程笔记与偶尔出现的想法。</span>
+        <span>按时间排列，也可以从标签与分类进入。</span>
+      </div>
+    </header>
+
+    <section class="archive-list page-width" aria-label="文章列表">
+      {posts.map((post) => <ArticleCard post={post} />)}
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .archive-page {
+    background: var(--color-bg);
+  }
+
+  .archive-hero {
+    display: grid;
+    padding-block: clamp(58px, 9vw, 112px);
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.7fr);
+    align-items: end;
+    gap: 36px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .archive-hero > p {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .archive-hero h1 {
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(3.8rem, 10vw, 8rem);
+    font-weight: 700;
+    line-height: 0.9;
+  }
+
+  .archive-hero div {
+    display: grid;
+    gap: 7px;
+    color: var(--color-muted);
+    font-size: 0.92rem;
+  }
+
+  .archive-list {
+    display: grid;
+    padding-block: clamp(48px, 8vw, 100px);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(22px, 4vw, 44px);
+  }
+
+  @media (max-width: 760px) {
+    .archive-hero {
+      grid-template-columns: 1fr;
+    }
+
+    .archive-list {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

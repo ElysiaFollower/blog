@@ -1,0 +1,19 @@
+---
+import { Info } from "@lucide/astro";
+
+interface Props {
+  title?: string;
+}
+
+const { title = "Note" } = Astro.props;
+---
+
+<aside class="content-callout">
+  <div class="content-callout__title">
+    <Info aria-hidden="true" size={18} stroke-width={1.8} />
+    <span>{title}</span>
+  </div>
+  <div class="content-callout__body">
+    <slot />
+  </div>
+</aside>

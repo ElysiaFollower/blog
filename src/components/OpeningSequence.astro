@@ -1,0 +1,142 @@
+---
+interface Props {
+  label?: string;
+  code?: string;
+}
+
+const { label = "少女祈祷中...", code = "LOADING // 017" } = Astro.props;
+---
+
+<div class="opening-sequence" data-opening-sequence aria-hidden="true">
+  <div class="opening-sequence__mark">17</div>
+  <div class="opening-sequence__copy">
+    <span>{code}</span>
+    <strong>{label}</strong>
+  </div>
+  <div class="opening-sequence__track">
+    <span></span>
+  </div>
+</div>
+
+<script>
+  const opening = document.querySelector<HTMLElement>(
+    "[data-opening-sequence]",
+  );
+
+  if (opening) {
+    const close = () => {
+      opening.dataset.state = "leaving";
+      sessionStorage.setItem("opening-seen", "true");
+      opening.addEventListener("transitionend", () => opening.remove(), {
+        once: true,
+      });
+    };
+
+    if (sessionStorage.getItem("opening-seen")) {
+      opening.remove();
+    } else {
+      const criticalImages = Array.from(
+        document.querySelectorAll<HTMLImageElement>(
+          "img[data-critical-image]",
+        ),
+      );
+      const imageReady = criticalImages.map((image) =>
+        image.complete ? Promise.resolve() : image.decode().catch(() => {}),
+      );
+
+      Promise.allSettled([document.fonts.ready, ...imageReady]).then(close);
+      window.setTimeout(close, 3200);
+    }
+  }
+</script>
+
+<style>
+  .opening-sequence {
+    position: fixed;
+    z-index: 9000;
+    inset: 0;
+    display: none;
+    padding: clamp(24px, 6vw, 80px);
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 1fr auto auto;
+    align-items: end;
+    background: #17151a;
+    color: #fff;
+    opacity: 1;
+    transition:
+      opacity 420ms ease,
+      visibility 420ms ease;
+  }
+
+  :global(.js) .opening-sequence {
+    display: grid;
+  }
+
+  .opening-sequence[data-state="leaving"] {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  .opening-sequence__mark {
+    grid-column: 1 / -1;
+    align-self: center;
+    color: #ff79a6;
+    font-family: var(--font-display);
+    font-size: clamp(7rem, 24vw, 18rem);
+    line-height: 0.7;
+  }
+
+  .opening-sequence__copy {
+    display: grid;
+    gap: 4px;
+  }
+
+  .opening-sequence__copy span {
+    color: #78d5d3;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+
+  .opening-sequence__copy strong {
+    font-size: clamp(1rem, 2.2vw, 1.35rem);
+  }
+
+  .opening-sequence__track {
+    width: min(34vw, 320px);
+    height: 4px;
+    align-self: end;
+    overflow: hidden;
+    background: #fff3;
+  }
+
+  .opening-sequence__track span {
+    display: block;
+    width: 55%;
+    height: 100%;
+    background: #f1b84b;
+    animation: opening-track 900ms ease-in-out infinite alternate;
+    transform-origin: left;
+  }
+
+  @keyframes opening-track {
+    from {
+      transform: translateX(-65%) scaleX(0.55);
+    }
+
+    to {
+      transform: translateX(150%) scaleX(1);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .opening-sequence {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .opening-sequence__track {
+      width: 100%;
+    }
+  }
+</style>

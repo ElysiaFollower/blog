@@ -1,0 +1,548 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import { ArrowRight, Asterisk } from "@lucide/astro";
+import elysiaPoster from "../../assets/demo/elysia-logo.png";
+import sparklePoster from "../../assets/demo/sparkle-portrait.png";
+import ArticleCard from "../../components/ArticleCard.astro";
+import ConceptSwitcher from "../../components/ConceptSwitcher.astro";
+import DirectedPointer from "../../components/DirectedPointer.astro";
+import MusicDock from "../../components/MusicDock.astro";
+import OpeningSequence from "../../components/OpeningSequence.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const posts = (await getCollection("posts", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+---
+
+<BaseLayout
+  title="图形型首页"
+  description="用非对称构图、编号、色块和短促动效建立的图形化首页方向。"
+  bodyClass="graphic-page"
+  directedPointer
+  noIndex
+>
+  <div class="graphic-shell">
+    <SiteHeader variant="graphic" />
+    <main id="main-content">
+      <section class="graphic-hero" data-graphic-hero>
+        <div class="graphic-hero__rail" aria-hidden="true">
+          <strong>17</strong>
+          <span>PERSONAL TRANSMISSION</span>
+        </div>
+
+        <div class="graphic-hero__copy">
+          <p>ISSUE 017 / JUL 2026</p>
+          <h1>17号的<br />航行日志</h1>
+          <div class="graphic-hero__statement">
+            <Asterisk aria-hidden="true" size={18} stroke-width={2} />
+            <p>
+              技术、生成媒体与一些无法丢下的角色记忆。<br />
+              保持好奇，继续向前。
+            </p>
+          </div>
+          <a href="/posts/">
+            <span>进入文章</span>
+            <ArrowRight aria-hidden="true" size={20} stroke-width={2} />
+          </a>
+        </div>
+
+        <div class="graphic-hero__poster">
+          <div class="graphic-hero__poster-label">
+            <span>FEATURED MEMORY</span>
+            <strong>01</strong>
+          </div>
+          <Image
+            class="graphic-hero__poster-day"
+            src={elysiaPoster}
+            alt="粉色甜心小姐主题海报"
+            widths={[540, 810, 1080]}
+            sizes="(max-width: 760px) 78vw, 42vw"
+            loading="eager"
+            data-critical-image
+          />
+          <Image
+            class="graphic-hero__poster-night"
+            src={sparklePoster}
+            alt="花火主题插画"
+            widths={[720, 1080, 1440]}
+            sizes="(max-width: 760px) 78vw, 42vw"
+            loading="eager"
+          />
+          <div class="graphic-hero__poster-stamp">KEEP<br />MOVING</div>
+        </div>
+
+        <div class="graphic-hero__topics" aria-label="主题">
+          <span>AUDIO AI</span>
+          <span>GENERATIVE MEDIA</span>
+          <span>GRAPHICS</span>
+          <span>GAMES</span>
+        </div>
+      </section>
+
+      <section class="graphic-notes">
+        <header class="graphic-notes__header page-width">
+          <p>NOW READING</p>
+          <h2>最近记录</h2>
+          <a href="/posts/">ALL POSTS / {String(posts.length).padStart(2, "0")}</a>
+        </header>
+        <div class="graphic-notes__grid page-width">
+          {posts.map((post) => <ArticleCard post={post} variant="graphic" />)}
+        </div>
+      </section>
+    </main>
+
+    <footer class="graphic-footer">
+      <div class="page-width">
+        <strong>END OF TRANSMISSION</strong>
+        <span>ELYSIAFOLLOWER © 2026</span>
+      </div>
+    </footer>
+  </div>
+
+  <DirectedPointer />
+  <MusicDock />
+  <ConceptSwitcher />
+  <OpeningSequence label="信号接入中..." code="CHANNEL // 017" />
+</BaseLayout>
+
+<script>
+  const graphicHero =
+    document.querySelector<HTMLElement>("[data-graphic-hero]");
+
+  if (
+    graphicHero &&
+    matchMedia("(pointer: fine) and (prefers-reduced-motion: no-preference)")
+      .matches
+  ) {
+    graphicHero.addEventListener(
+      "pointermove",
+      (event) => {
+        const rect = graphicHero.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        graphicHero.style.setProperty("--pointer-x", `${x * 12}px`);
+        graphicHero.style.setProperty("--pointer-y", `${y * 10}px`);
+      },
+      { passive: true },
+    );
+  }
+</script>
+
+<style>
+  .graphic-page {
+    background: #f4f0f1;
+  }
+
+  .graphic-shell {
+    min-height: 100vh;
+    background: #f4f0f1;
+    color: #17161a;
+  }
+
+  :global([data-theme="dark"]) .graphic-shell {
+    background: #17151a;
+    color: #f7f2f4;
+  }
+
+  .graphic-hero {
+    --pointer-x: 0px;
+    --pointer-y: 0px;
+    position: relative;
+    display: grid;
+    width: min(calc(100% - (2 * var(--page-inline))), 1380px);
+    height: min(80svh, 820px);
+    min-height: 620px;
+    margin-inline: auto;
+    grid-template-columns: 74px minmax(360px, 0.9fr) minmax(420px, 1.1fr);
+    grid-template-rows: 1fr 58px;
+    border: 2px solid #17161a;
+    background: #fff;
+    isolation: isolate;
+  }
+
+  :global([data-theme="dark"]) .graphic-hero {
+    border-color: #f7f2f4;
+    background: #242025;
+  }
+
+  .graphic-hero__rail {
+    display: grid;
+    overflow: hidden;
+    grid-row: 1 / -1;
+    align-items: center;
+    justify-items: center;
+    border-right: 2px solid #17161a;
+    background: #75d4d2;
+  }
+
+  :global([data-theme="dark"]) .graphic-hero__rail {
+    border-color: #f7f2f4;
+    background: #ff78a5;
+    color: #17161a;
+  }
+
+  .graphic-hero__rail strong {
+    align-self: start;
+    padding-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+  }
+
+  .graphic-hero__rail span {
+    writing-mode: vertical-rl;
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    font-weight: 800;
+  }
+
+  .graphic-hero__copy {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    min-width: 0;
+    padding: clamp(34px, 5vw, 70px);
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .graphic-hero__copy > p {
+    width: max-content;
+    padding: 5px 8px;
+    margin: 0 0 20px;
+    background: #f0b63d;
+    color: #17161a;
+    font-family: var(--font-mono);
+    font-size: 0.67rem;
+    font-weight: 800;
+    transform: rotate(-1.5deg);
+  }
+
+  .graphic-hero h1 {
+    margin: 0;
+    font-size: clamp(3.8rem, 7.6vw, 8rem);
+    font-weight: 900;
+    line-height: 0.88;
+    letter-spacing: 0;
+  }
+
+  .graphic-hero__statement {
+    display: flex;
+    max-width: 470px;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 34px;
+  }
+
+  .graphic-hero__statement p {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 650;
+    line-height: 1.65;
+  }
+
+  .graphic-hero__copy > a {
+    display: inline-flex;
+    width: max-content;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0 7px;
+    margin-top: 30px;
+    border-bottom: 3px solid currentColor;
+    font-weight: 850;
+    text-decoration: none;
+  }
+
+  .graphic-hero__copy > a:hover {
+    color: #c23166;
+  }
+
+  .graphic-hero__poster {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border-left: 2px solid #17161a;
+    background: #ef9fc5;
+    isolation: isolate;
+  }
+
+  :global([data-theme="dark"]) .graphic-hero__poster {
+    border-color: #f7f2f4;
+    background: #47222f;
+  }
+
+  .graphic-hero__poster :global(img) {
+    position: absolute;
+    width: calc(100% - 46px);
+    height: calc(100% - 54px);
+    inset: 28px 20px 26px 26px;
+    object-fit: cover;
+    object-position: center 48%;
+    box-shadow: 10px 10px 0 #17161a;
+    clip-path: polygon(8% 0, 100% 0, 100% 92%, 92% 100%, 0 100%, 0 8%);
+    transition: transform 180ms ease-out;
+    transform: translate3d(var(--pointer-x), var(--pointer-y), 0);
+  }
+
+  .graphic-hero__poster-night {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .graphic-hero__poster-day {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .graphic-hero__poster-night {
+    display: block;
+  }
+
+  .graphic-hero__poster-label {
+    position: absolute;
+    z-index: 2;
+    top: 42px;
+    left: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 11px;
+    background: #17161a;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 800;
+  }
+
+  .graphic-hero__poster-label strong {
+    color: #75d4d2;
+  }
+
+  .graphic-hero__poster-stamp {
+    position: absolute;
+    z-index: 2;
+    right: 5px;
+    bottom: 42px;
+    padding: 9px 12px;
+    border: 3px solid #17161a;
+    background: #f0b63d;
+    color: #17161a;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 900;
+    line-height: 1.05;
+    transform: rotate(-7deg);
+  }
+
+  .graphic-hero__topics {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    grid-column: 2 / -1;
+    overflow: hidden;
+    border-top: 2px solid #17161a;
+    background: #17161a;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  :global([data-theme="dark"]) .graphic-hero__topics {
+    border-color: #f7f2f4;
+    background: #f7f2f4;
+    color: #17161a;
+  }
+
+  .graphic-hero__topics span {
+    padding-inline: 25px;
+    border-right: 1px solid currentColor;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 850;
+  }
+
+  .graphic-notes {
+    padding-block: clamp(76px, 10vw, 140px);
+    background: #17161a;
+    color: #fff;
+  }
+
+  :global([data-theme="dark"]) .graphic-notes {
+    background: #f4f0f1;
+    color: #17161a;
+  }
+
+  .graphic-notes__header {
+    display: grid;
+    margin-bottom: 46px;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 10px 30px;
+  }
+
+  .graphic-notes__header p {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: #75d4d2;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  .graphic-notes__header h2 {
+    margin: 0;
+    font-size: clamp(3rem, 8vw, 7rem);
+    line-height: 0.9;
+  }
+
+  .graphic-notes__header a {
+    padding-bottom: 8px;
+    color: inherit;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .graphic-notes__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+  }
+
+  .graphic-footer {
+    padding: 32px 0 94px;
+    border-top: 2px solid #17161a;
+    background: #f0b63d;
+    color: #17161a;
+  }
+
+  .graphic-footer > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  @media (max-width: 980px) {
+    .graphic-hero {
+      height: auto;
+      min-height: 0;
+      grid-template-columns: 58px minmax(0, 1fr) minmax(310px, 0.85fr);
+    }
+
+    .graphic-hero__copy {
+      padding: 34px 28px;
+    }
+
+    .graphic-hero h1 {
+      font-size: clamp(3.5rem, 9vw, 5.5rem);
+    }
+
+    .graphic-notes__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .graphic-notes__grid > :last-child {
+      grid-column: 1 / -1;
+      width: min(50%, 580px);
+    }
+  }
+
+  @media (max-width: 740px) {
+    .graphic-hero {
+      width: calc(100% - 28px);
+      grid-template-columns: 44px minmax(0, 1fr);
+      grid-template-rows: minmax(480px, 62svh) auto 50px;
+    }
+
+    .graphic-hero__rail {
+      grid-row: 1 / -1;
+    }
+
+    .graphic-hero__copy {
+      grid-column: 2;
+      grid-row: 1;
+      padding: 30px 22px;
+      color: #fff;
+      text-shadow: 0 2px 18px rgb(0 0 0 / 45%);
+    }
+
+    .graphic-hero__copy > p,
+    .graphic-hero__copy > a,
+    .graphic-hero__statement {
+      position: relative;
+      z-index: 3;
+    }
+
+    .graphic-hero h1 {
+      position: relative;
+      z-index: 3;
+      font-size: clamp(3.5rem, 17vw, 5.6rem);
+    }
+
+    .graphic-hero__poster {
+      grid-column: 2;
+      grid-row: 1;
+      border-left: 0;
+    }
+
+    .graphic-hero__poster::after {
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      background: rgb(13 10 15 / 48%);
+      content: "";
+    }
+
+    .graphic-hero__poster :global(img) {
+      width: 100%;
+      height: 100%;
+      inset: 0;
+      box-shadow: none;
+      clip-path: none;
+    }
+
+    .graphic-hero__poster-label,
+    .graphic-hero__poster-stamp {
+      display: none;
+    }
+
+    .graphic-hero__topics {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    .graphic-hero__topics span {
+      padding-inline: 17px;
+    }
+
+    .graphic-notes__grid,
+    .graphic-notes__header {
+      grid-template-columns: 1fr;
+    }
+
+    .graphic-notes__grid > :last-child {
+      grid-column: auto;
+      width: auto;
+    }
+
+    .graphic-notes__header a {
+      margin-top: 10px;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .graphic-hero__statement {
+      margin-top: 20px;
+    }
+
+    .graphic-hero__copy > a {
+      margin-top: 20px;
+    }
+
+    .graphic-footer > div {
+      display: grid;
+    }
+  }
+</style>

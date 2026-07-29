@@ -1,0 +1,231 @@
+---
+import { Image } from "astro:assets";
+import { X } from "@lucide/astro";
+import coverCylien from "../../assets/demo/cover-cylien.png";
+import coverGeometry from "../../assets/demo/cover-geometry.jpeg";
+import coverMeme from "../../assets/demo/cover-meme.png";
+import coverMiku from "../../assets/demo/cover-miku.png";
+import coverSeele from "../../assets/demo/cover-seele.png";
+import elysiaPoster from "../../assets/demo/elysia-logo.png";
+import elysiaPortrait from "../../assets/demo/elysia-portrait.png";
+import sparklePortrait from "../../assets/demo/sparkle-portrait.png";
+import SiteHeader from "../../components/SiteHeader.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const images = [
+  { src: elysiaPortrait, alt: "花园茶会中的爱莉希雅" },
+  { src: coverMiku, alt: "蓝紫色调的初音未来插画" },
+  { src: coverSeele, alt: "希儿主题插画" },
+  { src: elysiaPoster, alt: "粉色甜心小姐主题海报" },
+  { src: coverMeme, alt: "生成式模型概念图" },
+  { src: sparklePortrait, alt: "花火主题插画" },
+  { src: coverCylien, alt: "昔涟与柔和光影构成的插画" },
+  { src: coverGeometry, alt: "纵向构图的几何主题插画" },
+];
+---
+
+<BaseLayout
+  title="相册"
+  description="角色、构图与偶然遇见的视觉片段。"
+  bodyClass="gallery-page"
+>
+  <SiteHeader variant="reading" />
+  <main id="main-content">
+    <header class="gallery-header page-width">
+      <p>COLLECTION // {String(images.length).padStart(2, "0")}</p>
+      <h1>相册</h1>
+      <span>角色、构图与偶然遇见的视觉片段。</span>
+    </header>
+
+    <section class="gallery-grid page-width" aria-label="图片收藏">
+      {
+        images.map((image) => (
+          <a
+            class="gallery-item"
+            href={image.src.src}
+            data-gallery-item
+            data-full-src={image.src.src}
+            data-alt={image.alt}
+            aria-label={`查看大图：${image.alt}`}
+          >
+            <Image
+              src={image.src}
+              alt={image.alt}
+              widths={[360, 540, 720]}
+              sizes="(max-width: 620px) 50vw, (max-width: 980px) 33vw, 25vw"
+              loading="lazy"
+            />
+          </a>
+        ))
+      }
+    </section>
+  </main>
+
+  <dialog class="gallery-lightbox" data-gallery-lightbox>
+    <button type="button" data-gallery-close aria-label="关闭大图" title="关闭">
+      <X aria-hidden="true" size={22} stroke-width={1.8} />
+    </button>
+    <img alt="" hidden data-gallery-image />
+  </dialog>
+</BaseLayout>
+
+<script>
+  const dialog =
+    document.querySelector<HTMLDialogElement>("[data-gallery-lightbox]");
+  const dialogImage =
+    dialog?.querySelector<HTMLImageElement>("[data-gallery-image]");
+  const closeButton =
+    dialog?.querySelector<HTMLButtonElement>("[data-gallery-close]");
+
+  document.querySelectorAll<HTMLAnchorElement>("[data-gallery-item]").forEach(
+    (item) => {
+      item.addEventListener("click", (event) => {
+        if (!dialog || !dialogImage) return;
+        event.preventDefault();
+        dialogImage.src = item.dataset.fullSrc ?? "";
+        dialogImage.alt = item.dataset.alt ?? "";
+        dialogImage.hidden = false;
+        dialog.showModal();
+      });
+    },
+  );
+
+  closeButton?.addEventListener("click", () => dialog?.close());
+  dialog?.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog?.addEventListener("close", () => {
+    if (!dialogImage) return;
+    dialogImage.hidden = true;
+    dialogImage.removeAttribute("src");
+    dialogImage.alt = "";
+  });
+</script>
+
+<style>
+  .gallery-page {
+    background: var(--color-bg);
+  }
+
+  .gallery-header {
+    display: grid;
+    padding-block: clamp(58px, 9vw, 110px);
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 12px 32px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .gallery-header p {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 850;
+  }
+
+  .gallery-header h1 {
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(3.7rem, 10vw, 8rem);
+    line-height: 0.9;
+  }
+
+  .gallery-header span {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+  }
+
+  .gallery-grid {
+    padding-block: clamp(42px, 7vw, 92px) 120px;
+    columns: 4 240px;
+    column-gap: 16px;
+  }
+
+  .gallery-item {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 16px;
+    break-inside: avoid;
+    overflow: hidden;
+    background: var(--color-surface-soft);
+    cursor: zoom-in;
+  }
+
+  .gallery-item :global(img) {
+    width: 100%;
+    height: auto;
+    transition:
+      transform 360ms ease,
+      filter 360ms ease;
+  }
+
+  .gallery-item:hover :global(img) {
+    filter: saturate(1.06);
+    transform: scale(1.025);
+  }
+
+  .gallery-lightbox {
+    width: 100vw;
+    max-width: none;
+    height: 100vh;
+    max-height: none;
+    padding: 28px;
+    border: 0;
+    background: rgb(12 10 13 / 92%);
+    color: #fff;
+  }
+
+  .gallery-lightbox::backdrop {
+    background: rgb(12 10 13 / 78%);
+  }
+
+  .gallery-lightbox[open] {
+    display: grid;
+    place-items: center;
+  }
+
+  .gallery-lightbox img {
+    max-width: min(92vw, 1500px);
+    max-height: 88vh;
+    object-fit: contain;
+  }
+
+  .gallery-lightbox button {
+    position: fixed;
+    z-index: 2;
+    top: 20px;
+    right: 20px;
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 1px solid #fff8;
+    border-radius: 50%;
+    background: #17151a;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  @media (max-width: 620px) {
+    .gallery-header {
+      grid-template-columns: 1fr;
+    }
+
+    .gallery-grid {
+      width: calc(100% - 20px);
+      columns: 2;
+      column-gap: 10px;
+    }
+
+    .gallery-item {
+      margin-bottom: 10px;
+    }
+
+    .gallery-lightbox {
+      padding: 12px;
+    }
+  }
+</style>

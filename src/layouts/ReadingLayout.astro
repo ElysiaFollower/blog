@@ -1,0 +1,84 @@
+---
+import { Image } from "astro:assets";
+import type { MarkdownHeading } from "astro";
+import type { CollectionEntry } from "astro:content";
+import BaseLayout from "./BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import "../styles/reading.css";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+  headings: MarkdownHeading[];
+}
+
+const { post, headings } = Astro.props;
+const { data } = post;
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const formattedDate = new Intl.DateTimeFormat("zh-CN", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+}).format(data.pubDate);
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.description}
+  bodyClass="reading-page"
+>
+  <SiteHeader variant="reading" />
+  <main id="main-content" class="post-shell">
+    <article>
+      <header class="post-header">
+        <div class="post-header__eyebrow">
+          <span>{data.category}</span>
+          <time datetime={data.pubDate.toISOString()}>{formattedDate}</time>
+          <span>约 8 分钟</span>
+        </div>
+        <h1>{data.title}</h1>
+        <p class="post-header__description">{data.description}</p>
+        <ul class="post-header__tags" aria-label="标签">
+          {data.tags.map((tag) => <li>#{tag}</li>)}
+        </ul>
+      </header>
+
+      <div class="post-cover">
+        <Image
+          src={data.cover}
+          alt={data.coverAlt}
+          widths={[720, 960, 1280, 1600]}
+          sizes="(max-width: 650px) 100vw, 1120px"
+          loading="eager"
+          data-critical-image
+          style={`object-position: ${data.coverPosition}`}
+        />
+      </div>
+
+      <div class="reading-grid">
+        {
+          toc.length > 0 && (
+            <nav class="post-toc" aria-label="文章目录">
+              <span class="post-toc__label">Contents</span>
+              <ol>
+                {toc.map((heading) => (
+                  <li data-depth={heading.depth}>
+                    <a href={`#${heading.slug}`}>{heading.text}</a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          )
+        }
+        <div class="prose">
+          <slot />
+        </div>
+      </div>
+    </article>
+
+    <footer class="post-footer">
+      <p>
+        写于 {formattedDate}。文章仍可能继续修订；若发现技术错误，欢迎联系讨论。
+      </p>
+    </footer>
+  </main>
+</BaseLayout>

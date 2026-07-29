@@ -1,0 +1,76 @@
+---
+import { siteConfig } from "../config/site";
+
+interface Props {
+  prefix?: string;
+}
+
+const { prefix = "MEMORY" } = Astro.props;
+---
+
+<div
+  class="quote-loop"
+  data-quote-loop
+  data-quotes={JSON.stringify(siteConfig.quotes)}
+>
+  <span class="quote-loop__index">{prefix} // 01</span>
+  <p>{siteConfig.quotes[0]}</p>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-quote-loop]").forEach((loop) => {
+    const text = loop.querySelector<HTMLParagraphElement>("p");
+    const index = loop.querySelector<HTMLElement>(".quote-loop__index");
+    const quotes = JSON.parse(loop.dataset.quotes ?? "[]") as string[];
+    if (!text || !index || quotes.length < 2) return;
+
+    let current = 0;
+    const prefix = index.textContent?.split("//")[0]?.trim() ?? "MEMORY";
+
+    window.setInterval(() => {
+      current = (current + 1) % quotes.length;
+      loop.dataset.state = "leaving";
+
+      window.setTimeout(() => {
+        text.textContent = quotes[current];
+        index.textContent = `${prefix} // ${String(current + 1).padStart(2, "0")}`;
+        loop.dataset.state = "visible";
+      }, 220);
+    }, 5200);
+  });
+</script>
+
+<style>
+  .quote-loop {
+    display: grid;
+    max-width: 580px;
+    gap: 8px;
+  }
+
+  .quote-loop__index {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 800;
+  }
+
+  .quote-loop p {
+    min-height: 3.4em;
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(0.98rem, 1.8vw, 1.18rem);
+    line-height: 1.7;
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease;
+  }
+
+  .quote-loop[data-state="leaving"] p {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  .quote-loop[data-state="visible"] p {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>

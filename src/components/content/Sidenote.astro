@@ -1,0 +1,14 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label = "旁注" } = Astro.props;
+---
+
+<aside class="sidenote">
+  <span class="sidenote__label">{label}</span>
+  <div class="sidenote__body">
+    <slot />
+  </div>
+</aside>

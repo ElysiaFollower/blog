@@ -1,0 +1,85 @@
+---
+import { Moon, Sun } from "@lucide/astro";
+---
+
+<button
+  class="theme-toggle"
+  type="button"
+  data-theme-toggle
+  aria-label="切换昼夜模式"
+  title="切换昼夜模式"
+>
+  <Sun
+    class="theme-toggle__sun"
+    aria-hidden="true"
+    size={19}
+    stroke-width={1.8}
+  />
+  <Moon
+    class="theme-toggle__moon"
+    aria-hidden="true"
+    size={19}
+    stroke-width={1.8}
+  />
+</button>
+
+<script>
+  const syncThemeControls = () => {
+    const isDark = document.documentElement.dataset.theme === "dark";
+    document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]").forEach(
+      (button) => {
+        button.setAttribute("aria-pressed", String(isDark));
+      },
+    );
+  };
+
+  document.querySelectorAll<HTMLButtonElement>("[data-theme-toggle]").forEach(
+    (button) => {
+      button.addEventListener("click", () => {
+        const next =
+          document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("theme", next);
+        syncThemeControls();
+      });
+    },
+  );
+
+  syncThemeControls();
+</script>
+
+<style>
+  .theme-toggle {
+    display: none;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition:
+      transform 160ms ease,
+      background 160ms ease;
+  }
+
+  :global(.js) .theme-toggle {
+    display: grid;
+  }
+
+  .theme-toggle:hover {
+    transform: rotate(8deg);
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  :global([data-theme="dark"]) .theme-toggle__sun,
+  .theme-toggle__moon {
+    display: none;
+  }
+
+  :global([data-theme="dark"]) .theme-toggle__moon {
+    display: block;
+  }
+</style>

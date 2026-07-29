@@ -1,0 +1,206 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import { ArrowUpRight } from "@lucide/astro";
+
+interface Props {
+  post: CollectionEntry<"posts">;
+  variant?: "standard" | "compact" | "graphic";
+  eager?: boolean;
+}
+
+const { post, variant = "standard", eager = false } = Astro.props;
+const { data } = post;
+const formattedDate = new Intl.DateTimeFormat("zh-CN", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(data.pubDate);
+---
+
+<article class="article-card" data-variant={variant}>
+  <a class="article-card__cover" href={`/posts/${post.id}/`}>
+    <Image
+      src={data.cover}
+      alt={data.coverAlt}
+      widths={[480, 720, 960]}
+      sizes={variant === "compact"
+        ? "(max-width: 700px) 100vw, 360px"
+        : "(max-width: 900px) 100vw, 560px"}
+      loading={eager ? "eager" : "lazy"}
+      style={`object-position: ${data.coverPosition}`}
+    />
+  </a>
+  <div class="article-card__body">
+    <div class="article-card__meta">
+      <span>{data.category}</span>
+      <time datetime={data.pubDate.toISOString()}>{formattedDate}</time>
+    </div>
+    <h2>
+      <a href={`/posts/${post.id}/`}>{data.title}</a>
+    </h2>
+    <p>{data.description}</p>
+    <div class="article-card__footer">
+      <ul aria-label="标签">
+        {data.tags.slice(0, 3).map((tag) => <li>#{tag}</li>)}
+      </ul>
+      <a
+        class="article-card__open"
+        href={`/posts/${post.id}/`}
+        aria-label={`阅读《${data.title}》`}
+        title="阅读文章"
+      >
+        <ArrowUpRight aria-hidden="true" size={19} stroke-width={1.8} />
+      </a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .article-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .article-card__cover {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: var(--color-surface-soft);
+  }
+
+  .article-card__cover :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .article-card:hover .article-card__cover :global(img) {
+    transform: scale(1.035);
+  }
+
+  .article-card__body {
+    display: grid;
+    padding: clamp(18px, 2.5vw, 28px);
+    gap: 13px;
+  }
+
+  .article-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+
+  .article-card__meta span {
+    color: var(--color-rose);
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .article-card h2 {
+    margin: 0;
+    font-size: clamp(1.2rem, 2vw, 1.65rem);
+    line-height: 1.35;
+  }
+
+  .article-card h2 a {
+    text-decoration: none;
+  }
+
+  .article-card p {
+    margin: 0;
+    color: var(--color-muted);
+    line-height: 1.75;
+  }
+
+  .article-card__footer {
+    display: flex;
+    min-height: 36px;
+    align-items: end;
+    justify-content: space-between;
+    gap: 18px;
+  }
+
+  .article-card__footer ul {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 0;
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.76rem;
+    list-style: none;
+  }
+
+  .article-card__open {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    place-items: center;
+    border: 1px solid var(--color-line);
+    border-radius: 50%;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .article-card__open:hover {
+    border-color: var(--color-rose);
+    color: var(--color-rose);
+  }
+
+  .article-card[data-variant="compact"] {
+    box-shadow: none;
+  }
+
+  .article-card[data-variant="compact"] .article-card__body {
+    padding: 18px;
+  }
+
+  .article-card[data-variant="compact"] h2 {
+    font-size: 1.08rem;
+  }
+
+  .article-card[data-variant="compact"] p,
+  .article-card[data-variant="compact"] .article-card__footer ul {
+    display: none;
+  }
+
+  .article-card[data-variant="graphic"] {
+    border: 2px solid #17161a;
+    border-radius: 0;
+    background: #fff;
+    color: #17161a;
+    box-shadow: 7px 7px 0 #17161a;
+  }
+
+  .article-card[data-variant="graphic"] .article-card__meta,
+  .article-card[data-variant="graphic"] p,
+  .article-card[data-variant="graphic"] .article-card__footer ul {
+    color: #58535b;
+  }
+
+  .article-card[data-variant="graphic"] .article-card__open {
+    border-color: #17161a;
+    color: #17161a;
+  }
+
+  @media (max-width: 520px) {
+    .article-card__body {
+      padding: 17px;
+    }
+
+    .article-card__footer ul {
+      display: none;
+    }
+  }
+</style>

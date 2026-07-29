@@ -1,0 +1,179 @@
+---
+import {
+  BookOpenText,
+  House,
+  Images,
+  Link2,
+  Sparkles,
+} from "@lucide/astro";
+import { siteConfig } from "../config/site";
+import ThemeToggle from "./ThemeToggle.astro";
+
+interface Props {
+  variant?: "overlay" | "reading" | "graphic";
+}
+
+const { variant = "reading" } = Astro.props;
+const currentPath = Astro.url.pathname;
+const icons = {
+  "/": House,
+  "/posts/": BookOpenText,
+  "/gallery/": Images,
+  "/friends/": Link2,
+} as const;
+---
+
+<header class="site-header" data-variant={variant}>
+  <div class="site-header__inner">
+    <a class="site-brand" href="/" aria-label={`${siteConfig.title}首页`}>
+      <Sparkles aria-hidden="true" size={19} stroke-width={1.8} />
+      <span>{siteConfig.shortTitle}</span>
+    </a>
+
+    <nav class="site-nav" aria-label="主导航">
+      {
+        siteConfig.navigation.map((item) => {
+          const Icon = icons[item.href as keyof typeof icons];
+          const active =
+            item.href === "/"
+              ? currentPath === "/"
+              : currentPath.startsWith(item.href);
+
+          return (
+            <a
+              class:list={["site-nav__link", { "is-active": active }]}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              title={item.label}
+            >
+              <Icon aria-hidden="true" size={18} stroke-width={1.8} />
+              <span>{item.label}</span>
+            </a>
+          );
+        })
+      }
+    </nav>
+
+    <ThemeToggle />
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: relative;
+    z-index: 40;
+    width: 100%;
+    color: var(--color-ink);
+  }
+
+  .site-header[data-variant="overlay"] {
+    position: absolute;
+    inset: 0 0 auto;
+    color: #fff;
+    text-shadow: 0 1px 18px rgb(0 0 0 / 38%);
+  }
+
+  .site-header[data-variant="graphic"] {
+    color: #151419;
+  }
+
+  .site-header[data-variant="reading"] {
+    border-bottom: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+    backdrop-filter: blur(18px);
+  }
+
+  .site-header__inner {
+    display: grid;
+    width: min(calc(100% - (2 * var(--page-inline))), var(--content-wide));
+    min-height: 72px;
+    margin-inline: auto;
+    grid-template-columns: minmax(max-content, 1fr) auto minmax(42px, 1fr);
+    align-items: center;
+    gap: 24px;
+  }
+
+  .site-brand {
+    display: inline-flex;
+    width: max-content;
+    align-items: center;
+    gap: 9px;
+    color: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-decoration: none;
+  }
+
+  .site-brand span {
+    padding-top: 1px;
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .site-nav__link {
+    display: inline-flex;
+    min-height: 42px;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 12px;
+    color: inherit;
+    font-size: 0.88rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition:
+      color 160ms ease,
+      background 160ms ease;
+  }
+
+  .site-nav__link:hover,
+  .site-nav__link.is-active {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  .site-nav__link.is-active {
+    color: var(--color-rose-bright);
+  }
+
+  .site-header[data-variant="graphic"] .site-nav__link.is-active {
+    color: #b52f62;
+  }
+
+  .site-header :global(.theme-toggle) {
+    justify-self: end;
+  }
+
+  @media (max-width: 700px) {
+    .site-header__inner {
+      min-height: 64px;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+    }
+
+    .site-brand span,
+    .site-nav__link span {
+      display: none;
+    }
+
+    .site-nav {
+      justify-content: center;
+    }
+
+    .site-nav__link {
+      width: 40px;
+      height: 40px;
+      min-height: 40px;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .site-header :global(.theme-toggle) {
+      width: 40px;
+      height: 40px;
+      flex-basis: 40px;
+    }
+  }
+</style>
