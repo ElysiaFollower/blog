@@ -53,6 +53,7 @@ coverAlt: "封面内容说明"
 - `src/config/site.ts`：站点名称、描述、导航与引语。
 - `src/config/profile.ts`：About 页面使用的个人资料与外部入口。
 - `src/config/friends.ts`：友链数据。
+- `src/config/gallery.ts`：相册图片、替代文本与展示顺序。
 - `src/content.config.ts`：文章 frontmatter 的类型与约束。
 
 页面构图、字体关系和交互节奏属于主题本身，不作为通用配置开放。

@@ -1,28 +1,10 @@
 ---
 import { Image } from "astro:assets";
-import { ChevronLeft, ChevronRight, X } from "@lucide/astro";
-import coverCylien from "../../assets/demo/cover-cylien.png";
-import coverGeometry from "../../assets/demo/cover-geometry.jpeg";
-import coverMeme from "../../assets/demo/cover-meme.png";
-import coverMiku from "../../assets/demo/cover-miku.png";
-import coverSeele from "../../assets/demo/cover-seele.png";
-import elysiaPoster from "../../assets/demo/elysia-logo.png";
-import elysiaPortrait from "../../assets/demo/elysia-portrait.png";
-import sparklePortrait from "../../assets/demo/sparkle-portrait.png";
+import GalleryLightbox from "../../components/gallery/GalleryLightbox.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
+import { galleryImages } from "../../config/gallery";
 import BaseLayout from "../../layouts/BaseLayout.astro";
-
-const images = [
-  { src: elysiaPortrait, alt: "花园茶会中的爱莉希雅" },
-  { src: coverMiku, alt: "蓝紫色调的初音未来插画" },
-  { src: coverSeele, alt: "希儿主题插画" },
-  { src: elysiaPoster, alt: "粉色甜心小姐主题海报" },
-  { src: coverMeme, alt: "生成式模型概念图" },
-  { src: sparklePortrait, alt: "花火主题插画" },
-  { src: coverCylien, alt: "昔涟与柔和光影构成的插画" },
-  { src: coverGeometry, alt: "纵向构图的几何主题插画" },
-];
 ---
 
 <BaseLayout
@@ -33,14 +15,14 @@ const images = [
   <SiteHeader variant="reading" />
   <main id="main-content">
     <header class="gallery-header page-width">
-      <p>COLLECTION // {String(images.length).padStart(2, "0")}</p>
+      <p>COLLECTION // {String(galleryImages.length).padStart(2, "0")}</p>
       <h1>相册</h1>
       <span>角色、构图与偶然遇见的视觉片段。</span>
     </header>
 
     <section class="gallery-grid page-width" aria-label="图片收藏">
       {
-        images.map((image, index) => (
+        galleryImages.map((image, index) => (
           <a
             class="gallery-item"
             href={image.src.src}
@@ -55,7 +37,8 @@ const images = [
               alt={image.alt}
               widths={[360, 540, 720]}
               sizes="(max-width: 620px) 50vw, (max-width: 980px) 33vw, 25vw"
-              loading="lazy"
+              loading={index < 4 ? "eager" : "lazy"}
+              decoding="async"
             />
             <span class="gallery-item__index" aria-hidden="true">
               {String(index + 1).padStart(2, "0")}
@@ -66,102 +49,9 @@ const images = [
     </section>
   </main>
 
-  <dialog class="gallery-lightbox" data-gallery-lightbox>
-    <button type="button" data-gallery-close aria-label="关闭大图" title="关闭">
-      <X aria-hidden="true" size={22} stroke-width={1.8} />
-    </button>
-    <button
-      class="gallery-lightbox__previous"
-      type="button"
-      data-gallery-previous
-      aria-label="查看上一张"
-      title="上一张"
-    >
-      <ChevronLeft aria-hidden="true" size={26} stroke-width={1.7} />
-    </button>
-    <figure>
-      <img alt="" hidden data-gallery-image />
-      <figcaption>
-        <span data-gallery-caption></span>
-        <small data-gallery-count></small>
-      </figcaption>
-    </figure>
-    <button
-      class="gallery-lightbox__next"
-      type="button"
-      data-gallery-next
-      aria-label="查看下一张"
-      title="下一张"
-    >
-      <ChevronRight aria-hidden="true" size={26} stroke-width={1.7} />
-    </button>
-  </dialog>
+  <GalleryLightbox />
   <SiteFooter />
 </BaseLayout>
-
-<script>
-  const dialog =
-    document.querySelector<HTMLDialogElement>("[data-gallery-lightbox]");
-  const dialogImage =
-    dialog?.querySelector<HTMLImageElement>("[data-gallery-image]");
-  const closeButton =
-    dialog?.querySelector<HTMLButtonElement>("[data-gallery-close]");
-  const previousButton = dialog?.querySelector<HTMLButtonElement>(
-    "[data-gallery-previous]",
-  );
-  const nextButton = dialog?.querySelector<HTMLButtonElement>(
-    "[data-gallery-next]",
-  );
-  const caption = dialog?.querySelector<HTMLElement>("[data-gallery-caption]");
-  const count = dialog?.querySelector<HTMLElement>("[data-gallery-count]");
-  const galleryItems = Array.from(
-    document.querySelectorAll<HTMLAnchorElement>("[data-gallery-item]"),
-  );
-  let currentIndex = 0;
-
-  const showImage = (index: number) => {
-    if (!dialogImage || galleryItems.length === 0) return;
-    currentIndex = (index + galleryItems.length) % galleryItems.length;
-    const item = galleryItems[currentIndex];
-    const alt = item.dataset.alt ?? "";
-
-    dialogImage.src = item.dataset.fullSrc ?? "";
-    dialogImage.alt = alt;
-    dialogImage.hidden = false;
-    if (caption) caption.textContent = alt;
-    if (count) {
-      count.textContent = `${String(currentIndex + 1).padStart(2, "0")} / ${String(galleryItems.length).padStart(2, "0")}`;
-    }
-  };
-
-  galleryItems.forEach((item, index) => {
-    item.addEventListener("click", (event) => {
-      if (!dialog || !dialogImage) return;
-      event.preventDefault();
-      showImage(index);
-      dialog.showModal();
-    });
-  });
-
-  closeButton?.addEventListener("click", () => dialog?.close());
-  previousButton?.addEventListener("click", () => showImage(currentIndex - 1));
-  nextButton?.addEventListener("click", () => showImage(currentIndex + 1));
-  dialog?.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
-  });
-  dialog?.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft") showImage(currentIndex - 1);
-    if (event.key === "ArrowRight") showImage(currentIndex + 1);
-  });
-  dialog?.addEventListener("close", () => {
-    if (!dialogImage) return;
-    dialogImage.hidden = true;
-    dialogImage.removeAttribute("src");
-    dialogImage.alt = "";
-    if (caption) caption.textContent = "";
-    if (count) count.textContent = "";
-  });
-</script>
 
 <style>
   .gallery-page {
@@ -247,88 +137,6 @@ const images = [
     opacity: 1;
   }
 
-  .gallery-lightbox {
-    width: 100vw;
-    max-width: none;
-    height: 100vh;
-    max-height: none;
-    padding: 28px;
-    border: 0;
-    background: rgb(12 10 13 / 92%);
-    color: #fff;
-  }
-
-  .gallery-lightbox::backdrop {
-    background: rgb(12 10 13 / 78%);
-  }
-
-  .gallery-lightbox[open] {
-    display: grid;
-    place-items: center;
-  }
-
-  .gallery-lightbox figure {
-    display: grid;
-    max-width: min(92vw, 1500px);
-    max-height: 92vh;
-    margin: 0;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 12px;
-  }
-
-  .gallery-lightbox img {
-    max-width: min(92vw, 1500px);
-    max-height: 82vh;
-    object-fit: contain;
-  }
-
-  .gallery-lightbox button {
-    position: fixed;
-    z-index: 2;
-    display: grid;
-    width: 44px;
-    height: 44px;
-    place-items: center;
-    border: 1px solid #fff8;
-    border-radius: 50%;
-    background: #17151a;
-    color: #fff;
-    cursor: pointer;
-  }
-
-  .gallery-lightbox [data-gallery-close] {
-    top: 20px;
-    right: 20px;
-  }
-
-  .gallery-lightbox__previous,
-  .gallery-lightbox__next {
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .gallery-lightbox__previous {
-    left: 20px;
-  }
-
-  .gallery-lightbox__next {
-    right: 20px;
-  }
-
-  .gallery-lightbox figcaption {
-    display: flex;
-    justify-content: space-between;
-    gap: 24px;
-    color: #ddd4da;
-    font-size: 0.8rem;
-  }
-
-  .gallery-lightbox figcaption small {
-    flex: none;
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
-  }
-
   @media (max-width: 620px) {
     .gallery-header {
       grid-template-columns: 1fr;
@@ -344,31 +152,8 @@ const images = [
       margin-bottom: 10px;
     }
 
-    .gallery-lightbox {
-      padding: 12px;
-    }
-
     .gallery-item__index {
       opacity: 1;
-    }
-
-    .gallery-lightbox__previous,
-    .gallery-lightbox__next {
-      top: auto;
-      bottom: 18px;
-      transform: none;
-    }
-
-    .gallery-lightbox__previous {
-      left: 18px;
-    }
-
-    .gallery-lightbox__next {
-      right: 18px;
-    }
-
-    .gallery-lightbox figcaption {
-      padding-bottom: 60px;
     }
   }
 </style>
