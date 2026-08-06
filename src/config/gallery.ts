@@ -1,11 +1,11 @@
 import type { ImageMetadata } from "astro";
-import coverCylien from "../assets/demo/cover-cylien.png";
-import coverGeometry from "../assets/demo/cover-geometry.jpeg";
-import coverMeme from "../assets/demo/cover-meme.png";
-import coverMiku from "../assets/demo/cover-miku.png";
-import coverSeele from "../assets/demo/cover-seele.png";
-import elysiaPoster from "../assets/demo/elysia-logo.png";
-import elysiaPortrait from "../assets/demo/elysia-portrait.png";
+import coverCylien from "../assets/demo/cover-cylien.webp";
+import coverGeometry from "../assets/demo/cover-geometry.webp";
+import coverMeme from "../assets/demo/cover-meme.webp";
+import coverMiku from "../assets/demo/cover-miku.webp";
+import coverSeele from "../assets/demo/cover-seele.webp";
+import elysiaPoster from "../assets/demo/elysia-logo.webp";
+import elysiaPortrait from "../assets/demo/elysia-portrait.webp";
 import alienTraveler from "../assets/demo/gallery/alien-traveler.webp";
 import alienTravelerTwo from "../assets/demo/gallery/alien-traveler-two.webp";
 import aponiaTear from "../assets/demo/gallery/aponia-tear.webp";
@@ -46,7 +46,7 @@ import towardTomorrow from "../assets/demo/gallery/toward-tomorrow.webp";
 import trioConcert from "../assets/demo/gallery/trio-concert.webp";
 import yoimiya from "../assets/demo/gallery/yoimiya.webp";
 import yoimiyaTwo from "../assets/demo/gallery/yoimiya-two.webp";
-import sparklePortrait from "../assets/demo/sparkle-portrait.png";
+import sparklePortrait from "../assets/demo/sparkle-portrait.webp";
 
 export interface GalleryImage {
   src: ImageMetadata;

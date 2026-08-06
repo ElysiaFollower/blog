@@ -1,0 +1,498 @@
+---
+title: "手撕主流图像（PNG/JPEG）：从文件结构到图像尺寸解析"
+description: "从文件结构解析 PNG 与 JPEG，并实现一个仅读取图像尺寸的解析器。"
+pubDate: 2025-09-17
+updatedDate: 2025-09-23
+tags: ["PNG", "JPEG", "Image", "Protocol"]
+cover: "./cover.webp"
+coverAlt: "蓝紫色调的初音未来插画"
+coverPosition: "50% 38%"
+---
+本文将从底层开始剖析当前主流图像格式的文件格式，但并不对其中压缩算法展开深入的研究。故而在下更愿意称本文探讨的重心为——图像的数据结构，即不同类型的数据在存储设备中如何排布。同时我们作为一个用户，如何能从图像中准确的取出我们所需要的某一部分数据 —— 一张图像文件除了图像本体，还留存有许多元信息。
+
+本文将对几种常见图片格式建立基本的认知模型，同时以 *从图像数据流中提取出图像的分辨率，即宽高属性* 作为实战案例。
+
+## PNG
+
+参考2025年6月25日发布的第三版PNG规范[^1]
+
+-   关于PNG存储格式，主要参考官方说明的第五节[Datastream structure](https://www.w3.org/TR/png-3/#5DataRep)
+
+PNG图像的格式其实相对来说非常的清晰易懂。它由 **文件署名(PNG signature)** 和 **数据块(chunks)** 两种类型的结构组成，而且从宏观上看，它就是 —— **一个署名后面跟着很多个数据块**。不同类型的数据块存储不同的数据。
+
+### 文件署名域(PNG signature)
+
+**署名用于确认一个文件是否是PNG文件**，是永远出现在PNG数据流最头部的八字节常量。
+
+用16进制打开任意PNG文件, 会发现前八个字节总是这几个十六进制数 `89 50 4E 47 0D 0A 1A 0A`
+
+这八个字节就是PNG的文件署名。出现这个签名则表明剩下的内容包含**单个PNG图像**，该图像由一系列**以’IHDR’开头、以’IEND’的数据块组成**。
+
+-   为什么是“单张PNG图像”呢？实际上能播放动画的APNG也是这个署名开头：
+
+    -   因为从技术上讲，**APNG也属于’a single PNG image’**。在下认为这并不只是一个无趣的文字游戏，因为APNG诞生在PNG之后，为了实现向下兼容，**它只是在原基础上增添了几种新的数据块类型**，如果忽略新增的数据块类型，那么剩下来的部分，就是**像存储正常的PNG一样存储APNG的第一帧**，所以即便是不支持APNG的老旧浏览器，只要对无法解析的数据块类型进行抛弃，就能够回退到“显示第一帧”的状态。[^4]
+        在理解了静态PNG格式之后再来看下面这张图，就能很容易理解APNG到底是怎么对原有的PNG进行拓展的了。
+
+        ![720px-Apng\_assembling](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/720px-Apng_assembling.svg.png)
+
+        这里从Wikipedia上借来一张APNG示例图，感兴趣可以用十六进制工具看看。在下的观察结果是完美符合上图的：![Animated\_PNG\_example\_bouncing\_beach\_ball](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/Animated_PNG_example_bouncing_beach_ball.png)
+
+
+这里使用VScode的Hex Editer插件，对一张普通的静态的PNG照片的十六进制数据进行观察：
+
+-   ![PixPin\_2025-09-17\_16-49-30](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-17_16-49-30.png)
+
+![文件署名域](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-17_17-10-12.png)
+
+如图所示，文件署名域对应一张PNG图像的前八个字节，可以发现里面还偷藏了一个”PNG”。理论符合预期，当我们要处理图像时，若解析到前八个字节为PNG的署名，那么就可以认为，我们将要解析一张PNG图像了。
+
+### 数据块
+
+在署名之后，剩下的就都是一连串的数据块了。单个数据块的结构如下：
+![PNGdataChunkStructure](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PNGdataChunkStructure.png)
+
+其实非常简单，只需要建立 **四个Field** 的认知模型即可，每个Field分别代表(按顺序排布)
+
+-   length: **四字节**无符号整数，用于指定 实际数据CHUNK DATA 的长度 —— 所以长度为0的时候CHUNK DATA域等效于不存在，就回退到了图中所示的三个Field的情况了。
+
+-   chunk type: **四字节**，每个字节可以理解为一个ASCII码
+
+    > *Each byte of a chunk type is restricted to the hexadecimal values 41 to 5A and 61 to 7A*
+
+    ​ 熟悉的话其实会发现，这其实就是约束了每个字节对应的ASCII字符就是’A’-‘Z’ 或 ‘a’-‘z’, 也就是说是直接人类可读的英文字母编码
+
+-   chunk data：实际的数据内容。**长度由length域约束**，可为0
+
+-   CRC： **四字节**， 仅根据CHUNK TYPE和CHUNK DATA计算出来的值，属于**校验码**，这里不用太在意其中细节。
+
+
+至此，数据块基本结构的理解就已经完成了。整个PNG存储的模型也就出来了。再之后就只需要在用得到的时候补全对于**不同类型数据块结构**的认知即可。
+
+**就是说，接下来去翻官网的[#11. Chunk specifications](https://www.w3.org/TR/png-3/#11Chunks) 就可以啦~**
+
+注：APNG增加的acTL、fcTL、fdAT类型在第三版的PNG规范中已经收录，也就是说都能在这份官方文档中查到。
+
+### 关键数据块
+
+有些类型的数据块基本上必须存在于一张PNG图像中，称为**Critical Chunk**。
+
+以下为四种Critical Chunk，其中只有PLTE是可选的，**其它都必须出现，而且必须以以下顺序出现**
+
+![CriticalChunks](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/CriticalChunks.png)
+
+#### 开头与结尾 IHDR-IEND
+
+类型一个是**IHDR**，一个是**IEND**， 没必要记16进制码，直接记字母就行。
+
+**IHDR**是非常特殊的块，它和**IEND**一起框定了一串数据的范围。可以理解为，一段有效的数据，比如一帧，它会是很多数据块，解析的时候遇到**IHDR**就知道这段数据开始了，遇到**IEND**意味着这段数据结束了。 前者**必须是第一个数据块**，而后者**必须是最后一个数据块**。
+
+甚至还有人发现可以在IEND后面藏数据而不影响图像显示[^2]。
+
+其中**IEND**就是一个结束标志，其长度域为0，之后不再提，但**IHDR**类型对应的数据块还存储了一些有用的信息，图像的宽高属性就存储在这里，下一节详细解析。
+
+#### IHDR Image header
+
+**IHDR**总长度是固定的13bytes，内部数据排布如下:
+
+|  |  |
+| --- | --- |
+| **Width** | 4 bytes |
+| **Height** | 4 bytes |
+| **Bit depth** | 1 byte |
+| **Color type** | 1 byte |
+| **Compression method** | 1 byte |
+| **Filter method** | 1 byte |
+| **Interlace method** | 1 byte |
+
+一般用户只需要关注前4个属性即可，分别代表**图像的宽**、**图像的高**、**图像位深**、**颜色类型**
+
+宽高以像素为单位；位深指的是**每个颜色通道的位深，而不是整个像素的位深**，即记录的是每个颜色通道使用多少比特进行编码。
+
+颜色类型(注意颜色类型和位深只有关系的)：
+
+![PixPin\_2025-09-22\_15-27-19](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-22_15-27-19.png)
+
+官方文档通过有序列表暗示了这些IHDR属性是顺序排列的。不过更进一步，我们可以基于“**协议本身是稳定的，市面上流传的PNG图像的这几个属性的排列顺序是稳定的**”的假设，可以找一张PNG图像拆解开来**验证**这一点——结论：**至少前四个属性是按顺序存储的**。
+
+![PixPin\_2025-09-17\_22-47-35](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-17_22-47-35.png)
+
+这里宽是**0x500**，对应十进制**1280**，长为**0x8E3**，对应十进制**2275**，这正好就是在下这张测试图像分辨率中的宽高，通过测试。
+
+**0x08**对应颜色位深8，**0x02**对应真彩色图像，RGB三色通道各使用8位编码，所以每个像素使用$3\times 8=24$位编码，对应图像位深度24，通过测试。
+
+![PixPin\_2025-09-17\_22-52-30](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-17_22-52-30.png)
+
+-   注: **数据大端对齐**，即高字节对应低地址
+
+#### PLTE
+
+Palette，调色盘。
+
+含1-256个entries，每个entry三个字节，每个字节分别对应红绿蓝。
+
+似乎主要是用于压缩等用途的元信息，也不是必须的数据块，非PNG图像的最小组成部分之一，这里跳过。
+
+#### IDAT
+
+**Image Data**， 图像真实的数据
+
+注：不是将每个像素的RGB存储的原始数据，而**是压缩算法的输出结果**
+
+必须的数据块类型就上述四种，其它感兴趣可以去文档中了解。
+
+### 如何获得图像尺寸
+
+基于上述观察，实际上只需要越过PNG的文件署名，直接进入IHDR头中的固定偏移位置取出对应数据即可。
+
+* * *
+
+## JPEG
+
+特别注意，JPEG和PNG不同，并非一个单一独立的规范，而存在很多不同的标准——不同的文件格式。**这里参考T.81标准**[^3], 又称**ISO/IEC 10918-1 标准**, 算是JPEG压缩技术最权威最官方的一个技术标准了，能够解释现在流行的绝大部分JPEG文件的格式，如JFIF和Exif。文献很长，这里只关注JPEG的数据结构，基本可以从31页的**Compressed data formats**章节开始看。
+
+由于JPEG格式与PNG不同，相对而言要复杂许多，所以这里不做非常详细地解读，搞清楚宏观的结构并理解如何获取图像尺寸就结束了。 ~~(因为真实的数据反正也要过压缩算法，费劲搞清楚了感觉一般也用不到)~~。
+
+### 宏观设计
+
+从最高层次看，JPEG文件有点像之前的PNG，但不完全一样。PNG由一个署名打头，后面跟着很多数据块(chunk)，而JPEG则直接由一系列的**段(Segment)**组成。而段又分**标记段(Marker Segment)**和**熵编码数据段(Entropy-coded data segments)**，前者作为标记和引导，存储着大量元信息，而后者则是图像本体在压缩后的结果载体。
+
+虽然文档中提到了“参数”，但在下认为这里提到的参数不过是“段”的组成部分，不需要单独拎出来理解。
+
+> Structurally, the compressed data formats consist of **an ordered collection of parameters, markers, and entropy-coded data segments**. Parameters and markers in turn are often organized into marker segments. Because all of these constituent parts are represented with byte-aligned codes, each compressed data format consists of an ordered sequence of 8-bit bytes. For each byte, a most significant bit (MSB) and a least significant bit (LSB) are defined
+
+可以想象我们是一个流式的数据解析器，我们顺序地读入JPEG数据，会读到一个个**段**，在熵编码数据段之前会读到**标记段(Marker Segement)**，其由一个**标记Marker**和若干跟随的**参数**(长度可为0)组成。我们可以利用这些像“路标”一样的**标记Marker**，识别后续内容，快速跳过不需要的信息，也可以从跟随其的参数中提取出一些需要的元信息。
+
+整体上来看，JPEG文件的数据流就是**很多的标记段和穿插的‘几个’熵编码数据段**
+
+-   对于Baseline JPEG，图像数据是一个完整的连续的熵编码数据段 (相当于一次扫描)
+-   但是对于Progressive JPEG，每次扫描不断填充细节和色彩精度，熵编码数据段就不是连续的
+-   不过从下图看，无论是基线还是渐进JPEG，都可以插入重启标记RST(同样会让数据段被分割开来), 以增加容错性。
+
+![JPEG-Structure](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/JPEG-Structure.png)
+
+我们不关注具体被压缩后的数据长什么样，所以对我们来说现在最重要的就是如何辨识**标记(Marker)**
+
+### 标记Marker
+
+在JPEG数据流中，**找到字节0xFF，并且后面不是0x00**, 就找到了Marker，**0xFF**后面跟的字节就决定了类型。
+
+#### Marker的格式
+
+一个Marker**长两个字节**
+
+-   第一个字节：一定是 **0xFF**。 这个特别的值应该就是专门保留出来标识Marker的
+
+-   第二个字节：
+
+    -   特殊情况
+
+        -   不能是**0x00**： 为了防止在数据段出现**0xFF**被误认为Marker，所有 ‘数据中的**0xFF**‘ 后面都会跟上**0x00**， 表明这是数据而非标记。
+        -   如果是**0xFF**: 被称为填充字节(**fill bytes**), 并不代表Marker的类型，仅做填充。可能是出于数据对齐的考量而设计，总之解析到**0xFF**的话，就继续往下看一字节，先前读到的第一个**0xFF**直接丢弃
+    -   正常情况，第二个字节标识了Marker的类型，标识了接下来的数据是什么类型的数据，具体匹配关系可以参见下表
+
+        > ![JPEG-marker-symbol-table](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/JPEG-marker-symbol-table.png)
+
+
+特别说明：**在Marker之后**，即在整个标记段的剩余部分，可能还有其它数据。若有(跟着的不是0xff…)，则紧跟着的为**两字节长度参数**，特指该Marker段除开Marker后参数的长度(不包含开头Marker的‘两’个字节，包含记录长度的两个字节)。这个参数可以用于快速跳过该Marker段达到下一个Marker段。
+
+### 具体数据构造
+
+让我们结合例子逐步剖析。
+
+这里使用[onlinehexeditor](https://www.onlinehexeditor.com/)作为十六进制查看器，因为它还能提供对jpeg结构的部分信息的解析与提取，有助于辅助验证。
+
+注：建议使用钉图工具如PixPin，将上面提到的Marker符号表钉在屏幕的某个位置，方便确认Marker类型。
+
+上传一张jpeg图像A作为示例：
+
+#### 最上层
+
+本节开篇展示了JPEG的多层级结构。在最上层，把Frame视为主体，则两侧分别有SOI和EOI，如图所示:
+
+![JPEG-overview-structure](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/JPEG-overview-structure.png)
+
+而图像A的实际数据头尾如图所示：
+
+![PixPin\_2025-09-19\_22-12-40](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-19_22-12-40.png)
+
+![PixPin\_2025-09-19\_22-13-49](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-19_22-13-49.png)
+
+查表不难发现，开头的数据和结尾的数据恰恰就是SOI和EOI的Marker。所以中间的部分就是架构图中的Frame。
+
+​ 注: 这两个Maker没有长度参数，因为仅作标识作用，无内部信息需要存储。
+
+#### Frame内
+
+进入Frame，重点要找的是帧头Frame Header。Frame内部结构如图所示:
+
+![JPEG-frame-structure](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/JPEG-frame-structure.png)
+
+##### Frame header前
+
+先看看Frame header前面有什么数据:
+
+![PixPin\_2025-09-19\_22-19-51](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-19_22-19-51.png)
+
+APP${}_{n}$ 是为应用程序预留的(或者为其他拓展规范预留的插槽)，可能会有很多，在这里会写入些应用程序想要写入的元数据，这些数据可能是各种类型，比如对于图片旋转的说明，也有可能是一些设备信息等等。这里看右侧转译结果，可以隐约看到JFIF的字眼，这说明该JPEG图像大概率是基于JFIF标准的。至于comment，则如其名。
+
+**DQT**代表定义量化表Define Quantization Table，这跟JPEG的压缩算法直接相关。大致理解的话，应该是在压缩过程中——具体可参考文档中的DCT算法——对于处理后得到的8 × 8 DCT coefficient array，去除以量化表中的64个值。这里注意到DQT段的长度并非0x0041(多出来的第一个字节是量化精度), 而是0x0084, 是因为这里存了两个量化表，0x0082的长度，再算上长度数据本身的两个字节，就得到了0x0084的总长.
+
+这里只是一个例子，表明Frame header前存在某些数据，至于有哪些，有多少，则根据具体情况会有所不同。
+
+##### Frame header
+
+这里就到了对于解析出图像尺寸而言最重要的**Frame header**了！
+
+![JPEG-frame-header-structure](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/JPEG-frame-header-structure.png)
+
+**Frame header**也是一个**标记段Marker Segment**，SOF类。
+
+如图所示，遍历到SOF的Marker就说明遍历到了**Frame header** (不知道为什么文档35页配图位置附近只特别提了所有非差分类型的SOF，但Frame Header的结构应该都是一样的，即图中所示SOF${}_{n}$, 是一种一般表示， SOF${}_{n}$​的标记段都遵从图示结构)。
+
+其参数代表的含义为：
+
+-   **Lf**：这个Segment的长度，和其他Segment保持一致。
+-   **P**: 样本精度，即每个采样点(sample)需要多少位来存储，即**每个color的位深**。
+-   **Y**: 行数，即图像的**高**
+-   **X**：一行的采样点数，即图像的**宽**
+
+**Y和X参数就是我们要寻找的图像尺寸信息**，感兴趣可以看看它们的官方解释:
+
+> **Y**: Number of lines – Specifies the maximum number of lines in the source image. This shall be equal to the number of lines in the component with the maximum number of vertical samples (see A.1.1). Value 0 indicates that the number of lines shall be defined by the DNL marker and parameters at the end of the first scan (see B.2.5)
+>
+> **X**: Number of samples per line – Specifies the maximum number of samples per line in the source image. This shall be equal to the number of samples per line in the component with the maximum number of horizontal samples (see A.1.1)
+
+这几个参数的位宽如下图所示:
+
+![JPEG-frame-header-parameter-sizes](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/JPEG-frame-header-parameter-sizes.png)
+
+让我们结合先前图像A的例子来观察一下真实的数据，0xFFC0表示SOF${}_{0}$, 图示部分就是Frame header：
+
+![PixPin\_2025-09-19\_22-52-12](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-19_22-52-12.png)
+
+可以看到P为**0x08**，单色为8bits，三个颜色通道各8bits，每个像素就是24bits，符合位深度24的文件属性。
+
+而高宽均为十六进制**0x0438**, 十进制数**1080**。这恰好符合文件属性。
+
+![PixPin\_2025-09-19\_23-00-48](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-19_23-00-48.png)
+
+-   注：如果看官方文档对P的说明的话，这里可能会有一点让人感到困惑的地方，因为官方的说法是P代表the precision in bits for the samples of the components in the frame。实际上sample是指一个color sample，而不是指一个像素。想象多个矩阵阵列即可理解，不同颜色的矩阵可以独立存储(即不是\[R1, G1, B1\], \[R2, G2, B2\], \[R3, G3, B3\] … 这样存，而是R单独一个矩阵，G单独一个矩阵这样存，对任一矩阵的任一元素，位深为P —— 虽然事实上不一定真的这样存，但逻辑上大致是这样)。
+
+**补充**：刚才那张图高宽相同，不便验证高宽顺序，这里再换个例子看一遍，这是另一张位深24，分辨率4096x2160的JPEG图像：
+
+![PixPin\_2025-09-19\_23-06-03](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-19_23-06-03.png)
+
+可以看到，高**0x0870**, 即十进制2160，宽**0x1000**，即十进制4096, 完美符合预期，顺序也可以得到映证。
+
+为了直观地感受到这张图是**扁**的，而非**长**的，这里附上分辨率4096x2160的样例图:
+
+![薪炎永燃](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/gallery/薪炎永燃.jpg)
+
+眼尖的话其实会发现刚才两个案例在SOF, **0xFFC0**的Marker后面都出现了**FFC4**， 它对应的是Marker **DHT**， 即Define Huffman table(s), 哈夫曼表。这里涉及到压缩算法，不展开讲——~~因为它似乎有很多版本~~, 至少除了Huffman coding还有arithmetic coding。
+
+### 如何获得图像尺寸
+
+基于上述观察，我们只需要首先通过检验**SOI** marker，确认这是一张JPEG图像，然后一路跳过无用的标记段，直到遇到**SOF${}_{n}$​​** 标记，此时停下来，在Frame header的固定偏移位置取出宽高即可。
+
+-   注：RST、EOI、SOI没有长度字段。以RST${}_{7}$(0xFFD7)为例，可以看到后面跟的既非新的marker也非长度，对于我们的场景(不关心“重启间隔”标记)，就必须要通过遍历的方式才能安全地找到下一个标记。
+
+​ ![PixPin\_2025-09-22\_22-37-43](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/22/PixPin_2025-09-22_22-37-43.png)
+
+基于**ITU-T T.81**标准的主流JPEG规范，如JFIF[^5]和EXIF[^6]等规范理论上都能够被支持。
+
+## Get Image Size
+
+基于以上观察，这里给出获取PNG图像和大部分JPEG图像(包括JFIF和EXIF)宽高的js代码。仅供参考:
+
+```text
+/**
+ * @file imageSize.js
+ * A image dimension parser.
+ * Supports PNG and JPEG formats.
+ */
+
+
+/**
+ * A function to get dimensions of PNG and JPEG images from a Buffer.
+ * @param {Buffer} buffer The image data buffer.
+ * @returns {{width: number, height: number, type: 'png' | 'jpeg'} | null}
+ */
+function imageSize(buffer) {
+  try {
+    //PNG
+    const pngResult = parsePNG(buffer);
+    if (pngResult) {
+      return pngResult;
+    }
+
+    //JPEG
+    const jpegResult = parseJPEG(buffer);
+    if(jpegResult){
+      return jpegResult;
+    }
+
+    console.error('Unsupported image format')
+    return null;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+
+// --- Constants for PNG Parsing ---
+// reference: https://www.w3.org/TR/png-3/#5DataRep
+// All PNG files start with this 8-byte signature.
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+// The IHDR chunk type identifier in ASCII.
+const IHDR_CHUNK_TYPE = Buffer.from('IHDR');
+// The IHDR chunk's data section must be 13 bytes long.
+const EXPECTED_IHDR_LENGTH = 13;
+/**
+ * Parses a Buffer to extract dimensions of a PNG image.
+ * @param {Buffer} buffer The buffer containing the image data.
+ * @returns {{width: number, height: number, type: 'png'} | null} Dimensions object or null if not a valid PNG with IHDR chunk.
+ */
+function parsePNG(buffer) {
+  try {
+    // A valid PNG with dimensions requires at least 33 bytes for signature and IHDR info.
+    // 8 (signature) + 4 (length) + 4 (type) + 13 + 4(CRC) = 33 bytes
+    if (buffer.length < 33) {
+      return null;
+    }
+
+    // Verify the PNG file signature.
+    if (!PNG_SIGNATURE.equals(buffer.subarray(0, 8))) {
+      return null;
+    }
+
+    // --- IHDR Chunk Verification  ---
+    // length must be 13. readUInt32BE reads a 4-byte, Big-Endian integer.
+    const ihdrLength = buffer.readUInt32BE(8);
+    if (ihdrLength !== EXPECTED_IHDR_LENGTH) {
+      return null;
+    }
+
+    // type must be "IHDR".
+    const chunkType = buffer.subarray(12, 16);
+    if (!IHDR_CHUNK_TYPE.equals(chunkType)) {
+      return null;
+    }
+
+    // --- extract the dimensions ---
+    // width: 4 bytes
+    const width = buffer.readUInt32BE(16);
+    // height: 4 bytes
+    const height = buffer.readUInt32BE(20);
+
+    return { width, height, type: 'png' };
+
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+
+// --- Constants for JPEG Parsing ---
+// reference: ITU T.81, Annex B  https://www.w3.org/Graphics/JPEG/itu-t81.pdf
+// Start of Image marker
+const JPG_SOI = 0xFFD8;
+// End of Image marker
+const JPG_EOI = 0xFFD9;
+
+// Start of Frame markers
+//non-differential, Huffman coding
+const JPG_SOF0  = 0xFFC0; // Baseline DCT
+const JPG_SOF1  = 0xFFC1; // Extended sequential DCT
+const JPG_SOF2  = 0xFFC2; // Progressive DCT
+const JPG_SOF3  = 0xFFC3; // Lossless (sequential)
+//differential, Huffman coding
+const JPG_SOF5  = 0xFFC5; // sequential DCT
+const JPG_SOF6  = 0xFFC6; // progressive DCT
+const JPG_SOF7  = 0xFFC7; // lossless (sequential)
+//non-differential, arithmetic coding
+const JPG_SOF9  = 0xFFC9; // Extended sequential DCT
+const JPG_SOF10 = 0xFFCA; // Progressive DCT
+const JPG_SOF11 = 0xFFCB; // Lossless (sequential)
+//differential, arithmetic coding
+const JPG_SOF13 = 0xFFCD; // sequential DCT
+const JPG_SOF14 = 0xFFCE; // progressive DCT
+const JPG_SOF15 = 0xFFCF; // lossless (sequential)
+
+const SOF_MARKERS = [
+  JPG_SOF0, JPG_SOF1, JPG_SOF2, JPG_SOF3,
+  JPG_SOF5, JPG_SOF6, JPG_SOF7,
+  JPG_SOF9, JPG_SOF10, JPG_SOF11,
+  JPG_SOF13, JPG_SOF14, JPG_SOF15
+]
+
+/**
+ * Parses a Buffer to extract dimensions of a JPEG image.
+ * @param {Buffer} buffer The buffer containing the image data.
+ * @returns {{width: number, height: number, type: 'jpeg'} | null}
+ */
+function parseJPEG(buffer){
+  try{
+    //Start with SOI
+    if(buffer.readUInt16BE(0) !== JPG_SOI){
+      return null;
+    }
+
+    let offset = 2;
+    while(offset < buffer.length){
+      //find next marker
+      while(buffer[offset] !== 0xFF){
+        offset++;
+        if(offset >= buffer.length) return null;
+      }
+      //jump over fill bytes
+      while(buffer[offset] === 0xFF){
+        offset++;
+        if(offset >= buffer.length) return null;//for broken image
+      }
+
+      //now offset points to the second byte of marker
+      const markerByte = buffer[offset];
+      offset++;
+      if(markerByte === 0x00){
+        //not a marker, but a data
+        continue;
+      }
+      const marker = 0xFF00 | markerByte;
+
+      if(SOF_MARKERS.includes(marker)){
+        //find Frame header
+        //For frameheader: 2 for marker, 2 for length, 1 for precision, 2 for height, 2 for width
+        return { height: buffer.readUInt16BE(offset+3), width: buffer.readUInt16BE(offset+5), type: 'jpeg' };
+      }
+
+      //if not the SOF marker, skip to the next marker;
+      if(marker === JPG_EOI || (marker >= 0xFFD0 && marker <= 0xFFD7)){
+        // note: RST_m(and SOI,EOI) doesn't have its length field, even though it won't occur before frame header; for safety, do not try to read length field
+        continue;
+      }
+      const length = buffer.readUInt16BE(offset);
+      offset += length;
+    }
+
+    return null;
+  }catch(e){
+    console.error(e);
+    return null;
+  }
+}
+
+module.exports = {
+  imageSize,
+  parsePNG,
+  parseJPEG,
+};
+```
+
+[^1]: W3C. [Portable Network Graphics (PNG) Specification (Third Edition)](https://www.w3.org/TR/png-3/#5DataRep). W3C, 2025-06-25
+[^2]: [maxiongying](https://www.cnblogs.com/senior-engineer). [PNG文件格式详解](https://www.cnblogs.com/senior-engineer/p/9548347.html) . 博客园, 2018-08-25
+[^3]: CCITT (The International Telegraph and Telephone Consultative Committee) / ITU (International Telecommunication Union). [Recommendation T.81: Information Technology - Digital Compression and Coding of Continuous-tone Still Images - Requirements and Guidelines](https://www.w3.org/Graphics/JPEG/itu-t81.pdf). ITU (International Telecommunication Union), 1992-9-18
+[^4]: . [APNG](https://en.wikipedia.org/wiki/APNG). wikipedia, 2025-9-10
+[^5]: Recommendation ITU-T T.871. [Digital compression and coding of continuous-tone still images: JPEG File Interchange Format (JFIF)](https://www.ijg.org/files/T-REC-T.871-201105-I!!PDF-E.pdf) . ITU, 2011-05
+[^6]: Technical Standardization Committee on AV & IT Storage Systems and Equipment. [EXIF文档，指出基于ISO/IEC 10918-1标准](https://exiv2.org/Exif2-2.PDF). Japan Electronics and Information Technology Industries Association, 2002-4

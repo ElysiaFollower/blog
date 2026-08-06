@@ -1,0 +1,1340 @@
+---
+import {
+  ArrowUpDown,
+  ArrowUpRight,
+  Hash,
+  ListTree,
+  Search,
+  X,
+} from "@lucide/astro";
+import { Image } from "astro:assets";
+import ArticleSectionNav from "../../components/content/ArticleSectionNav.astro";
+import CatalogTree from "../../components/content/CatalogTree.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import {
+  buildCatalogTree,
+  getCatalogBreadcrumbs,
+  getSourcePath,
+  getTagEntries,
+  getVisiblePosts,
+  postHref,
+  tagHref,
+} from "../../lib/posts";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const posts = await getVisiblePosts();
+const catalog = buildCatalogTree(posts);
+const tags = getTagEntries(posts);
+const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+---
+
+<BaseLayout
+  title="知识目录"
+  description="通过目录、Tags 与全文检索定位文章。"
+  bodyClass="library-page"
+>
+  <SiteHeader variant="reading" />
+  <main id="main-content">
+    <ArticleSectionNav current="catalog" />
+    <header class="library-masthead">
+      <div class="page-width">
+        <div class="library-masthead__title">
+          <p>KNOWLEDGE CATALOG // {String(posts.length).padStart(2, "0")}</p>
+          <h1>知识目录</h1>
+        </div>
+        <p class="library-masthead__description">
+          沿目录找到大致位置，或直接搜索标题、摘要与正文。
+        </p>
+      </div>
+    </header>
+
+    <section
+      class="library-shell page-width"
+      aria-label="文章目录与搜索"
+      data-library-root
+      data-index-ready={import.meta.env.PROD ? "true" : "false"}
+    >
+      <div class="library-search" data-library-search>
+        <Search aria-hidden="true" size={23} stroke-width={1.7} />
+        <label>
+          <span class="visually-hidden">搜索文章正文</span>
+          <input
+            type="search"
+            placeholder="搜索标题、摘要与正文…"
+            autocomplete="off"
+            data-library-search-input
+          />
+        </label>
+        <button
+          type="button"
+          aria-label="清空搜索"
+          title="清空搜索"
+          data-library-search-clear
+          hidden
+        >
+          <X aria-hidden="true" size={19} stroke-width={1.8} />
+        </button>
+      </div>
+
+      <div class="library-workspace">
+        <aside class="library-index" aria-label="文章索引">
+          <header>
+            <span>INDEX</span>
+            <small>{String(posts.length).padStart(2, "0")} FILES</small>
+          </header>
+
+          <div class="library-index__modes" aria-label="索引方式">
+            <button
+              type="button"
+              data-index-mode="catalog"
+              aria-pressed="true"
+            >
+              <ListTree aria-hidden="true" size={16} stroke-width={1.7} />
+              <span>目录</span>
+            </button>
+            <button
+              type="button"
+              data-index-mode="tags"
+              aria-pressed="false"
+            >
+              <Hash aria-hidden="true" size={16} stroke-width={1.7} />
+              <span>Tags</span>
+            </button>
+          </div>
+
+          <div class="library-index__panel" data-index-panel="catalog">
+            <button
+              class="library-index__all"
+              type="button"
+              data-catalog-path=""
+              data-catalog-label="全部文章"
+              data-selected="true"
+            >
+              <span>全部文章</span>
+              <small>{String(posts.length).padStart(2, "0")}</small>
+            </button>
+            <CatalogTree nodes={catalog} />
+          </div>
+
+          <div
+            class="library-index__panel library-tag-index"
+            data-index-panel="tags"
+            hidden
+          >
+            <a href="/posts/catalog/" data-tag="">
+              <span>全部 Tags</span>
+              <small>{String(tags.length).padStart(2, "0")}</small>
+            </a>
+            {
+              tags.map((tag) => (
+                <a href={tagHref(tag.name)} data-tag={tag.name}>
+                  <span>{tag.name}</span>
+                  <small>{String(tag.count).padStart(2, "0")}</small>
+                </a>
+              ))
+            }
+          </div>
+        </aside>
+
+        <section class="library-results" aria-labelledby="library-result-title">
+          <header class="library-results__header">
+            <div>
+              <p data-library-scope>全部文章</p>
+              <h2 id="library-result-title" data-library-title>全部文章</h2>
+              <code data-library-path>src/content/posts/</code>
+            </div>
+            <label class="library-sort">
+              <ArrowUpDown aria-hidden="true" size={16} stroke-width={1.7} />
+              <span class="visually-hidden">排列文章</span>
+              <select data-library-sort>
+                <option value="relevance" disabled>相关度</option>
+                <option value="date-desc" selected>最新发布</option>
+                <option value="date-asc">最早发布</option>
+                <option value="title-asc">标题 A–Z</option>
+                <option value="title-desc">标题 Z–A</option>
+              </select>
+            </label>
+          </header>
+
+          <div class="library-status">
+            <p aria-live="polite" data-library-status>
+              当前目录共 <strong>{posts.length}</strong> 篇文章
+            </p>
+            <button
+              type="button"
+              data-library-clear-scope
+              hidden
+            >
+              清除范围
+            </button>
+          </div>
+
+          <ol class="catalog-results" data-catalog-results>
+            {
+              posts.map((post, index) => {
+                const breadcrumbs = getCatalogBreadcrumbs(post, false);
+                const breadcrumbLabel = breadcrumbs
+                  .map((entry) => entry.label)
+                  .join(" / ");
+
+                return (
+                  <li
+                    data-post-row
+                    data-path={post.id}
+                    data-tags={JSON.stringify(post.data.tags)}
+                    data-title={post.data.title}
+                    data-date={post.data.pubDate.valueOf()}
+                  >
+                    <span class="catalog-result__index" data-result-index>
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <a
+                      class="catalog-result__cover"
+                      href={postHref(post)}
+                      tabindex="-1"
+                      aria-hidden="true"
+                    >
+                      <Image
+                        src={post.data.cover}
+                        alt=""
+                        widths={[180, 280]}
+                        sizes="(max-width: 700px) 96px, 140px"
+                        loading="lazy"
+                        style={`object-position: ${post.data.coverPosition}`}
+                      />
+                    </a>
+                    <article>
+                      <p class="catalog-result__path">{breadcrumbLabel}</p>
+                      <h3>
+                        {post.data.draft && <span>Draft</span>}
+                        <a href={postHref(post)}>{post.data.title}</a>
+                      </h3>
+                      <p class="catalog-result__description">
+                        {post.data.description}
+                      </p>
+                      <ul aria-label="标签">
+                        {post.data.tags.map((tag) => (
+                          <li>
+                            <a href={tagHref(tag)}>#{tag}</a>
+                          </li>
+                        ))}
+                      </ul>
+                      <code title={getSourcePath(post)}>
+                        {getSourcePath(post)}
+                      </code>
+                    </article>
+                    <div class="catalog-result__tail">
+                      <time datetime={post.data.pubDate.toISOString()}>
+                        {dateFormatter.format(post.data.pubDate)}
+                      </time>
+                      <a
+                        href={postHref(post)}
+                        aria-label={`阅读《${post.data.title}》`}
+                        title="阅读文章"
+                      >
+                        <ArrowUpRight
+                          aria-hidden="true"
+                          size={18}
+                          stroke-width={1.8}
+                        />
+                      </a>
+                    </div>
+                  </li>
+                );
+              })
+            }
+          </ol>
+
+          <ol
+            class="catalog-results search-results"
+            data-search-results
+            hidden
+          ></ol>
+
+          <p class="library-empty" data-library-empty hidden>
+            当前范围内没有匹配的文章。
+          </p>
+          <button
+            class="library-more"
+            type="button"
+            data-library-more
+            hidden
+          >
+            显示更多
+          </button>
+        </section>
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+</BaseLayout>
+
+<script>
+  interface SearchResultData {
+    url: string;
+    excerpt: string;
+    meta: Record<string, string>;
+    sub_results?: Array<{
+      title: string;
+      url: string;
+      excerpt: string;
+    }>;
+  }
+
+  interface SearchResultReference {
+    data(): Promise<SearchResultData>;
+  }
+
+  interface PagefindApi {
+    search(
+      query: string,
+      options?: {
+        filters?: Record<string, string>;
+        sort?: Record<string, "asc" | "desc">;
+      },
+    ): Promise<{ results: SearchResultReference[] }>;
+  }
+
+  type SortMode =
+    | "relevance"
+    | "date-desc"
+    | "date-asc"
+    | "title-asc"
+    | "title-desc";
+
+  const root = document.querySelector<HTMLElement>("[data-library-root]");
+  const input = root?.querySelector<HTMLInputElement>(
+    "[data-library-search-input]",
+  );
+  const clearSearch = root?.querySelector<HTMLButtonElement>(
+    "[data-library-search-clear]",
+  );
+  const sortSelect = root?.querySelector<HTMLSelectElement>(
+    "[data-library-sort]",
+  );
+  const scope = root?.querySelector<HTMLElement>("[data-library-scope]");
+  const title = root?.querySelector<HTMLElement>("[data-library-title]");
+  const pathLabel = root?.querySelector<HTMLElement>("[data-library-path]");
+  const status = root?.querySelector<HTMLElement>("[data-library-status]");
+  const clearScope = root?.querySelector<HTMLButtonElement>(
+    "[data-library-clear-scope]",
+  );
+  const catalogResults = root?.querySelector<HTMLOListElement>(
+    "[data-catalog-results]",
+  );
+  const searchResults = root?.querySelector<HTMLOListElement>(
+    "[data-search-results]",
+  );
+  const empty = root?.querySelector<HTMLElement>("[data-library-empty]");
+  const more = root?.querySelector<HTMLButtonElement>("[data-library-more]");
+  const rows = Array.from(
+    root?.querySelectorAll<HTMLElement>("[data-post-row]") ?? [],
+  );
+  const modeButtons = Array.from(
+    root?.querySelectorAll<HTMLButtonElement>("[data-index-mode]") ?? [],
+  );
+  const panels = Array.from(
+    root?.querySelectorAll<HTMLElement>("[data-index-panel]") ?? [],
+  );
+  const directoryControls = Array.from(
+    root?.querySelectorAll<HTMLElement>("[data-catalog-path]") ?? [],
+  );
+  const tagControls = Array.from(
+    root?.querySelectorAll<HTMLAnchorElement>("[data-tag]") ?? [],
+  );
+
+  const collator = new Intl.Collator("zh-CN", {
+    numeric: true,
+    sensitivity: "base",
+  });
+  const pageSize = 24;
+  let selectedPath = "";
+  let selectedPathLabel = "全部文章";
+  let selectedTag = "";
+  let searchSequence = 0;
+  let debounceTimer: number | undefined;
+  let pagefindPromise: Promise<PagefindApi> | undefined;
+  let searchReferences: SearchResultReference[] = [];
+  let renderedSearchResults = 0;
+  let renderedBrowseResults = pageSize;
+  let queryWasEmpty = true;
+
+  const escapeHtml = (value: string) =>
+    value.replace(
+      /[&<>"']/g,
+      (character) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        })[character] ?? character,
+    );
+
+  const formatSearchDate = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.valueOf())) return value;
+
+    return new Intl.DateTimeFormat("zh-CN", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(date);
+  };
+
+  const loadPagefind = () => {
+    if (!pagefindPromise) {
+      const modulePath = "/pagefind/pagefind.js";
+      pagefindPromise = import(
+        /* @vite-ignore */ modulePath
+      ) as Promise<PagefindApi>;
+    }
+    return pagefindPromise;
+  };
+
+  const getSortMode = () =>
+    (sortSelect?.value ?? "date-desc") as SortMode;
+
+  const getPagefindSort = (): Record<string, "asc" | "desc"> | undefined => {
+    const sort = getSortMode();
+    if (sort === "date-desc") return { date: "desc" as const };
+    if (sort === "date-asc") return { date: "asc" as const };
+    if (sort === "title-asc") return { title: "asc" as const };
+    if (sort === "title-desc") return { title: "desc" as const };
+    return undefined;
+  };
+
+  const syncUrl = () => {
+    const url = new URL(window.location.href);
+    const query = input?.value.trim() ?? "";
+    const sort = getSortMode();
+
+    url.search = "";
+    if (query) url.searchParams.set("q", query);
+    if (selectedPath) url.searchParams.set("path", selectedPath);
+    if (selectedTag) url.searchParams.set("tag", selectedTag);
+    if (
+      (query && sort !== "relevance") ||
+      (!query && sort !== "date-desc")
+    ) {
+      url.searchParams.set("sort", sort);
+    }
+
+    window.history.replaceState({}, "", url);
+  };
+
+  const updateSelection = () => {
+    directoryControls.forEach((control) =>
+      control.setAttribute(
+        "data-selected",
+        String(
+          !selectedTag &&
+            (control.dataset.catalogPath ?? "") === selectedPath,
+        ),
+      ),
+    );
+    tagControls.forEach((control) =>
+      control.setAttribute(
+        "data-selected",
+        String((control.dataset.tag ?? "") === selectedTag),
+      ),
+    );
+
+    if (scope) {
+      scope.textContent = selectedTag
+        ? `TAG // ${selectedTag}`
+        : selectedPath
+          ? "CATALOG SCOPE"
+          : "ALL ARTICLES";
+    }
+    if (title) {
+      title.textContent = selectedTag
+        ? `#${selectedTag}`
+        : selectedPathLabel;
+    }
+    if (pathLabel) {
+      pathLabel.textContent = selectedTag
+        ? "跨目录关联"
+        : `src/content/posts/${selectedPath ? `${selectedPath}/` : ""}`;
+    }
+    if (clearScope) clearScope.hidden = !selectedPath && !selectedTag;
+  };
+
+  const matchesScope = (row: HTMLElement) => {
+    const path = row.dataset.path ?? "";
+    const tags = JSON.parse(row.dataset.tags ?? "[]") as string[];
+    const pathMatches =
+      !selectedPath ||
+      path === selectedPath ||
+      path.startsWith(`${selectedPath}/`);
+    const tagMatches = !selectedTag || tags.includes(selectedTag);
+    return pathMatches && tagMatches;
+  };
+
+  const compareRows = (a: HTMLElement, b: HTMLElement) => {
+    const sort = getSortMode();
+    const dateA = Number(a.dataset.date);
+    const dateB = Number(b.dataset.date);
+    const titleA = a.dataset.title ?? "";
+    const titleB = b.dataset.title ?? "";
+
+    if (sort === "date-asc") return dateA - dateB;
+    if (sort === "title-asc") return collator.compare(titleA, titleB);
+    if (sort === "title-desc") return -collator.compare(titleA, titleB);
+    return dateB - dateA;
+  };
+
+  const renderBrowse = (reset = true) => {
+    if (!catalogResults || !searchResults) return;
+    if (reset) renderedBrowseResults = pageSize;
+    const visible = rows.filter(matchesScope).sort(compareRows);
+    const hidden = rows.filter((row) => !matchesScope(row));
+
+    visible.forEach((row, index) => {
+      row.hidden = index >= renderedBrowseResults;
+      row.querySelector<HTMLElement>("[data-result-index]")!.textContent =
+        String(index + 1).padStart(2, "0");
+      catalogResults.append(row);
+    });
+    hidden.forEach((row) => {
+      row.hidden = true;
+      catalogResults.append(row);
+    });
+
+    catalogResults.hidden = false;
+    searchResults.hidden = true;
+    if (more) more.hidden = renderedBrowseResults >= visible.length;
+    if (empty) empty.hidden = visible.length > 0;
+    if (status) {
+      status.innerHTML = `当前范围共 <strong>${visible.length}</strong> 篇文章`;
+    }
+  };
+
+  const createSearchResult = (entry: SearchResultData, index: number) => {
+    const item = document.createElement("li");
+    const section = entry.sub_results?.find((candidate) =>
+      candidate.url.includes("#"),
+    );
+    const excerpt = entry.excerpt.includes("<mark>")
+      ? entry.excerpt
+      : escapeHtml(entry.meta.description || entry.excerpt);
+    const sectionLink = section
+      ? `<a class="search-result__section" href="${escapeHtml(section.url)}">
+          命中小节 · ${escapeHtml(section.title)}
+        </a>`
+      : "";
+    const cover = entry.meta.cover
+      ? `<a class="catalog-result__cover" href="${escapeHtml(entry.url)}" tabindex="-1" aria-hidden="true">
+          <img
+            src="${escapeHtml(entry.meta.cover)}"
+            alt=""
+            loading="lazy"
+            style="object-position: ${escapeHtml(entry.meta["cover-position"] || "50% 50%")}"
+          />
+        </a>`
+      : "";
+
+    item.innerHTML = `
+      <span class="catalog-result__index">${String(index + 1).padStart(2, "0")}</span>
+      ${cover}
+      <article>
+        <p class="catalog-result__path">${escapeHtml(entry.meta.catalog || "")}</p>
+        <h3><a href="${escapeHtml(entry.url)}">${escapeHtml(entry.meta.title || "未命名文章")}</a></h3>
+        <p class="catalog-result__description">${excerpt}</p>
+        ${sectionLink}
+        <code>${escapeHtml(entry.meta.source || "")}</code>
+      </article>
+      <div class="catalog-result__tail">
+        <time datetime="${escapeHtml(entry.meta.date || "")}">
+          ${escapeHtml(formatSearchDate(entry.meta.date || ""))}
+        </time>
+        <a href="${escapeHtml(entry.url)}" aria-label="阅读文章">
+          <span aria-hidden="true">↗</span>
+        </a>
+      </div>
+    `;
+    return item;
+  };
+
+  const renderMoreSearchResults = async () => {
+    if (!searchResults) return;
+    const sequence = searchSequence;
+    const nextReferences = searchReferences.slice(
+      renderedSearchResults,
+      renderedSearchResults + pageSize,
+    );
+    const entries = await Promise.all(
+      nextReferences.map((reference) => reference.data()),
+    );
+    if (sequence !== searchSequence) return;
+
+    entries.forEach((entry, index) => {
+      searchResults.append(
+        createSearchResult(entry, renderedSearchResults + index),
+      );
+    });
+    renderedSearchResults += entries.length;
+    if (more) {
+      more.hidden = renderedSearchResults >= searchReferences.length;
+    }
+  };
+
+  const runSearch = async () => {
+    if (!root || !input || !catalogResults || !searchResults) return;
+    const query = input.value.trim();
+    clearSearch?.toggleAttribute("hidden", !query);
+
+    if (!query) {
+      queryWasEmpty = true;
+      const relevance = sortSelect?.querySelector<HTMLOptionElement>(
+        'option[value="relevance"]',
+      );
+      if (relevance) relevance.disabled = true;
+      if (sortSelect?.value === "relevance") sortSelect.value = "date-desc";
+      syncUrl();
+      renderBrowse();
+      return;
+    }
+
+    const relevance = sortSelect?.querySelector<HTMLOptionElement>(
+      'option[value="relevance"]',
+    );
+    if (relevance) relevance.disabled = false;
+    if (queryWasEmpty && sortSelect && !new URLSearchParams(location.search).has("sort")) {
+      sortSelect.value = "relevance";
+    }
+    queryWasEmpty = false;
+    syncUrl();
+
+    if (root.dataset.indexReady !== "true") {
+      catalogResults.hidden = true;
+      searchResults.hidden = false;
+      searchResults.replaceChildren();
+      if (status) {
+        status.textContent =
+          "全文索引在生产构建时生成，请使用 pnpm build 后的预览服务。";
+      }
+      return;
+    }
+
+    const sequence = ++searchSequence;
+    if (status) status.textContent = "正在查找…";
+    if (empty) empty.hidden = true;
+
+    try {
+      const pagefind = await loadPagefind();
+      const filters: Record<string, string> = {};
+      if (selectedPath) filters.directory = selectedPath;
+      if (selectedTag) filters.tag = selectedTag;
+      const response = await pagefind.search(query, {
+        filters: Object.keys(filters).length > 0 ? filters : undefined,
+        sort: getPagefindSort(),
+      });
+      if (sequence !== searchSequence) return;
+
+      searchReferences = response.results;
+      renderedSearchResults = 0;
+      searchResults.replaceChildren();
+      catalogResults.hidden = true;
+      searchResults.hidden = false;
+      if (status) {
+        status.innerHTML = `找到 <strong>${searchReferences.length}</strong> 篇相关文章`;
+      }
+      if (empty) empty.hidden = searchReferences.length > 0;
+      await renderMoreSearchResults();
+    } catch (error) {
+      console.error(error);
+      searchResults.replaceChildren();
+      if (status) status.textContent = "搜索索引加载失败，请刷新页面后重试。";
+    }
+  };
+
+  const applyState = () => {
+    updateSelection();
+    syncUrl();
+    if (input?.value.trim()) runSearch();
+    else renderBrowse();
+  };
+
+  modeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const mode = button.dataset.indexMode;
+      modeButtons.forEach((candidate) =>
+        candidate.setAttribute(
+          "aria-pressed",
+          String(candidate === button),
+        ),
+      );
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.indexPanel !== mode;
+      });
+    });
+  });
+
+  directoryControls.forEach((control) => {
+    control.addEventListener("click", () => {
+      selectedPath = control.dataset.catalogPath ?? "";
+      selectedPathLabel = control.dataset.catalogLabel ?? "全部文章";
+      selectedTag = "";
+      applyState();
+    });
+  });
+
+  tagControls.forEach((control) => {
+    control.addEventListener("click", (event) => {
+      event.preventDefault();
+      selectedTag = control.dataset.tag ?? "";
+      selectedPath = "";
+      selectedPathLabel = "全部文章";
+      applyState();
+    });
+  });
+
+  clearScope?.addEventListener("click", () => {
+    selectedPath = "";
+    selectedPathLabel = "全部文章";
+    selectedTag = "";
+    applyState();
+  });
+
+  input?.addEventListener("input", () => {
+    window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(runSearch, 120);
+  });
+  input?.addEventListener("focus", () => {
+    if (root?.dataset.indexReady === "true") loadPagefind();
+  });
+  clearSearch?.addEventListener("click", () => {
+    if (!input) return;
+    input.value = "";
+    runSearch();
+    input.focus();
+  });
+  sortSelect?.addEventListener("change", () => {
+    if (input?.value.trim()) runSearch();
+    else {
+      syncUrl();
+      renderBrowse();
+    }
+  });
+  more?.addEventListener("click", () => {
+    if (input?.value.trim()) {
+      renderMoreSearchResults();
+    } else {
+      renderedBrowseResults += pageSize;
+      renderBrowse(false);
+    }
+  });
+
+  const initialParams = new URLSearchParams(window.location.search);
+  const initialQuery = initialParams.get("q") ?? "";
+  const initialPath = initialParams.get("path") ?? "";
+  const initialTag = initialParams.get("tag") ?? "";
+  const initialSort = initialParams.get("sort");
+  const initialDirectory = directoryControls.find(
+    (control) => control.dataset.catalogPath === initialPath,
+  );
+
+  selectedPath = initialDirectory ? initialPath : "";
+  selectedPathLabel =
+    initialDirectory?.dataset.catalogLabel ?? "全部文章";
+  selectedTag = initialTag;
+  if (input) input.value = initialQuery;
+  if (sortSelect) {
+    sortSelect.value =
+      initialSort ??
+      (initialQuery ? "relevance" : "date-desc");
+  }
+  queryWasEmpty = !initialQuery;
+  if (initialTag) {
+    const tagsMode = modeButtons.find(
+      (button) => button.dataset.indexMode === "tags",
+    );
+    tagsMode?.click();
+  }
+  updateSelection();
+  if (initialQuery) runSearch();
+  else renderBrowse();
+</script>
+
+<style is:global>
+  .library-page {
+    background: var(--color-bg);
+  }
+
+  .library-masthead {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .library-masthead > .page-width {
+    display: grid;
+    min-height: 230px;
+    padding-block: 54px 42px;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.55fr);
+    align-items: end;
+    gap: 60px;
+  }
+
+  .library-masthead__title > p {
+    margin: 0 0 16px;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 800;
+  }
+
+  .library-masthead h1 {
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(3.3rem, 7vw, 6rem);
+    line-height: 0.95;
+  }
+
+  .library-masthead__description {
+    max-width: 420px;
+    margin: 0;
+    color: var(--color-muted);
+    font-family: var(--font-reading);
+    font-size: 1.04rem;
+    line-height: 1.85;
+  }
+
+  .library-shell {
+    padding-bottom: 120px;
+  }
+
+  .library-search {
+    display: grid;
+    min-height: 78px;
+    padding-inline: 20px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--color-ink);
+    color: var(--color-ink);
+  }
+
+  .library-search:focus-within {
+    box-shadow: inset 0 -2px var(--color-rose);
+  }
+
+  .library-search label,
+  .library-search input {
+    width: 100%;
+  }
+
+  .library-search input {
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font-family: var(--font-reading);
+    font-size: clamp(1.08rem, 2vw, 1.4rem);
+  }
+
+  .library-search input::-webkit-search-cancel-button,
+  .library-search input::-webkit-search-decoration {
+    appearance: none;
+  }
+
+  .library-search button {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+
+  .library-search button[hidden] {
+    display: none;
+  }
+
+  .library-workspace {
+    display: grid;
+    grid-template-columns: 278px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .library-index {
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow: auto;
+    border-right: 1px solid var(--color-line);
+    padding: 28px 24px 56px 0;
+  }
+
+  .library-index > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 14px;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 800;
+  }
+
+  .library-index__modes {
+    display: grid;
+    margin-bottom: 18px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border: 1px solid var(--color-line);
+  }
+
+  .library-index__modes button {
+    display: flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    font-size: 0.72rem;
+  }
+
+  .library-index__modes button + button {
+    border-left: 1px solid var(--color-line);
+  }
+
+  .library-index__modes button[aria-pressed="true"] {
+    background: var(--color-ink);
+    color: var(--color-bg);
+  }
+
+  .library-index__panel[hidden] {
+    display: none;
+  }
+
+  .library-index__all,
+  .library-tag-index a {
+    display: grid;
+    width: 100%;
+    min-height: 38px;
+    padding: 7px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    font-size: 0.76rem;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .library-index__all {
+    margin-bottom: 4px;
+  }
+
+  .library-index__all:hover,
+  .library-index__all[data-selected="true"],
+  .library-tag-index a:hover,
+  .library-tag-index a[data-selected="true"] {
+    background: var(--color-surface-soft);
+    color: var(--color-ink);
+    box-shadow: inset 2px 0 var(--color-rose);
+  }
+
+  .library-index__all small,
+  .library-tag-index small {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+  }
+
+  .library-tag-index a + a {
+    border-top: 1px solid var(--color-line);
+  }
+
+  .library-results {
+    min-width: 0;
+    padding: 38px 0 0 48px;
+  }
+
+  .library-results__header {
+    display: grid;
+    padding-bottom: 28px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 32px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .library-results__header p {
+    margin: 0 0 5px;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 800;
+  }
+
+  .library-results__header h2 {
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    line-height: 1.2;
+  }
+
+  .library-results__header code {
+    display: block;
+    max-width: 100%;
+    margin-top: 8px;
+    overflow: hidden;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .library-sort {
+    display: grid;
+    min-width: 148px;
+    min-height: 42px;
+    padding-inline: 12px;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 9px;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+  }
+
+  .library-sort select {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.76rem;
+  }
+
+  .library-status {
+    display: flex;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    color: var(--color-muted);
+    font-size: 0.76rem;
+  }
+
+  .library-status p {
+    margin: 0;
+  }
+
+  .library-status strong {
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+  }
+
+  .library-status button {
+    background: transparent;
+    color: var(--color-rose);
+    cursor: pointer;
+    font-size: 0.7rem;
+  }
+
+  .library-status button[hidden] {
+    display: none;
+  }
+
+  .catalog-results {
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid var(--color-line);
+    list-style: none;
+  }
+
+  .catalog-results[hidden] {
+    display: none;
+  }
+
+  .catalog-results > li {
+    display: grid;
+    min-height: 190px;
+    padding-block: 28px;
+    grid-template-columns: 34px 140px minmax(0, 1fr) 104px;
+    align-items: start;
+    gap: 24px;
+    border-bottom: 1px solid var(--color-line);
+    transition:
+      background 180ms ease,
+      padding 180ms ease;
+  }
+
+  .catalog-results > li:hover {
+    background: color-mix(in srgb, var(--color-cyan) 4%, transparent);
+  }
+
+  .catalog-results > li[hidden] {
+    display: none;
+  }
+
+  .catalog-result__index {
+    padding-top: 4px;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 800;
+  }
+
+  .catalog-result__cover {
+    display: block;
+    width: 140px;
+    overflow: hidden;
+    aspect-ratio: 7 / 5;
+    align-self: start;
+    background: var(--color-surface-soft);
+  }
+
+  .catalog-result__cover :is(img, picture) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .catalog-result__cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 320ms ease;
+  }
+
+  .catalog-results > li:hover .catalog-result__cover img {
+    transform: scale(1.025);
+  }
+
+  .catalog-result__path {
+    margin: 0;
+    color: var(--color-cyan);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 760;
+  }
+
+  .catalog-results h3 {
+    max-width: 30ch;
+    margin: 8px 0 0;
+    font-family: var(--font-reading);
+    font-size: clamp(1.32rem, 2.2vw, 1.8rem);
+    line-height: 1.35;
+  }
+
+  .catalog-results h3 > span {
+    display: inline-block;
+    padding: 2px 5px;
+    margin-right: 8px;
+    border: 1px solid var(--color-line);
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.48em;
+    text-transform: uppercase;
+    vertical-align: 0.18em;
+  }
+
+  .catalog-results h3 a,
+  .catalog-results ul a {
+    text-decoration: none;
+  }
+
+  .catalog-results h3 a:hover,
+  .catalog-results ul a:hover {
+    color: var(--color-rose);
+  }
+
+  .catalog-result__description {
+    max-width: 720px;
+    margin: 9px 0 0;
+    color: var(--color-muted);
+    font-size: 0.88rem;
+    line-height: 1.72;
+  }
+
+  .catalog-result__description mark {
+    background: color-mix(in srgb, var(--color-rose) 22%, transparent);
+    color: var(--color-ink);
+  }
+
+  .catalog-results ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding: 0;
+    margin: 13px 0 0;
+    color: var(--color-muted);
+    font-size: 0.71rem;
+    list-style: none;
+  }
+
+  .catalog-results article > code {
+    display: block;
+    max-width: 100%;
+    margin-top: 12px;
+    overflow: hidden;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.59rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .search-result__section {
+    display: block;
+    margin-top: 12px;
+    color: var(--color-rose);
+    font-size: 0.72rem;
+    font-weight: 750;
+    text-decoration: none;
+  }
+
+  .catalog-result__tail {
+    display: grid;
+    min-height: 100%;
+    justify-items: end;
+    align-content: space-between;
+    gap: 24px;
+  }
+
+  .catalog-result__tail time {
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+  }
+
+  .catalog-result__tail > a {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid var(--color-line);
+    border-radius: 50%;
+    text-decoration: none;
+  }
+
+  .catalog-result__tail > a:hover {
+    border-color: var(--color-rose);
+    color: var(--color-rose);
+  }
+
+  .library-empty {
+    padding: 80px 0;
+    margin: 0;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  .library-empty[hidden] {
+    display: none;
+  }
+
+  .library-more {
+    width: 100%;
+    min-height: 52px;
+    margin-top: 22px;
+    border: 1px solid var(--color-line);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .library-more[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .library-masthead > .page-width {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .library-workspace {
+      grid-template-columns: 1fr;
+    }
+
+    .library-index {
+      position: relative;
+      max-height: none;
+      padding: 28px 0;
+      border-right: 0;
+      border-bottom: 1px solid var(--color-line);
+    }
+
+    .library-index__panel {
+      max-height: min(44svh, 420px);
+      padding-right: 8px;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+    }
+
+    .library-results {
+      padding-left: 0;
+    }
+  }
+
+  @media (max-width: 620px) {
+    .library-masthead > .page-width {
+      min-height: 190px;
+      padding-block: 42px 32px;
+    }
+
+    .library-masthead h1 {
+      font-size: 3.6rem;
+    }
+
+    .library-search {
+      min-height: 66px;
+      padding-inline: 4px;
+    }
+
+    .library-results__header {
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .library-sort {
+      width: 100%;
+    }
+
+    .catalog-results > li {
+      min-height: 0;
+      grid-template-columns: 30px 96px minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .catalog-result__cover {
+      width: 96px;
+    }
+
+    .catalog-result__tail {
+      display: none;
+    }
+
+    .catalog-results h3 {
+      font-size: 1.28rem;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .catalog-results > li {
+      grid-template-columns: 24px minmax(0, 1fr);
+    }
+
+    .catalog-result__cover {
+      width: 100%;
+      grid-column: 2;
+      aspect-ratio: 16 / 7;
+    }
+
+    .catalog-results article {
+      grid-column: 2;
+    }
+  }
+</style>

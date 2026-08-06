@@ -1,222 +1,648 @@
 ---
-import { Search, X } from "@lucide/astro";
-import ArticleCard from "../../components/ArticleCard.astro";
-import ContentDirectory from "../../components/content/ContentDirectory.astro";
-import ContentPageHeader from "../../components/content/ContentPageHeader.astro";
+import { Image } from "astro:assets";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  ListTree,
+} from "@lucide/astro";
+import ArticleSectionNav from "../../components/content/ArticleSectionNav.astro";
+import DirectedPointer from "../../components/DirectedPointer.astro";
+import ScrollReveal from "../../components/ScrollReveal.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
-import { getPublishedPosts, getTaxonomy } from "../../lib/posts";
+import {
+  getCatalogBreadcrumbs,
+  getVisiblePosts,
+  postHref,
+  tagHref,
+} from "../../lib/posts";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-const posts = await getPublishedPosts();
-const categories = getTaxonomy(posts, "categories");
-const tags = getTaxonomy(posts, "tags");
+const posts = await getVisiblePosts();
+const years = Array.from(
+  new Set(posts.map((post) => post.data.pubDate.getFullYear())),
+).map((year) => ({
+  year,
+  posts: posts.filter((post) => post.data.pubDate.getFullYear() === year),
+}));
+const latestId = posts[0]?.id;
+const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const monthDayFormatter = new Intl.DateTimeFormat("zh-CN", {
+  month: "2-digit",
+  day: "2-digit",
+});
+const directoryLabel = (post: (typeof posts)[number]) =>
+  getCatalogBreadcrumbs(post, false)
+    .map((entry) => entry.label)
+    .join(" / ");
 ---
 
 <BaseLayout
   title="文章"
-  description="技术文章、课程笔记与偶尔出现的想法。"
-  bodyClass="archive-page"
+  description="技术笔记、论文阅读、工程记录，以及偶尔写远的思绪。"
+  bodyClass="journal-page"
+  directedPointer
 >
   <SiteHeader variant="reading" />
   <main id="main-content">
-    <ContentPageHeader
-      kicker={`LATEST // ${String(posts.length).padStart(2, "0")}`}
-      title="文章"
-      description="技术文章、课程笔记与偶尔出现的想法。"
-      note="按时间排列，也可以从标签与分类进入。"
-    />
-    <ContentDirectory
-      current="latest"
-      postCount={posts.length}
-      categoryCount={categories.length}
-      tagCount={tags.length}
-    />
+    <ArticleSectionNav current="discover" />
 
-    <section class="post-search page-width" aria-label="搜索文章" data-post-search>
-      <label>
-        <Search aria-hidden="true" size={19} stroke-width={1.8} />
-        <span class="visually-hidden">搜索文章</span>
-        <input
-          type="search"
-          placeholder="搜索标题、分类或标签"
-          autocomplete="off"
-          data-post-search-input
-        />
-      </label>
-      <button
-        type="button"
-        aria-label="清空搜索"
-        title="清空搜索"
-        data-post-search-clear
-        hidden
-      >
-        <X aria-hidden="true" size={18} stroke-width={1.8} />
-      </button>
-      <p aria-live="polite">
-        <span data-post-search-count>{posts.length}</span> 篇记录
-      </p>
-    </section>
+    <header class="journal-masthead">
+      <div class="journal-masthead__inner page-width">
+        <div class="journal-masthead__title">
+          <p>WRITING ARCHIVE // {String(posts.length).padStart(2, "0")}</p>
+          <h1>文章</h1>
+        </div>
+        <div class="journal-masthead__copy">
+          <p>
+            技术笔记、论文阅读、工程记录，也有偶尔偏离主线的思考。<br />
+            所有文章依发布时间从新到旧排列。
+          </p>
+          {
+            posts.length > 0 && (
+              <a href="#journal-timeline">
+                从最新一篇读起
+                <ArrowDownRight
+                  aria-hidden="true"
+                  size={19}
+                  stroke-width={1.8}
+                />
+              </a>
+            )
+          }
+        </div>
+      </div>
+      <div class="journal-masthead__rule page-width" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+    </header>
 
-    <section class="archive-list page-width" aria-label="文章列表">
-      {
-        posts.map((post) => (
-          <div
-            data-post-search-item
-            data-search-text={[
-              post.data.title,
-              post.data.description,
-              post.data.category,
-              ...post.data.tags,
-            ]
-              .join(" ")
-              .toLocaleLowerCase("zh-CN")}
-          >
-            <ArticleCard post={post} />
+    {
+      posts.length > 0 ? (
+        <section
+          class="journal-timeline page-width"
+          id="journal-timeline"
+          aria-labelledby="timeline-title"
+        >
+          <header class="journal-timeline__header" data-reveal>
+            <div>
+              <p>CHRONOLOGICAL RECORDS</p>
+              <h2 id="timeline-title">沿时间翻阅</h2>
+            </div>
+            <span>
+              {String(years.length).padStart(2, "0")} YEARS /{" "}
+              {String(posts.length).padStart(2, "0")} ENTRIES
+            </span>
+          </header>
+
+          <div class="journal-years">
+            {years.map((group) => (
+              <section
+                class="journal-year"
+                aria-labelledby={`year-${group.year}`}
+              >
+                <header data-reveal>
+                  <p>YEAR</p>
+                  <h2 id={`year-${group.year}`}>{group.year}</h2>
+                  <span>{String(group.posts.length).padStart(2, "0")} 篇</span>
+                </header>
+
+                <ol>
+                  {group.posts.map((post, index) => {
+                    const isLatest = post.id === latestId;
+
+                    return (
+                      <li
+                        class:list={{ "is-latest": isLatest }}
+                        data-reveal
+                        data-reveal-delay={String(Math.min(index, 2))}
+                      >
+                        <div class="journal-entry__date">
+                          <time
+                            datetime={post.data.pubDate.toISOString()}
+                            title={dateFormatter.format(post.data.pubDate)}
+                          >
+                            {monthDayFormatter.format(post.data.pubDate)}
+                          </time>
+                          {isLatest && <span>LATEST</span>}
+                        </div>
+
+                        <a
+                          class="journal-entry__cover"
+                          href={postHref(post)}
+                          aria-label={`阅读《${post.data.title}》`}
+                        >
+                          <Image
+                            src={post.data.cover}
+                            alt={post.data.coverAlt}
+                            widths={[360, 540, 720, 960]}
+                            sizes="(max-width: 700px) 86vw, (max-width: 1000px) 230px, 300px"
+                            loading={isLatest ? "eager" : "lazy"}
+                            data-critical-image={isLatest ? true : undefined}
+                            style={`object-position: ${post.data.coverPosition}`}
+                          />
+                        </a>
+
+                        <article>
+                          <p class="journal-entry__path">
+                            {directoryLabel(post)}
+                          </p>
+                          <h3>
+                            <a href={postHref(post)}>{post.data.title}</a>
+                          </h3>
+                          <p class="journal-entry__description">
+                            {post.data.description}
+                          </p>
+                          <ul aria-label="标签">
+                            {post.data.tags.slice(0, 4).map((tag) => (
+                              <li>
+                                <a href={tagHref(tag)}>#{tag}</a>
+                              </li>
+                            ))}
+                          </ul>
+                        </article>
+
+                        <a
+                          class="journal-entry__open"
+                          href={postHref(post)}
+                          aria-label={`阅读《${post.data.title}》`}
+                          title="阅读文章"
+                        >
+                          <ArrowUpRight
+                            aria-hidden="true"
+                            size={19}
+                            stroke-width={1.8}
+                          />
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </section>
+            ))}
           </div>
-        ))
-      }
+        </section>
+      ) : (
+        <section class="journal-empty page-width">
+          <p>WRITING ARCHIVE // 00</p>
+          <h2>第一篇文章还在纸上。</h2>
+        </section>
+      )
+    }
+
+    <section class="journal-catalog" aria-labelledby="catalog-title">
+      <div class="page-width" data-reveal>
+        <ListTree aria-hidden="true" size={29} stroke-width={1.5} />
+        <div>
+          <p>KNOW WHERE TO LOOK?</p>
+          <h2 id="catalog-title">沿知识脉络，找回旧文。</h2>
+        </div>
+        <a href="/posts/catalog/">
+          打开知识目录
+          <ArrowUpRight aria-hidden="true" size={20} stroke-width={1.8} />
+        </a>
+      </div>
     </section>
-    <p class="post-search-empty page-width" data-post-search-empty hidden>
-      没有找到匹配的记录。
-    </p>
   </main>
   <SiteFooter />
+  <DirectedPointer />
+  <ScrollReveal />
 </BaseLayout>
 
-<script>
-  const searchRoot = document.querySelector<HTMLElement>("[data-post-search]");
-  const searchInput = searchRoot?.querySelector<HTMLInputElement>(
-    "[data-post-search-input]",
-  );
-  const clearButton = searchRoot?.querySelector<HTMLButtonElement>(
-    "[data-post-search-clear]",
-  );
-  const count = searchRoot?.querySelector<HTMLElement>(
-    "[data-post-search-count]",
-  );
-  const empty = document.querySelector<HTMLElement>("[data-post-search-empty]");
-  const items = Array.from(
-    document.querySelectorAll<HTMLElement>("[data-post-search-item]"),
-  );
-
-  const filterPosts = () => {
-    const query = searchInput?.value.trim().toLocaleLowerCase("zh-CN") ?? "";
-    let visible = 0;
-
-    items.forEach((item) => {
-      const matches = !query || item.dataset.searchText?.includes(query);
-      item.hidden = !matches;
-      if (matches) visible += 1;
-    });
-
-    if (count) count.textContent = String(visible);
-    if (clearButton) clearButton.hidden = !query;
-    if (empty) empty.hidden = visible !== 0;
-  };
-
-  searchInput?.addEventListener("input", filterPosts);
-  clearButton?.addEventListener("click", () => {
-    if (!searchInput) return;
-    searchInput.value = "";
-    filterPosts();
-    searchInput.focus();
-  });
-</script>
-
 <style>
-  .archive-page {
+  .journal-page {
     background: var(--color-bg);
   }
 
-  .post-search {
-    display: none;
+  .journal-masthead {
+    position: relative;
+    border-bottom: 1px solid var(--color-line);
+    overflow: hidden;
   }
 
-  :global(.js) .post-search {
+  .journal-masthead__inner {
     display: grid;
-    padding-block: 48px 0;
-    grid-template-columns: minmax(0, 560px) auto 1fr;
-    align-items: center;
-    gap: 8px;
+    min-height: 340px;
+    padding-block: 76px 72px;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.62fr);
+    align-items: end;
+    gap: 72px;
   }
 
-  .post-search label {
-    display: grid;
-    min-height: 52px;
-    padding-inline: 16px;
-    grid-template-columns: auto minmax(0, 1fr);
-    align-items: center;
-    gap: 12px;
-    border: 1px solid var(--color-line);
-    background: var(--color-surface);
+  .journal-masthead__title p,
+  .journal-timeline__header p,
+  .journal-year > header p,
+  .journal-catalog p,
+  .journal-empty > p {
+    margin: 0;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 800;
   }
 
-  .post-search input {
-    width: 100%;
-    border: 0;
-    outline: 0;
-    background: transparent;
+  .journal-masthead h1 {
+    margin: 16px 0 0;
+    font-family: var(--font-reading);
+    font-size: clamp(4.5rem, 10vw, 8rem);
+    line-height: 0.88;
   }
 
-  .post-search button {
-    display: grid;
-    width: 52px;
-    height: 52px;
-    place-items: center;
-    border: 1px solid var(--color-line);
-    background: var(--color-surface);
-    cursor: pointer;
+  .journal-masthead__copy {
+    padding: 8px 0 8px 34px;
+    border-left: 1px solid var(--color-line);
   }
 
-  .post-search button[hidden] {
-    display: none;
-  }
-
-  .post-search p {
-    justify-self: end;
+  .journal-masthead__copy p {
     margin: 0;
     color: var(--color-muted);
-    font-family: var(--font-mono);
-    font-size: 0.67rem;
+    font-family: var(--font-reading);
+    font-size: 1.05rem;
+    line-height: 1.9;
   }
 
-  .archive-list {
-    display: grid;
-    padding-block: 68px 108px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 40px;
+  .journal-masthead__copy a {
+    display: inline-flex;
+    margin-top: 28px;
+    align-items: center;
+    gap: 9px;
+    color: var(--color-ink);
+    font-size: 0.78rem;
+    font-weight: 760;
+    text-decoration: none;
   }
 
-  .archive-list > div[hidden] {
-    display: none;
+  .journal-masthead__rule {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    height: 5px;
   }
 
-  .post-search-empty {
-    padding-bottom: 120px;
-    margin-top: -56px;
+  .journal-masthead__rule span:nth-child(1) {
+    width: 46px;
+    background: var(--color-cyan);
+  }
+
+  .journal-masthead__rule span:nth-child(2) {
+    width: 46px;
+    background: var(--color-rose);
+  }
+
+  .journal-masthead__rule span:nth-child(3) {
+    width: 38px;
+    background: var(--color-yellow);
+  }
+
+  .journal-timeline {
+    padding-block: 90px 128px;
+  }
+
+  .journal-timeline__header {
+    display: flex;
+    padding-bottom: 34px;
+    align-items: end;
+    justify-content: space-between;
+    gap: 48px;
+  }
+
+  .journal-timeline__header h2 {
+    margin: 10px 0 0;
+    font-family: var(--font-reading);
+    font-size: clamp(2.2rem, 4vw, 3.8rem);
+    line-height: 1;
+  }
+
+  .journal-timeline__header > span {
     color: var(--color-muted);
-    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    font-weight: 750;
   }
 
-  .post-search-empty[hidden] {
-    display: none;
+  .journal-year {
+    display: grid;
+    grid-template-columns: 168px minmax(0, 1fr);
+    border-top: 1px solid var(--color-ink);
+  }
+
+  .journal-year > header {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    padding: 31px 26px 34px 0;
+  }
+
+  .journal-year > header h2 {
+    margin: 9px 0 8px;
+    font-family: var(--font-reading);
+    font-size: clamp(2.8rem, 5vw, 4.6rem);
+    line-height: 1;
+  }
+
+  .journal-year > header span {
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+  }
+
+  .journal-year ol,
+  .journal-entry__date,
+  .journal-year article ul {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .journal-year ol {
+    min-width: 0;
+    border-left: 1px solid var(--color-line);
+  }
+
+  .journal-year ol > li {
+    display: grid;
+    min-height: 230px;
+    padding: 34px 0 34px 32px;
+    grid-template-columns: 74px minmax(220px, 300px) minmax(0, 1fr) 42px;
+    align-items: center;
+    gap: 26px;
+    border-bottom: 1px solid var(--color-line);
+    transition: background 180ms ease;
+  }
+
+  .journal-year ol > li:hover {
+    background: color-mix(in srgb, var(--color-cyan) 4%, transparent);
+  }
+
+  .journal-entry__date {
+    align-self: start;
+    padding-top: 4px;
+  }
+
+  .journal-entry__date time {
+    display: block;
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 800;
+  }
+
+  .journal-entry__date span {
+    display: block;
+    width: max-content;
+    margin-top: 12px;
+    padding: 3px 6px;
+    background: var(--color-rose);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    font-weight: 850;
+  }
+
+  .journal-entry__cover {
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 16 / 10;
+    background: var(--color-surface-soft);
+  }
+
+  .journal-entry__cover :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 360ms ease;
+  }
+
+  .journal-year ol > li:hover .journal-entry__cover :global(img) {
+    transform: scale(1.025);
+  }
+
+  .journal-year article {
+    min-width: 0;
+  }
+
+  .journal-entry__path {
+    margin: 0;
+    color: var(--color-cyan);
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    font-weight: 760;
+  }
+
+  .journal-year h3 {
+    max-width: 27ch;
+    margin: 10px 0 10px;
+    font-family: var(--font-reading);
+    font-size: clamp(1.45rem, 2.4vw, 2.15rem);
+    line-height: 1.28;
+  }
+
+  .journal-year h3 a {
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .journal-entry__description {
+    max-width: 640px;
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.84rem;
+    line-height: 1.7;
+  }
+
+  .journal-year article ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 15px;
+    margin-top: 14px;
+    font-size: 0.7rem;
+  }
+
+  .journal-year article ul a {
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .journal-year article ul a:hover {
+    color: var(--color-rose);
+  }
+
+  .journal-entry__open {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border: 1px solid var(--color-line);
+    border-radius: 50%;
+    color: var(--color-ink);
+  }
+
+  .journal-entry__open:hover {
+    border-color: var(--color-rose);
+    color: var(--color-rose);
+  }
+
+  .journal-empty {
+    min-height: 480px;
+    padding-block: 120px;
+  }
+
+  .journal-empty h2 {
+    margin-top: 18px;
+    font-family: var(--font-reading);
+    font-size: clamp(2.4rem, 6vw, 5rem);
+  }
+
+  .journal-catalog {
+    padding-block: 76px;
+    background: #19171c;
+    color: #fff;
+  }
+
+  .journal-catalog > .page-width {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .journal-catalog :global(svg) {
+    color: #75d4d2;
+  }
+
+  .journal-catalog h2 {
+    max-width: 26ch;
+    margin: 7px 0 0;
+    font-family: var(--font-reading);
+    font-size: clamp(1.5rem, 3vw, 2.4rem);
+    line-height: 1.3;
+  }
+
+  .journal-catalog > .page-width > a {
+    display: inline-flex;
+    min-height: 48px;
+    padding: 0 16px;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #ffffff58;
+    color: #fff;
+    text-decoration: none;
+  }
+
+  @media (max-width: 1000px) {
+    .journal-year {
+      grid-template-columns: 130px minmax(0, 1fr);
+    }
+
+    .journal-year ol > li {
+      grid-template-columns: 62px 220px minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .journal-entry__open {
+      display: none;
+    }
   }
 
   @media (max-width: 760px) {
-    :global(.js) .post-search {
-      padding-top: 34px;
-      grid-template-columns: minmax(0, 1fr) auto;
-    }
-
-    .post-search p {
-      display: none;
-    }
-
-    .archive-list {
-      padding-block: 46px 84px;
+    .journal-masthead__inner {
+      min-height: 300px;
+      padding-block: 54px 48px;
       grid-template-columns: 1fr;
-      gap: 28px;
+      align-content: end;
+      gap: 34px;
+    }
+
+    .journal-masthead__copy {
+      padding: 22px 0 0;
+      border-top: 1px solid var(--color-line);
+      border-left: 0;
+    }
+
+    .journal-masthead__copy p {
+      font-size: 0.94rem;
+    }
+
+    .journal-masthead__copy a {
+      margin-top: 18px;
+    }
+
+    .journal-timeline {
+      padding-block: 68px 84px;
+    }
+
+    .journal-timeline__header {
+      align-items: start;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .journal-year {
+      grid-template-columns: 1fr;
+    }
+
+    .journal-year > header {
+      position: relative;
+      top: auto;
+      display: flex;
+      padding: 26px 0 20px;
+      align-items: baseline;
+      gap: 14px;
+    }
+
+    .journal-year > header h2 {
+      margin: 0;
+      font-size: 2.8rem;
+    }
+
+    .journal-year ol {
+      border-left: 0;
+    }
+
+    .journal-year ol > li {
+      padding: 28px 0;
+      grid-template-columns: 44px minmax(0, 1fr);
+      align-items: start;
+      gap: 10px 14px;
+    }
+
+    .journal-entry__date {
+      grid-row: 1 / 3;
+    }
+
+    .journal-entry__date time {
+      writing-mode: vertical-rl;
+    }
+
+    .journal-entry__cover {
+      grid-column: 2;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+    }
+
+    .journal-year article {
+      grid-column: 2;
+    }
+
+    .journal-catalog > .page-width {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .journal-catalog > .page-width > a {
+      grid-column: 2;
+      width: max-content;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .journal-entry__cover :global(img) {
+      transition: none;
     }
   }
 </style>

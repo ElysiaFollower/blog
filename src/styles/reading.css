@@ -6,10 +6,40 @@
   padding-bottom: 88px;
 }
 
+.search-catalog-index {
+  display: none;
+}
+
 .post-header {
   width: min(calc(100% - (2 * var(--page-inline))), 960px);
   padding: clamp(58px, 9vw, 110px) 0 clamp(34px, 6vw, 64px);
   margin-inline: auto;
+}
+
+.post-catalog-path {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 9px;
+  margin-bottom: 18px;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.69rem;
+}
+
+.post-catalog-path a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.post-catalog-path a:first-of-type {
+  color: var(--color-rose);
+  font-weight: 800;
+}
+
+.post-catalog-path a:hover {
+  color: var(--color-ink);
 }
 
 .post-header__eyebrow {
@@ -23,10 +53,23 @@
   font-size: 0.76rem;
 }
 
-.post-header__eyebrow > a:first-child {
+.post-header__eyebrow > a {
   color: var(--color-rose);
   font-weight: 800;
   text-decoration: none;
+  text-transform: uppercase;
+}
+
+.post-header__eyebrow > span:first-child {
+  color: var(--color-cyan);
+  font-weight: 800;
+}
+
+.post-header__draft {
+  padding: 2px 7px;
+  border: 1px solid var(--color-line);
+  font-size: 0.65rem;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
@@ -69,6 +112,19 @@
   color: var(--color-rose);
 }
 
+.post-source-path {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin-top: 18px;
+  overflow: hidden;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .post-cover {
   width: min(calc(100% - (2 * var(--page-inline))), 1120px);
   overflow: hidden;
@@ -84,11 +140,17 @@
 }
 
 .reading-grid {
+  --reading-toc-width: 140px;
+  --reading-prose-width: 780px;
+  --reading-note-width: 220px;
+  --reading-gap: 32px;
   display: grid;
   width: min(calc(100% - (2 * var(--page-inline))), 1260px);
   margin-inline: auto;
-  grid-template-columns: 140px minmax(0, 780px) 220px;
-  gap: 32px;
+  grid-template-columns:
+    var(--reading-toc-width) minmax(0, var(--reading-prose-width))
+    var(--reading-note-width);
+  gap: var(--reading-gap);
   justify-content: center;
 }
 
@@ -98,6 +160,9 @@
   align-self: start;
   max-height: calc(100vh - 60px);
   overflow: auto;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
 }
 
 .post-toc__label {
@@ -156,7 +221,9 @@
 .prose blockquote,
 .prose pre,
 .prose table,
-.prose .content-callout {
+.prose .content-figure,
+.prose .content-callout,
+.prose .content-video {
   margin-top: 0;
   margin-bottom: 1.45em;
 }
@@ -232,7 +299,23 @@
 .prose img {
   width: 100%;
   height: auto;
-  margin-block: 2.2em;
+}
+
+.content-figure {
+  margin-inline: 0;
+}
+
+.content-figure img {
+  margin: 0;
+}
+
+.content-figure figcaption {
+  margin-top: 10px;
+  color: var(--color-muted);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  text-align: center;
 }
 
 .prose table {
@@ -256,6 +339,64 @@
   color: var(--color-muted);
   font-size: 0.76rem;
   text-transform: uppercase;
+}
+
+.prose .contains-task-list {
+  padding-left: 0;
+  list-style: none;
+}
+
+.prose .task-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65em;
+}
+
+.prose .task-list-item input {
+  width: 1em;
+  height: 1em;
+  accent-color: var(--color-rose);
+}
+
+.prose .footnotes {
+  padding-top: 1.2em;
+  margin-top: 3.5em;
+  border-top: 1px solid var(--color-line);
+  color: var(--color-muted);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+}
+
+.prose .footnotes .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  margin: -1px;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.prose .footnotes ol {
+  margin-bottom: 0;
+}
+
+.prose .footnotes li:last-child p {
+  margin-bottom: 0;
+}
+
+.prose .data-footnote-backref {
+  margin-left: 0.3em;
+  text-decoration: none;
+}
+
+.prose .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.4em;
+  margin-block: 1.8em;
 }
 
 .content-callout {
@@ -293,6 +434,23 @@
   font-family: var(--font-ui);
   font-size: 0.78rem;
   line-height: 1.65;
+  transition:
+    opacity 220ms ease,
+    transform 220ms ease;
+}
+
+@media (min-width: 1121px) {
+  .reading-grid[data-stage-active] .post-toc {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-14px);
+  }
+
+  .reading-grid[data-stage-active] .prose > .sidenote {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(14px);
+  }
 }
 
 .sidenote__label {

@@ -1,0 +1,119 @@
+---
+import { Compass, ListTree } from "@lucide/astro";
+
+interface Props {
+  current: "discover" | "catalog";
+}
+
+const { current } = Astro.props;
+const entries = [
+  {
+    id: "discover",
+    label: "浏览文章",
+    note: "依发布时间浏览全部文章",
+    href: "/posts/",
+    icon: Compass,
+  },
+  {
+    id: "catalog",
+    label: "知识目录",
+    note: "目录、Tags 与全文检索",
+    href: "/posts/catalog/",
+    icon: ListTree,
+  },
+] as const;
+---
+
+<nav class="article-section-nav page-width" aria-label="文章浏览方式">
+  {
+    entries.map((entry) => {
+      const Icon = entry.icon;
+      const active = entry.id === current;
+
+      return (
+        <a
+          href={entry.href}
+          class:list={{ "is-active": active }}
+          aria-current={active ? "page" : undefined}
+        >
+          <Icon aria-hidden="true" size={19} stroke-width={1.7} />
+          <span>
+            <strong>{entry.label}</strong>
+            <small>{entry.note}</small>
+          </span>
+        </a>
+      );
+    })
+  }
+</nav>
+
+<style>
+  .article-section-nav {
+    display: grid;
+    min-height: 84px;
+    padding-block: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .article-section-nav a {
+    display: grid;
+    min-height: 64px;
+    padding: 10px clamp(14px, 2.2vw, 28px);
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 13px;
+    border-left: 1px solid var(--color-line);
+    color: var(--color-muted);
+    text-decoration: none;
+    transition:
+      color 160ms ease,
+      background 160ms ease;
+  }
+
+  .article-section-nav a:last-child {
+    border-right: 1px solid var(--color-line);
+  }
+
+  .article-section-nav a:hover,
+  .article-section-nav a.is-active {
+    background: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  .article-section-nav a.is-active {
+    box-shadow: inset 0 -3px var(--color-rose);
+  }
+
+  .article-section-nav span {
+    display: grid;
+    gap: 2px;
+  }
+
+  .article-section-nav strong {
+    font-size: 0.86rem;
+  }
+
+  .article-section-nav small {
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+  }
+
+  @media (max-width: 520px) {
+    .article-section-nav {
+      min-height: 68px;
+      padding-block: 7px;
+    }
+
+    .article-section-nav a {
+      min-height: 54px;
+      padding: 8px 12px;
+      gap: 9px;
+    }
+
+    .article-section-nav small {
+      display: none;
+    }
+  }
+</style>

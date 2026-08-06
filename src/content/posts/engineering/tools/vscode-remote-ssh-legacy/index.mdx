@@ -1,0 +1,86 @@
+---
+title: "VSCode 新版不兼容远程 SSH 连接旧服务器或 Docker 容器"
+description: "新版 Remote SSH 无法连接旧环境时，使用便携版 VSCode 维持兼容性的处理方案。"
+pubDate: 2025-09-22
+updatedDate: 2025-09-23
+tags: ["VSCode", "SSH", "Docker", "Compatibility"]
+cover: "./cover.webp"
+coverAlt: "次生银翼挥刃的瞬间"
+coverPosition: "50% 38%"
+---
+## 现象和背景
+
+或许大概是24年，在更新到最新版VSCode后，在下发现‘无法’再通过`Remote - SSH` 插件连接到远程Linux服务器。检查后发现是出现了**兼容性问题**，新版的VSCode对远程服务器底层库的版本提出了更高的要求。
+另一方面，于25年9月，在下又发现无法通过`Dev Containers`插件连接到操作系统课程实验的Docker容器。观察发现报错信息和当初`Remote - SSH` 插件的错误信息非常相似，都是**底层库版本不兼容**，故而推断二者本质的问题是相同的 —— 都源自某次VSCode的版本更新。
+
+报错如下图所示：
+
+![remote-connect-error-message](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/23/remote-connect-error-message.png)
+
+让我们看看官方针对这个问题的说法[^1] :
+
+![VSCode-official-FQA](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/23/VSCode-official-FQA.png)
+
+可以看到，在**VSCode 1.99**版本及之后，它就只兼容基于 **glibc版本>=2.28** 的Linux发行版了。
+
+虽然官方给出了一种通过更新Linux服务器glibc的解决方案，但**glibc是linux系统上非常底层的库**，随便更新它可能会带来很多未知的风险 —— 尤其是对于追求稳定性的服务器，或者追求一致性的实验环境。所以很多时候，我们可能都无法接受这种解决方案。与此同时，我们远程连接服务器或者容器的很多时候只是为了图个方便，并不很在意**VSCode**新版本增添的AI辅助的开发功能 ~~(毕竟还可以开发完之后复制代码过来)~~，故，回退VSCode版本是一种可靠可行的解决方案。
+
+但是如果**VSCode**是我们本来就依赖的主流编辑器，回退版本会带来很多麻烦，也会让人很难受。所以有没有一种可能我们可以在不影响原有**VSCode**使用的前提下，额外安装一个独立的低版本**VSCode**？有的兄弟，有的 —— 那就是通过安装**VSCode**便携版来解决这个问题。
+
+-   注：虽然根据官方的说法，从1.99版本开始才正式对**glibc**等库提出更高的版本要求，但是根据社区的说法，这个问题从1.86版本就已经开始出现了，所以为了可靠性，我们之后将会选择安装1.85版本。
+
+    这里有一篇文章指出了问题的根源大概率来自于**VSCode1.86**更新时，**Node.js**的版本更新，进而对**glibc**的版本提出了更高的要求[^3]；所以这其实是一个从1.86版本开始出现的**Bug**……
+
+
+## VSCode便携版
+
+### 什么是便携版(portable mode)？
+
+> Visual Studio Code supports [Portable mode](https://en.wikipedia.org/wiki/Portable_application). This mode enables all data created and maintained by VS Code to live near itself, so it can be moved around across environments.[^2]
+
+就是一种将插件、用户数据全部存储在应用安装目录下，不会安装到全局的`AppData`等文件夹的一种模式。
+
+可以理解成一种独立的，一个集中的工具，它的作用范围完全局限于我们选定的那个安装文件夹，非常安全。
+
+以我自己安装的VSCode便携版为例，可以看到extensions和user-data都在这个data文件夹下：
+
+![data-example](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/23/data-example.png)
+
+### 如何安装便携版
+
+**对于Windows用户来说**，安装非常简单:
+
+1.  下载.zip版本(即压缩包版本，而非安装程序)，解压到任意目录——比如我这里选择将其放在E:/\_\_Tools/VSCode1.85目录下，方便管理。这里给出一个[1.85版本的下载链接](https://update.code.visualstudio.com/1.85.2/win32-x64-archive/stable)
+2.  进入刚才解压出的VSCode目录，在下面创建一个新文件夹，名为 “**data**“, 不要取其他名字，如下图所示。
+    ![PixPin\_2025-09-23\_11-26-13](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/23/PixPin_2025-09-23_11-26-13.png)
+
+就两步，结束了，现在就可以放心的使用VSCode便携版了！如果想要更方便地使用，可以为图中应用程序`Code.exe`创建一个快捷方式放在桌面，取个新的名字。
+
+-   如果想迁移旧配置的话，可以把`%APPDATA%\Code`的内容复制到新建的`data\user-data`下， 把`%USERPROFILE%\.vscode\extensions`的内容复制到新建的`data\extensions`下。同理，如果安装过其他VSCode便携版，也只需要像这样把`user-data`和`extensions`分别复制进来即可。
+
+    不过在下并不推荐这么做，因为VSCode版本不同，随意迁移可能引发新的兼容性问题，另一方面，这将会破坏一个现在对我们来说非常干净没有任何污染的环境。若是**把刚安装的VSCode仅仅作为一个方便访问远程ssh服务器或者Docker容器的便携入口**的话，根本就没有做太多配置的必要，维持一个小而轻的状态是最稳定最让人安心的。
+
+
+**对于Linux和mac用户**， 操作可能略有不同，具体可见官方指导[^2]，这里就不复述了(主要是在下并没有在Linux和mac上测试过相应方法)
+
+## 问题解决
+
+在安装好兼容版本VSCode便携版之后，就**像正常使用VSCode一样使用即可**。
+
+以连接Docker容器为例, 首先安装好Docker和Dev Containers插件
+
+![extension-install](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/23/extension-install.png)
+
+安装完成之后，在拓展栏点击Docker图标，打开下图所示配置，右键目标容器，可以**先启动容器**(这里已经启动了，所以看到的只有stop和restart)， 之后只需要点击`Attach Visual Studio Code` ， 就可以进入容器了。
+
+![enter-container](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/23/enter-container.png)
+
+之后VSCode会打开一个新的窗口，之后就可以在**这个新窗口自如地使用对应的容器**了(**ssh连接远程服务器**同理)
+
+![connected-example](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/2025/09/23/connected-example.png)
+
+注：**在容器中如有需要的插件，需要单独安装**； 这里为了展示，在宿主机的VSCode中安装了Markdown All in One插件，可以看到这里明确提示”在容器中进行安装”，说明二者的插件是独立开来的。
+
+[^1]: VSCode. [Remote Development FAQ](https://code.visualstudio.com/docs/remote/faq#_can-i-run-vs-code-server-on-older-linux-distributions). , 2025-09-11
+[^2]: VSCode. [VSCode Portable mode](https://code.visualstudio.com/docs/editor/portable). , 2025-09-11
+[^3]: 烧饼. [解决 VSCode Remote SSH 远程连接 glibc 高版本依赖问题](https://feng.moe/posts/202402-fix-vscode-ssh-on-my-server/). [烧饼吹水铺](https://feng.moe/)(个人博客) , 2024-02-18

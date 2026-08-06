@@ -1,0 +1,70 @@
+---
+interface Props {
+  src: string;
+  title: string;
+  caption?: string;
+  poster?: string;
+  type?: string;
+  preload?: "none" | "metadata" | "auto";
+  loop?: boolean;
+  muted?: boolean;
+}
+
+const {
+  src,
+  title,
+  caption,
+  poster,
+  type,
+  preload = "metadata",
+  loop = false,
+  muted = false,
+} = Astro.props;
+---
+
+<figure class="content-video">
+  <video
+    controls
+    playsinline
+    {poster}
+    {preload}
+    {loop}
+    {muted}
+    aria-label={title}
+  >
+    <source {src} {type} />
+    <slot />
+    当前浏览器无法播放这个视频。
+  </video>
+  <figcaption>
+    <strong>{title}</strong>
+    {caption && <span>{caption}</span>}
+  </figcaption>
+</figure>
+
+<style>
+  .content-video {
+    margin-inline: 0;
+  }
+
+  video {
+    width: 100%;
+    max-height: min(70vh, 680px);
+    background: #0d0c0f;
+    object-fit: contain;
+  }
+
+  figcaption {
+    display: grid;
+    margin-top: 10px;
+    color: var(--color-muted);
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  figcaption strong {
+    color: var(--color-ink);
+  }
+</style>

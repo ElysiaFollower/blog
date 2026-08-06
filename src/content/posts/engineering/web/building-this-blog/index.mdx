@@ -1,0 +1,757 @@
+---
+title: "从 Hexo 到 Astro：我是如何重建这个博客的"
+description: "从设计目标、技术选型、内容模型和交互文章，到图片性能、静态搜索与 GitHub Pages 部署，完整拆解“17号的航行日志”。"
+pubDate: 2026-07-31
+tags: ["Astro", "Frontend", "Static Site", "Web Design", "GitHub Pages"]
+cover: "./cover.webp"
+coverAlt: "17号的航行日志首页，角色插画上叠加非对称标题与导航界面"
+coverPosition: "50% 48%"
+draft: true
+---
+
+import BuildPipeline from "./BuildPipeline.astro";
+
+这个博客曾经是一个 Hexo 站点。它有我喜欢的背景、相册、开屏动画和许多个人化的细节，视觉上并不寒酸；但源码留在一个修改过的主题仓库里，生成结果又单独推到 `ElysiaFollower.github.io`。过了一段时间再回来，我甚至很难迅速说清楚：文章应该在哪里写，哪一份仓库才是网站本身，改完之后又是谁负责构建。
+
+于是我决定重建它。
+
+重建不等于把 Hexo 换成另一个命令，也不等于找一套更新的主题继续改配置。这次真正要解决的是三个问题：
+
+1. **网站要有明确的个人气质。** 首页、About 和相册可以大胆一些，像一段经过编排的开场。
+2. **文章要适合长期阅读与整理。** 技术笔记不能被装饰挤得只剩几行正文，几年后也应该找得回来。
+3. **源码、内容和部署必须讲得清楚。** 仓库里保存可维护的源文件，构建产物交给自动化流程生成。
+
+最终得到的“17号的航行日志”使用 Astro，但没有采用任何现成主题。页面构图、内容模型、阅读系统和交互都从项目内部写起。本文会从设计决策讲到代码路径，也会给出一套能够实际复现的工程结构。
+
+<Callout title="先给出一句话版本">
+  Markdown 与 MDX 保存在 Content Collections 中；Astro 在构建期把内容、页面组件和图片编译成静态网站；Pagefind 再从成品 HTML 建立全文索引；GitHub Actions 验证 `dist/` 后将它部署到 GitHub Pages。浏览器只为真正需要交互的部分加载 JavaScript。
+</Callout>
+
+## 一、先决定网站应该如何被使用
+
+技术选型开始之前，我先把页面分成了两类。
+
+第一类是**展示页面**：首页、About、相册和友链。它们负责建立印象，可以使用大幅角色美术、非对称构图、昼夜场景、开屏和滚动转场。这里追求的并不是“动画越多越好”，而是网站被认真导演过的感觉。
+
+第二类是**功能页面**：文章发现页、知识目录和阅读页。它们会被反复使用，必须安静、快速、可预测。读者进来是为了看文章或找资料，界面不该抢走注意力。
+
+这两类页面共享色彩、字体和细节语言，但不共享同一种版式。首页可以让标题压在整幅插画上；文章页则把正文锁定在稳定行宽中。相册可以全屏看图；知识目录更像一个工作台。
+
+这个区分后来解决了很多争论。例如，“首页是否应该塞入完整个人简介”的答案是否定的。首页已经承担气氛和导航，再放履历只会破坏构图，所以个人信息被交给独立的 About 页面。又例如，文章列表也被拆成两个入口：
+
+- `/posts/` 是发现页，保留封面，按时间从新到旧浏览；
+- `/posts/catalog/` 是检索页，负责目录、Tags、全文搜索和排序。
+
+前者回答“最近写了什么”，后者回答“我记得写过某个东西，它在哪里”。职责拆开以后，页面设计反而更自由。
+
+## 二、为什么选 Astro
+
+我当时考虑的路线大致有三种：继续使用 Hexo、从前端脚手架完全自建，或者使用 Astro 这样的内容型框架。
+
+| 路线 | 优点 | 代价 |
+| --- | --- | --- |
+| Hexo + 主题 | 博客功能成熟，上手快，主题生态丰富 | 深度修改容易受主题结构约束；内容、主题和发布仓库可能再次分离 |
+| Vite/React 等完全自建 | UI 自由度最高，前端资料多 | 路由、Markdown、图片、SEO、RSS、站点地图都要重新搭；纯内容页面也容易带上多余 JavaScript |
+| Astro | 静态输出、文件路由、内容集合、MDX 和图片管线都有正式接口 | 仍然需要自己设计页面和内容模型；复杂交互要明确划分客户端边界 |
+
+决定性因素不是“Astro 比 Hexo 新”，而是它正好卡在两个需求之间：
+
+1. 它能像静态站生成器一样，在构建期生成完整 HTML；
+2. 它又允许我像写现代前端项目一样组织组件、类型和页面脚本。
+
+Astro 的默认思路是 HTML 优先。一个 `.astro` 组件可以有构建期逻辑、HTML 模板、局部样式和浏览器脚本，但组件本身不会因为“使用了组件化”就自动把一整套运行时发送给读者。只有开屏、搜索、相册、主题切换或交互解释器等确实需要响应操作的地方，才带客户端脚本。
+
+这对博客很合适。文章正文应当在没有 JavaScript 时依然可读，而神经网络演示又可以在局部实时计算。两者不需要互相迁就。
+
+撰写本文时，项目使用 Astro 7.1.5、TypeScript 5.9、Node.js 22 和 pnpm 9。主要依赖只有 MDX、RSS、sitemap、KaTeX、Pagefind、PhotoSwipe 和 Sharp，没有安装 React、Vue，也没有安装博客主题。
+
+## 三、整条构建链路
+
+<Stage label="从文章到网页">
+  下面这张图展示了内容从仓库抵达浏览器之前经过的五个阶段。它本身也是一个文章专属的 Astro 组件：没有 UI 框架，只使用语义化 HTML、局部 CSS 和一小段 TypeScript。
+
+  <BuildPipeline />
+</Stage>
+
+静态网站的“静态”指的是部署结果，不是开发方式。源码里依然可以有组件、类型检查、构建插件和自动化，只是这些工作在发布前完成，服务器最后只需要返回文件。
+
+如果你没有接触过前端，可以先把这条链路理解成：
+
+- **HTML** 决定页面里有什么，例如标题、正文、按钮和图片；
+- **CSS** 决定它们如何排列、使用什么字体和颜色；
+- **JavaScript** 处理主题切换、搜索、缩放等操作；
+- **源码** 是更适合开发者维护的 `.astro`、`.mdx` 和 TypeScript 文件；
+- **构建** 是把源码转换成浏览器能够直接打开的 HTML、CSS、JavaScript 与图片；
+- **`dist/`** 是转换完成后的成品目录，也是 GitHub Pages 最后收到的内容。
+
+所谓静态站生成器，就是在发布前批量完成这次转换。读者访问时不需要等待服务器临时查询数据库、拼装页面。
+
+项目的主干结构如下：
+
+```text
+.
+├── .github/workflows/deploy-pages.yml
+├── astro.config.mjs
+├── scripts/
+│   ├── new-post.mjs
+│   └── verify-build.mjs
+├── src/
+│   ├── components/
+│   │   ├── content/
+│   │   ├── gallery/
+│   │   └── home/
+│   ├── config/
+│   ├── content/posts/
+│   ├── layouts/
+│   ├── pages/
+│   └── styles/
+└── package.json
+```
+
+这里有一个很实用的边界：
+
+- `src/config/` 放适合替换的数据，例如站点名称、个人资料、友链和相册条目；
+- `src/components/` 与 `src/layouts/` 保存页面的视觉判断；
+- `src/content/posts/` 保存文章及其专属素材；
+- `src/pages/` 只负责 URL、取数和页面装配；
+- `scripts/` 与工作流负责把“能运行”提升到“敢发布”。
+
+我没有把所有东西都做成配置项。字体关系、首屏构图、动效节奏如果被拆成几十个开关，使用者确实可以调，但主题也会失去判断。能自然解耦的内容交给配置；构成站点身份的部分留在代码里。
+
+## 四、不使用主题，具体意味着什么
+
+Astro 提供框架能力，并不会替我决定首页长什么样。这个站的首页实际上是一个普通的 `HomeExperience.astro` 组件：
+
+```astro
+---
+import heroDay from "../../assets/demo/hero-day.webp";
+import heroNight from "../../assets/demo/hero-night.webp";
+import OpeningSequence from "../OpeningSequence.astro";
+import ScrollReveal from "../ScrollReveal.astro";
+---
+
+<BaseLayout>
+  <SiteHeader variant="overlay" />
+  <main>
+    <section class="hybrid-hero">...</section>
+    <section class="hybrid-feed">...</section>
+    <section class="hybrid-channels">...</section>
+    <section class="hybrid-memory">...</section>
+  </main>
+  <ScrollReveal />
+  <OpeningSequence />
+</BaseLayout>
+```
+
+真正的工作发生在这些省略号里：HTML 的层级决定构图，CSS Grid 决定视线如何移动，图片和文字之间需要留出什么关系，动效何时出现，又在什么条件下退出。
+
+Astro 的局部样式默认带作用域，因此首页、About 和友链可以拥有完全不同的布局，而不会把选择器泄漏到其他页面。全站只共享一小组设计令牌和真正通用的阅读样式。
+
+换句话说，这个项目更接近“用 Astro 写了一套主题”，而不是“使用了 Astro 主题”。框架负责稳定的工程底座，站点自己负责审美与业务。
+
+## 五、导演感不是多放几个动画
+
+所谓导演感，我后来把它理解为四件事：**场景、顺序、对比和退场**。
+
+### 先比较完整原型，而不是形容词
+
+设计初期并没有直接认定一个风格，而是在同一份首页内容上做了三种可以完整滚动的方向：
+
+- **氛围型**让背景图和大标题承担主要表达；
+- **图形型**依赖几何线条、色块和界面符号；
+- **混合型**让不同章节分别使用场景、编辑排版和图形界面。
+
+图形型很快被否掉了，因为视觉信号太密，画面显得脏。氛围型很好看，但上限过度依赖一张背景图。最终选择混合型，是因为它能让每个模块承担不同的表达，又保留整页的起承转合。
+
+这个过程比讨论“高级感”“科技感”有效。形容词很容易让两个人各自想象不同的画面；一个能滚动、能点击的原型会直接暴露信息密度、节奏和交互问题。比较方向时也不必把三个版本都做成成品，只要它们足以验证最重要的构图假设。
+
+### AI Agent 负责实现，人负责判断
+
+这次重建有 AI Agent 深度参与，但过程并不是写一段提示词，然后等待网站凭空出现。
+
+我先提供旧博客、喜欢和不喜欢的主题样例，以及真实使用场景。Agent 负责阅读仓库、建立可运行原型、实现组件、查阅文档和执行浏览器测试；我则不断判断页面是否符合自己的审美，指出哪些地方“技术上没错，但整体不协调”。
+
+相册是一个很典型的例子。第一版已经具备点击和缩放，却不像在欣赏照片。重新定义“相册是端起一张照片，聚焦细节”之后，技术方案才收敛到 PhotoSwipe 的平移、缩放与手势模型。文章系统也经历了类似过程：搜索最初是孤立入口，分类字段又与 Tags 重叠；把用户场景改写成“我大概记得一篇旧笔记在哪里”之后，文件树、Tags 和全文检索才各自找到了职责。
+
+这种协作里，人最难替代的部分不是手写 CSS，而是持续回答三个问题：
+
+1. 这个页面究竟服务谁？
+2. 用户来到这里想完成什么？
+3. 当前实现虽然能用，是否破坏了整站的气质和结构？
+
+Agent 可以很快地产出代码，也可能很快地把错误方向做得十分完整。可运行原型、明确的否决和自动化验证缺一不可。最终质量来自多轮反馈，而不是第一次生成有多惊艳。
+
+### 1. 场景先于卡片
+
+首页第一屏是一张全幅场景，而不是一个居中的欢迎卡片。角色图承担情绪，界面元素承担秩序：
+
+- 细框限定画面范围；
+- `OPEN CHANNEL / 017` 建立站点的信号语言；
+- 两行大标题形成主要视觉重心；
+- 左侧竖排文字、底部坐标和右侧引语补齐空间；
+- 导航覆盖在场景上，但保持固定、可识别的操作方式。
+
+这些元素不是为了说明功能，而是在访客进入时给出一段完整的开场。
+
+### 2. 顺序形成叙事
+
+首页向下滚动时依次出现近期文章、内容频道和视觉档案。它们并没有重复使用同一张卡片模板：
+
+- 近期文章采用一大两小的编辑式布局；
+- 内容频道进入深色横幅，以密集线性列表改变节奏；
+- 相册入口重新让大图占据主导。
+
+页面的起承转合来自版式变化。假如每一节都只是“标题 + 三张圆角卡片”，即使每张卡片都很好看，整页仍然会像组件展览。
+
+### 3. 对比让功能页安静下来
+
+About 可以继续使用巨幅插画和章节式滚动，但文章阅读页主动收敛。正文使用衬线字体，界面和控件使用无衬线字体，路径与编号使用等宽字体。它们分别对应阅读、操作和结构信息。
+
+颜色也不是单一粉色。全站以玫红、青色和金色作为功能明确的强调色，配合接近白色的日间背景与接近黑色的夜间背景。这样既保留角色站点的气质，也不会让所有界面落进同一种色调。
+
+### 4. 动画必须知道何时结束
+
+滚动浮现由一个很小的 `IntersectionObserver` 完成：
+
+```ts
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting && entry.boundingClientRect.top >= 0) return;
+      entry.target.classList.add("is-visible");
+      observer.unobserve(entry.target);
+    });
+  },
+  { rootMargin: "0px 0px -9% 0px", threshold: 0.08 },
+);
+```
+
+元素出现一次后立即取消观察，不持续追踪，也不在用户向上滚动时反复表演。快速跳转导致元素直接越过视口时，代码仍会把它显示出来，避免页面留下永久空白。
+
+开屏动画同样有明确边界。它至少展示 900 毫秒，同时等待字体和首屏关键图片解码；最迟 3.2 秒强制结束。播放记录放在 `sessionStorage`，因此同一浏览会话中切换页面不会反复被拦住。系统开启“减少动态效果”时，最低时长归零。
+
+```ts
+const minimumDuration = reduceMotion ? 0 : 900;
+
+Promise.allSettled([document.fonts.ready, ...imageReady]).then(close);
+window.setTimeout(close, 3200);
+```
+
+这里有一个可复用的判断：**动效应该说明状态转换，而不是让一个已经很复杂的画面继续运动。** 首屏背景曾经有缓慢放大，后来被删除，因为标题、角色和界面已经足够丰富，再加运动只会画蛇添足。
+
+## 六、让文件系统成为知识目录
+
+对长期写技术笔记的人来说，文章不仅要能发布，还要能在几年后找回来。
+
+一开始很容易设计出 `category`、`domain`、`series`、`slug`、`aliases` 等一串 frontmatter 字段。问题是，本地文件本来就必须整理一次，网站又要求维护另一套分类，两个系统迟早会分叉。
+
+这个项目选择让目录直接成为数据：
+
+```text
+src/content/posts/
+├── notes/
+│   ├── ai/
+│   │   └── neural-networks/
+│   │       └── backpropagation/
+│   │           ├── index.mdx
+│   │           └── cover.webp
+│   └── mathematics/
+├── papers/
+├── engineering/
+├── problems/
+├── reflections/
+└── projects/
+```
+
+六个根目录表达稳定的文章类型：
+
+- `notes`：课程、教材和成体系的知识笔记；
+- `papers`：论文阅读与研究进展；
+- `engineering`：实现、排错和工程经验；
+- `problems`：算法题与复杂度记录；
+- `reflections`：尚未定型的观察和随笔；
+- `projects`：游戏、MMD 与其他个人创作。
+
+更深层级由内容自然生长。于是同一个路径同时决定三件事：
+
+```text
+本地文件  src/content/posts/notes/ai/neural-networks/backpropagation/index.mdx
+网站目录  笔记 / AI / Neural Networks
+文章 URL  /posts/notes/ai/neural-networks/backpropagation/
+```
+
+Tags 只负责目录不能表达的交叉关系。例如一篇 GRPO 工程记录和一篇强化学习论文阅读可以位于不同目录，但共享 `Reinforcement Learning` Tag。目录回答“它属于哪一脉知识”，Tag 回答“它还和什么有关”。
+
+### Content Collections 如何约束文章
+
+Astro 的 Content Collections 会在构建时加载文章，并用 Zod 校验 frontmatter：
+
+Frontmatter 是 Markdown 文件开头两行 `---` 之间的 YAML 数据。正文写给读者，frontmatter 则告诉网站这篇文章的标题、日期、封面和发布状态。
+
+```ts
+const posts = defineCollection({
+  loader: glob({
+    base: "./src/content/posts",
+    pattern: "**/index.mdx",
+    generateId: ({ entry }) => {
+      // 从目录生成 notes/ai/.../article 形式的 id
+      return entry.slice(0, -"/index.mdx".length);
+    },
+  }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      description: z.string(),
+      pubDate: z.coerce.date(),
+      updatedDate: z.coerce.date().optional(),
+      tags: z.array(z.string()).default([]),
+      cover: image(),
+      coverAlt: z.string(),
+      coverPosition: z.string().default("50% 50%"),
+      draft: z.boolean().default(false),
+    }),
+});
+```
+
+实际实现还会检查根目录、文章层级和小写 kebab-case。路径错误、封面不存在或日期格式异常都会在构建时失败，而不是发布后留下半坏页面。
+
+新建文章也不需要手工复制模板：
+
+```bash
+pnpm new:post \
+  engineering/web/building-this-blog \
+  ~/Desktop/cover.png
+```
+
+脚本会建立独立目录、复制封面并生成 `draft: true` 的 `index.mdx`。开发服务器能看到草稿，生产构建、RSS 和搜索索引会排除它，直到作者明确把 `draft` 改成 `false`。
+
+## 七、从一篇 MDX 生成完整阅读页
+
+内容集合本身不会自动生成 URL。文章路由位于 `src/pages/posts/[...path].astro`，核心代码很短：
+
+```astro
+---
+import { render } from "astro:content";
+import { getVisiblePosts } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const posts = await getVisiblePosts();
+  return posts.map((post) => ({
+    params: { path: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+---
+
+<ReadingLayout post={post} headings={headings}>
+  <Content components={contentComponents} />
+</ReadingLayout>
+```
+
+`getStaticPaths()` 在构建期把文章 ID 展开为一组真实路由。`render()` 返回正文组件和标题列表，前者进入阅读布局，后者生成左侧目录。
+
+阅读页采用三栏网格：
+
+```css
+.reading-grid {
+  --reading-toc-width: 140px;
+  --reading-prose-width: 780px;
+  --reading-note-width: 220px;
+  --reading-gap: 32px;
+  grid-template-columns:
+    var(--reading-toc-width)
+    minmax(0, var(--reading-prose-width))
+    var(--reading-note-width);
+}
+```
+
+中间 780 像素是稳定正文；左边是文章目录，右边留给旁注。屏幕不足时，不强行压缩三栏：目录回到正文上方，旁注变成行内补充块。响应式设计在这里不是把桌面版按比例缩小，而是改变次要信息的组织方式。
+
+标题、摘要、目录路径、发布日期、阅读时间、封面、Tags 和源文件路径都由 `ReadingLayout` 统一生成。作者只写正文，不需要在每篇文章里重复页面骨架。
+
+## 八、普通 Markdown 与交互文章没有两套格式
+
+所有文章统一使用 `index.mdx`。MDX 完全兼容普通 Markdown，所以普通文章照常写标题、列表、公式、代码和图片；只有需要特殊表达时才插入组件。
+
+可以把 MDX 理解成“允许插入组件的 Markdown”。不用组件时，它和日常 Markdown 没有区别；需要视频、旁注或交互图时，也不用把文章改成另一种格式。
+
+```mdx
+<Callout title="关键观察">
+  梯度在这个节点分成了两条路径。
+</Callout>
+
+<Sidenote label="设计动机">
+  这段信息有帮助，但不值得打断主线。
+</Sidenote>
+
+<Stage>
+  <BackpropExplorer preset="xor" />
+</Stage>
+```
+
+通用组件集中注册：
+
+```ts
+export const contentComponents = {
+  BackpropExplorer,
+  Callout,
+  Figure,
+  Image,
+  Sidenote,
+  Stage,
+  Video,
+};
+```
+
+注册之后，每篇文章都可以直接使用，不必重复 `import`。一次性实验则像本文的构建管线图一样，作为文章专属组件和素材放在文章目录内。
+
+### 为什么需要 Stage
+
+普通文章适合稳定行宽，但神经网络图、视频或交互工具需要更大的画布。若粗暴地把所有正文拉宽，阅读体验会变差；若把演示塞进 780 像素，细节又会拥挤。
+
+`Stage` 是一个临时改变阅读节奏的作用域。它通过 CSS 计算跨越目录、正文和旁注三栏的总宽度：
+
+```css
+.reading-stage {
+  width: calc(
+    100% + var(--reading-toc-width) + var(--reading-note-width) +
+      var(--reading-gap) + var(--reading-gap)
+  );
+  margin-left: calc(
+    0px - var(--reading-toc-width) - var(--reading-gap)
+  );
+}
+```
+
+当舞台进入视口中央区域，`IntersectionObserver` 会给阅读网格加上 `data-stage-active`，左右目录和外侧旁注随之淡出；离开后恢复。舞台中的普通段落仍限制在正文宽度，媒体和交互组件则可以使用完整空间。
+
+这个设计解决的不是“组件怎样变宽”，而是“读者何时从阅读状态进入观察状态”。版式转换本身成为文章叙事的一部分。
+
+### 不必为了一个滑块引入 React
+
+现有的 `BackpropExplorer` 是一个 2–2–1 XOR 网络演示。节点值、损失和梯度由浏览器实时计算，但实现仍是 Astro 模板加原生 TypeScript。静态初始状态直接存在于 HTML 中，脚本接管后再响应样本与阶段切换。
+
+只有当某个交互模块真的出现复杂状态同步时，才值得引入 Preact 或其他客户端框架，并把它做成独立 island。框架应该由问题复杂度触发，而不是由“这是交互组件”触发。
+
+## 九、全文检索为什么不需要服务器
+
+GitHub Pages 只托管静态文件，没有数据库，也没有搜索 API。Pagefind 的做法很适合这个约束：它在 `astro build` 之后扫描 `dist/` 中的 HTML，生成一份静态索引和浏览器端搜索模块。
+
+```json
+{
+  "scripts": {
+    "build": "astro build && pagefind --site dist"
+  }
+}
+```
+
+文章布局使用 `data-pagefind-*` 属性告诉索引器哪些内容有意义：
+
+```astro
+<article data-pagefind-body>
+  <span data-pagefind-meta="title" data-pagefind-sort="title">
+    {data.title}
+  </span>
+  <span data-pagefind-filter="directory">{catalogPath}</span>
+  <span data-pagefind-filter="tag">{tag}</span>
+  <time
+    datetime={data.pubDate.toISOString()}
+    data-pagefind-sort="date[datetime]"
+  />
+  ...
+</article>
+```
+
+目录过滤不只记录文章所在的最深目录，还记录所有祖先路径。选择 `notes/ai` 时，下面更深层的文章也能被命中。Tags 作为另一组过滤器独立存在。
+
+浏览器只有在搜索框获得焦点或真正输入查询时，才动态导入 `/pagefind/pagefind.js`。搜索结果可以按相关性、日期或标题排序，并与当前目录或 Tag 范围组合。查询、路径、Tag 和排序会同步到 URL 参数，所以检索状态可以刷新，也可以直接分享。
+
+无查询时，页面使用构建时已经输出的文章列表，不加载搜索引擎。这样“浏览”和“搜索”共用同一个工作台，却不会让每次打开目录都付出索引加载成本。
+
+## 十、图片管线与相册
+
+这个站大量依赖图片，因此性能问题不能等到最后再补。
+
+### 文章与页面图片
+
+保存在 `src/` 下的图片会进入 Astro 资产管线。页面使用 `<Image />` 或 `getImage()` 指定多个宽度，构建时由 Sharp 生成不同尺寸的 WebP：
+
+```astro
+<Image
+  src={post.data.cover}
+  widths={[360, 540, 720, 960]}
+  sizes="(max-width: 700px) 86vw, 300px"
+  loading="lazy"
+  alt={post.data.coverAlt}
+/>
+```
+
+浏览器根据 `srcset` 和 `sizes` 选择合适文件，不必给 300 像素宽的卡片下载整张 2K 封面。已知宽高还能在图片加载前保留空间，减少布局跳动。
+
+普通 Markdown 图片也会经过处理。一个很小的 rehype 插件为正文图片补上 `loading="lazy"` 和 `decoding="async"`；首屏封面则显式使用 eager 和较高优先级。
+
+### 瀑布流不一定需要 JavaScript 布局
+
+相册缩略图使用 CSS multi-column：
+
+```css
+.gallery-grid {
+  columns: 4 240px;
+  column-gap: 16px;
+}
+
+.gallery-item {
+  break-inside: avoid;
+  margin-bottom: 16px;
+}
+```
+
+不同长宽比的图片自然流入各列，浏览器负责排版。它不是严格按行排序的 masonry，因此若业务要求绝对的阅读顺序，需要换成网格或专门算法；对以观看为主的个人相册，这个取舍更轻、更稳定。
+
+前四张缩略图立即加载，后续图片先输出保持原始宽高比的透明占位。当图片距离视口约 300 像素时，`IntersectionObserver` 才写入真实 `src` 与 `srcset`。无 JavaScript 时，`noscript` 仍提供普通图片。
+
+### 放大之后交给 PhotoSwipe
+
+瀑布流负责“浏览很多图”，灯箱负责“端起一张图”。PhotoSwipe 提供拖拽、滚轮和手势缩放、键盘切换以及边界计算。每个链接预先写入原图尺寸：
+
+```html
+<a
+  href="/path/to/full-image.webp"
+  data-pswp-width="2200"
+  data-pswp-height="1238"
+>
+  <img ... />
+</a>
+```
+
+灯箱初始缩放为 `fit`，二级缩放回到原始像素比例，最大缩放至少为 2 倍或适配比例的 5 倍。关闭纵向拖拽和滑动带走当前图片，是为了让拖拽更接近“移动照片”，而不是误触换页。
+
+PhotoSwipe 核心通过动态 `import()` 在打开相册时加载，普通页面不会承担这部分代码。它仍然保留原始图片链接，因此脚本失败时，用户至少能直接打开大图。
+
+## 十一、昼夜主题不只是反色
+
+基础颜色由 CSS 自定义属性管理：
+
+```css
+:root {
+  --color-bg: #fafafd;
+  --color-ink: #202027;
+  --color-rose: #df4d7d;
+  --color-cyan: #267f88;
+  --color-gold: #c78b20;
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #141214;
+  --color-ink: #f4edf1;
+  --color-rose: #ff78a5;
+  --color-cyan: #72ccd0;
+  --color-gold: #edbd5d;
+}
+```
+
+但首页的日夜并不是给同一张图套滤镜，而是分别准备 `hero-day.webp` 和 `hero-night.webp`。不同场景可以重新安排亮度、主体位置和色彩关系，文字覆盖区域也能单独控制。
+
+主题初始化脚本内联在 `<head>` 中，在页面首次绘制前读取 `localStorage`；没有手动选择时才跟随 `prefers-color-scheme`：
+
+```js
+const stored = localStorage.getItem("theme");
+const preferred = matchMedia("(prefers-color-scheme: dark)").matches
+  ? "dark"
+  : "light";
+document.documentElement.dataset.theme = stored || preferred;
+```
+
+这段脚本必须足够早，否则浏览器会先画出日间页面，再突然切到夜间，形成明显闪烁。
+
+## 十二、SEO、旧链接与同一域名下的 Academic
+
+静态站不等于只生成正文。`BaseLayout.astro` 统一输出：
+
+- canonical URL；
+- Open Graph 与 Twitter Card；
+- 1200 × 630 的社交分享图；
+- 文章发布日期、更新时间和 Tags；
+- `BlogPosting` JSON-LD；
+- RSS 与 sitemap 入口。
+
+`@astrojs/rss` 从公开文章集合生成 `/rss.xml`，`@astrojs/sitemap` 生成站点地图。
+
+其中 canonical 告诉搜索引擎哪个 URL 是页面的正式地址；Open Graph 和 Twitter Card 决定链接被分享到聊天软件或社交平台时显示什么标题、摘要和封面；JSON-LD 则用机器可读的方式声明“这是一篇博客文章”。
+
+重构还必须处理旧文章地址。旧 Hexo URL 被集中记录在 `src/config/legacy-routes.ts`：
+
+```ts
+{
+  source: "2025/09/17/图片格式解析",
+  destination: "/posts/engineering/images/image-format-parsing/",
+}
+```
+
+Astro 为每个旧地址生成静态兼容页。页面同时包含：
+
+- `<meta http-equiv="refresh">`，用于无脚本跳转；
+- `window.location.replace()`，用于即时跳转；
+- 指向新地址的 canonical；
+- `noindex`，避免搜索引擎把兼容页当成重复内容。
+
+这些旧地址还会从 sitemap 中排除。迁移网站时，保住外部链接通常比让 URL 看起来更整齐重要。
+
+`/Academic/` 则不是博客内部路由。`ElysiaFollower.github.io` 是用户名站点，Academic 仓库作为项目站点发布在同一域名的 `/Academic/` 前缀。请求先由 GitHub Pages 的站点映射处理，再返回对应仓库的静态文件；两个项目不共享 Astro Router，也不需要把 Academic 的构建产物复制进博客仓库。
+
+## 十三、GitHub Actions 只部署构建产物
+
+旧仓库曾经直接保存 Hexo 生成后的 HTML。这样做能发布，但几乎无法从发布仓库理解网站是怎么维护的。
+
+现在 `main` 分支保存完整 Astro 源码，`dist/` 写入 `.gitignore`。每次推送后，GitHub Actions 在干净环境中重新构建：
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/configure-pages@v6
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm build
+      - run: pnpm verify:build
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/deploy-pages@v5
+```
+
+`--frozen-lockfile` 保证 CI 不会擅自改依赖解析结果。部署被拆成 build 与 deploy 两个 job，后者只有在前者成功后才能取得 artifact。
+
+Pages 工作流需要 `pages: write` 与 `id-token: write` 权限。`id-token` 用于 GitHub 的 OIDC 身份验证，不需要在仓库里保存长期部署密钥。
+
+### 构建成功还不够
+
+`pnpm check` 能发现 Astro、TypeScript 和内容类型错误，但它不知道某个页面是否忘了 canonical，也不知道某个链接是否指向不存在的锚点。
+
+因此项目还有一个基于 `parse5` 的产物验证器。它直接遍历 `dist/` 中的最终 HTML，检查：
+
+- 必需的首页、404、RSS、sitemap 和 Pagefind 文件；
+- 每页是否有标题、描述、唯一 H1 和 main；
+- 图片是否有 `alt`；
+- 按钮与链接是否有可访问名称；
+- canonical、Open Graph 与站内链接是否有效；
+- 锚点是否真的存在；
+- 页面是否残留 `TODO`；
+- 旧地址是否生成重定向。
+
+这层检查很重要，因为它验证的是即将上传的东西，而不是对源码作乐观推断。
+
+## 十四、怎样在本地复现
+
+### 直接运行本站
+
+仓库本身已经包含全部源码：
+
+```bash
+git clone https://github.com/ElysiaFollower/ElysiaFollower.github.io.git
+cd ElysiaFollower.github.io
+corepack enable
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+浏览器打开终端提示的本地地址即可。完整生产检查使用：
+
+```bash
+pnpm verify
+```
+
+### 用相同思路从零开始
+
+先建立一个最小 Astro 项目，再安装本站使用的能力：
+
+```bash
+pnpm create astro@latest my-blog
+cd my-blog
+
+pnpm astro add mdx sitemap
+pnpm add @astrojs/rss @astrojs/markdown-remark \
+  katex remark-math rehype-katex sharp
+pnpm add photoswipe @lucide/astro
+pnpm add -D pagefind @astrojs/check typescript parse5
+```
+
+接下来的顺序比复制 CSS 更重要：
+
+1. 在 `src/content.config.ts` 定义文章 schema；
+2. 决定文章目录如何映射分类与 URL；
+3. 用动态路由和 `getStaticPaths()` 生成文章页；
+4. 先完成稳定的 `BaseLayout` 与 `ReadingLayout`；
+5. 再分别设计首页、About、相册和检索页；
+6. 在 `astro build` 后运行 Pagefind；
+7. 最后加入产物验证与 Pages 工作流。
+
+若只是换成自己的内容，需要修改：
+
+```text
+src/config/site.ts       站点名称、导航和外部链接
+src/config/profile.ts    About 页面资料
+src/config/friends.ts    友链
+src/config/gallery.ts    相册条目
+src/assets/              首页与展示页图片
+src/content/posts/       文章与文章素材
+astro.config.mjs         正式域名
+```
+
+GitHub 仓库的 **Settings → Pages → Build and deployment** 选择 **GitHub Actions**。之后推送 `main`，工作流会自行生成并部署 `dist/`。
+
+如果部署在 `username.github.io/repository/` 这样的项目路径下，还需要设置 Astro 的 `base`，并审查站内以 `/` 开头的绝对路径。本站是用户名根站点，所以 `base` 为 `/`。
+
+## 十五、这套方案的边界
+
+这套架构适合内容大多公开、更新频率不高、重视加载速度和长期维护的个人网站。它也很适合教学型交互：小型网络、算法过程、信号变换和图形学演示都能在浏览器中完成。
+
+它并不适合所有需求：
+
+- 需要登录、评论写入或多人实时协作时，需要额外后端；
+- 需要私密 API Key 的在线模型推理不能直接放进 Pages；
+- 相册增长到数万张时，应考虑对象存储、缩略图服务和分页，而不是继续把所有元数据编进一个页面；
+- 多作者高频编辑时，纯 Git + MDX 可能不如 CMS 顺手。
+
+静态并不落后，它只是把复杂度放在构建期。对这个博客而言，内容可以在本地被严格管理，读者得到的却是直接、稳定的 HTML，正好符合实际需求。
+
+## 十六、真正可复用的经验
+
+回头看，最值得复用的并不是某个粉色值，也不是一段滚动动画。
+
+**先写清页面职责。** 首页、发现页、目录和阅读页若都想同时承担展示、检索和自我介绍，最后只会互相挤压。
+
+**让一个事实只维护一次。** 本地目录已经表达知识结构，就不要再抄一份 category；构建产物可以自动生成，就不要提交到源码分支。
+
+**客户端能力按需出现。** 文章默认是 HTML，搜索、灯箱和交互解释器各自加载自己的脚本。不要为了少数动态区域把整站改成 SPA。
+
+**动效要有叙事作用。** 开屏等待关键资源，滚动浮现说明章节到达，舞台让目录和旁注退场。找不到职责的动画，删掉通常更好。
+
+**迁移不是重新开始。** 旧 URL、RSS、站点地图和独立的 Academic 页面都是既有契约。新架构应该接住它们，而不是要求读者理解内部重构。
+
+最终，这个博客仍然只是若干 HTML、CSS、图片和少量 JavaScript。但当内容模型、页面职责和部署链路彼此一致时，它不再是一堆文件，而是一套我知道该如何继续使用的系统。
+
+## 延伸阅读
+
+- [Astro：为什么选择 Astro](https://docs.astro.build/en/concepts/why-astro/)
+- [Astro Content Collections](https://docs.astro.build/en/reference/modules/astro-content/)
+- [Astro 图片处理](https://docs.astro.build/en/guides/images/)
+- [Pagefind Search API](https://pagefind.app/docs/api/)
+- [PhotoSwipe 入门](https://photoswipe.com/getting-started/)
+- [GitHub Pages 自定义工作流](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)

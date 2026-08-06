@@ -10,8 +10,8 @@ import {
   Microscope,
   Sparkles,
 } from "@lucide/astro";
-import aboutPortrait from "../../assets/demo/elysia-portrait.png";
-import playPortrait from "../../assets/demo/sparkle-portrait.png";
+import aboutPortrait from "../../assets/demo/elysia-portrait.webp";
+import playPortrait from "../../assets/demo/sparkle-portrait.webp";
 import DirectedPointer from "../../components/DirectedPointer.astro";
 import ScrollReveal from "../../components/ScrollReveal.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
@@ -21,7 +21,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
 <BaseLayout
   title="关于"
-  description={`关于 ${profileConfig.handle}：研究、好奇心与那些纯粹为了好玩的创作。`}
+  description={`${profileConfig.handle} 的研究方向、技术兴趣与个人创作。`}
   bodyClass="about-page"
   directedPointer
 >
@@ -48,11 +48,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             <strong>{profileConfig.handle}.</strong>
           </h1>
           <p class="about-hero__alias">
-            也可以叫我 <b>{profileConfig.alias}</b>。
+            也使用网名 <b>{profileConfig.alias}</b>。
           </p>
           <p class="about-hero__intro">{profileConfig.introduction}</p>
           <a href="#research">
-            <span>继续读取</span>
+            <span>继续向下</span>
             <ArrowDownRight aria-hidden="true" size={20} stroke-width={2} />
           </a>
         </div>
@@ -74,9 +74,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <div class="page-width">
         <header data-reveal>
           <span>01 / RESEARCH TRANSMISSION</span>
-          <h2>正在认真追问的事情</h2>
+          <h2>声音、对话与情感理解</h2>
           <p>
-            研究方向有明确的主线：从声音与对话开始，逐渐靠近更自然、更有表达力，也更理解人的智能系统。
+            声音里藏着文字没有写下的东西：节奏、情绪，还有人与人之间微妙的关系。我的研究从这里开始。
           </p>
         </header>
 
@@ -95,7 +95,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <blockquote data-reveal>
           <Sparkles aria-hidden="true" size={24} stroke-width={1.6} />
           <p>
-            长期想做的，是能够倾听、理解并陪伴人的 AI；现在从音频对话开始。
+            我希望 AI 不只听见一句话，也能听懂说话的人。音频对话，是我选择的起点。
           </p>
         </blockquote>
       </div>
@@ -105,7 +105,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <div class="page-width">
         <header data-reveal>
           <span>02 / CURIOSITY MAP</span>
-          <h2>主线之外，<br />好奇心没有边界。</h2>
+          <h2>主线之外，<br />总有兔子洞。</h2>
         </header>
 
         <div class="about-curiosity__list">
@@ -134,9 +134,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
       <div class="about-play__copy" data-reveal="right">
         <span>03 / AFTER HOURS</span>
-        <h2 id="play-title">另一条航线，<br />纯粹为了好玩。</h2>
+        <h2 id="play-title">研究之外，<br />也认真玩耍。</h2>
         <p>
-          我会笨手笨脚地做些游戏，折腾图形学与 MMD，也会在动画和二游里暂时离开现实世界。它们不一定通向论文，但经常通向新的问题。
+          我也会做些游戏原型，琢磨图形学和 MMD；闲下来，就回到动画和崩坏的世界里。
         </p>
         <ul>
           {profileConfig.play.map((item) => <li>{item}</li>)}
@@ -148,13 +148,15 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <div class="page-width">
         <div data-reveal>
           <span>04 / OPEN CHANNEL</span>
-          <h2>看到这里，<br />就算接上频道了。</h2>
+          <h2>若恰好关心<br />同一个问题，<br />欢迎来信。</h2>
         </div>
         <div class="about-contact__body" data-reveal data-reveal-delay="1">
           <p>
-            研究、开源项目、生成媒体，或者只是某个突然变得很有趣的问题，都欢迎来聊。
+            无论是研究、开源项目，还是生成媒体，我都很乐意交换想法。
           </p>
-          <p class="about-contact__invitation">Feel free to reach out.</p>
+          <p class="about-contact__invitation">
+            Feel free to reach out. (｡･ω･｡)ﾉ
+          </p>
           <nav aria-label="个人链接">
             <a href={profileConfig.links.github}>
               <GitFork aria-hidden="true" size={19} stroke-width={1.8} />
@@ -479,7 +481,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-curiosity h2 {
     margin-top: 20px;
-    font-size: 5.4rem;
+    font-size: 4.5rem;
     line-height: 0.96;
   }
 
@@ -550,7 +552,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   .about-play h2 {
     margin-top: 20px;
     font-family: var(--font-reading);
-    font-size: 5.2rem;
+    font-size: 4.5rem;
     line-height: 1.02;
   }
 
@@ -603,7 +605,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-contact h2 {
     margin-top: 18px;
-    font-size: 5.4rem;
+    font-size: 5rem;
     line-height: 0.98;
   }
 
@@ -785,7 +787,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     .about-curiosity h2,
     .about-contact h2 {
-      font-size: 3.1rem;
+      font-size: 2.7rem;
     }
 
     .about-play h2 {

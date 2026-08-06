@@ -1,0 +1,99 @@
+---
+title: "解决 Windows 端口被系统随机保留：netstat 显示端口空闲，但是无法使用"
+description: "解释端口未被进程占用却无法绑定的 Windows 保留端口机制。"
+pubDate: 2025-09-14
+updatedDate: 2025-09-22
+tags: ["Windows", "Port", "Troubleshooting"]
+cover: "./cover.webp"
+coverAlt: "湛蓝色调的少女"
+coverPosition: "50% 38%"
+---
+最后更新于2025/9/14
+
+-   Windows 11 专业版
+
+## 碎碎念
+
+[跳过碎碎念](#%E7%8E%B0%E8%B1%A1)
+
+在大约一年之前，17号的室友曾遇到过一个clash代理无法生效的问题。17号尝试了很多手段，都没定位到问题的原因，但最后却是通过更换代理端口意外地解决了这个问题。当时推测是对应端口被占用，但是不明所以，于是不了了之。
+
+在前段时间17号在进行web开发的时候，又遇到了相似的问题，即端口被占用，无法使用。然而即便17号使用`netstat -ano`命令查看系统上所有的网络连接和端口状态，也没有发现绑定对应端口的进程。通过搜索，17号发现这个问题可能是因为Window系统会为Hyper-V服务保留一些端口，导致用户无法使用这些端口。虽然很无语，但是毕竟虚拟化服务还用得到，所以也没有去尝试从根本上解决这个问题。
+
+直到现在…昨天在为一个项目录制demo视频的时候，发现8000端口被占用，无法使用，导致demo录制到一半被迫中断，还被迫修改默认配置。而今天更是直接将17号clash代理http的端口，同时也是git的代理端口给封印了，害得17号连push和fetch都做不了！！！
+忍无可忍无需再忍，今天在下稍微深入一点地研究了这个问题，结果发现，这个问题有一半可以说是系统bug！它完全可以无痛解决而且很好解决！
+
+解决之后顺便写篇文章分享一下叭~
+如果哪里写得不恰当的，还请不吝赐教o(╥﹏╥)o
+
+## 现象
+
+`netstat -ano | findstr 'port'` (命令中的port替换为真实要查找的端口) 无输出。结果显示**没有任何进程绑定了此端口**，然而，**任何试图使用该端口的尝试均以失败告终**。
+
+无法使用的端口非常**随机**，让人无迹可寻。比如几天前可能可以使用某端口，但过两天可能突然不能用了。而且重启电脑还有概率解决这个问题。
+
+## 原因
+
+Windows有一个“**TCP动态端口范围**”，这个范围内的端口有时候可能会被系统**随机占用**。例如Hyper-V虚拟化服务，因为虚拟机也是需要支持网络服务的，故而虚拟机会需要真实的网络端口。所以Windows系统会为它预先保留一些端口以确保虚拟机能够正常使用。
+
+**动态端口**是指那些不固定分配给特定服务，而由系统动态分配给需要网络通信的应用程序的端口。
+
+在 Windows Vista（或 Windows Server 2008）之前，动态端口范围是 1025 到 5000；在 Windows Vista（或 Windows Server 2008）之后，**新的默认起始端口为 49152，新的默认结束端口为 65535**。[^1][^2]
+
+注意到新的默认起始端口为49152，这非常大，基本上不会保留我们平时常用的那些端口。但是！**Windows的自动更新有时会出错，导致这个范围的起始端口被重置为1024**，就有可能导致我们常用的8000等端口被占用。
+
+## 诊断方式
+
+`netsh int ipv4 show dynamicport tcp`
+该命令可以查看当前Windows计算机的TCP动态端口范围
+
+> 输出eg:
+>
+> Protocol tcp Dynamic Port Range
+> \-——————————–
+> Start Port : 49152
+> Number of Ports : 16384
+
+如果阁下发现您的Start Port是1024或者一个相对较小的数字，那么阁下遇到的端口无法使用问题很可能就源自于此，[建议手动恢复到正常的配置](#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95)。
+
+`netsh int ipv4 show excludedportrange protocol=tcp`
+该命令可以更直接地输出，当前被系统保留的端口范围。如果前面那个命令只是确诊了“风险”，那么这个命令就是实锤“病症”了，因为这里显示就是当前确确实实被系统保留而无法使用的端口范围了。如果阁下现在想要使用的端口就在里面，那么几乎可以肯定，端口无法使用的症结就在这了。
+
+> 输出eg:
+>
+> Protocol tcp Port Exclusion Ranges
+>
+> Start Port End Port
+>
+> * * *
+>
+> ```
+>  50000       50059     \*
+> ```
+>
+> \* - Administered port exclusions.
+
+## 解决方法
+
+**以下命令要以管理员身份运行**
+
+`netsh int ipv4 set dynamicport tcp start=49152 num=16384`
+该命令可以重置ipv4的TCP动态端口范围。数值即为后来更新的正确的默认值49152-65535.
+
+`netsh int ipv6 set dynamicport tcp start=49152 num=16384`
+该命令和上条相同，只不过修改的是ipv6不是ipv4，建议一起执行。
+
+执行完上述命令之后只需要重启电脑即可。不过实测发现，实际上只需要重启winnat即可, 即：
+`net stop winnat`
+`net start winnat`
+
+-   注：`winnat`是Windows网络地址转换服务，重启它可以强制系统重新评估网络配置并释放被错误保留的端口[^4]
+
+不放心的话可以再使用上一节“诊断方式”中给出的两种方法重新进行一次诊断。如果阁下要使用的端口已不在保留的端口范围中，则这方面的问题就已经解决啦~ ~~(注: 若此时形如clash代理的服务仍无法使用，则大概率只需要重启clash就可以解决, 不重启或许它不会主动尝试再申请对应端口)~~
+
+## 参考文献
+
+[^1]: 爱丽丝基. [解决 Windows 10 端口被 Hyper-V 随机保留（占用）的问题](https://zhuanlan.zhihu.com/p/474392069). 知乎, 2022-03-01
+[^2]: 感谢地心引力. [【Windows】电脑端口明明没有进程占用但显示端口被占用（动态端口）](https://blog.csdn.net/weixin_43764974/article/details/143241715). CSDN, 2024-10-25
+[^3]: 安浩阳. [端口未被占用，但是却提示端口无法使用](https://www.cnblogs.com/anhaoyang/p/the-port-is-not-occupied-but-it-is-prompted-that-the-port-cannot-be-used-z2e8urz.html). 博客园, 2023-07-24
+[^4]: scooley (microsoft). [Windows NAT (WinNAT) – Capabilities and limitations](https://techcommunity.microsoft.com/blog/virtualization/windows-nat-winnat----capabilities-and-limitations/382303). Microsoft Community Hub, 2016-5-25

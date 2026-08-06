@@ -2,7 +2,14 @@
 import { Image } from "astro:assets";
 import type { CollectionEntry } from "astro:content";
 import { ArrowUpRight } from "@lucide/astro";
-import { taxonomyHref } from "../lib/posts";
+import { contentRootLabel } from "../config/content";
+import {
+  catalogHref,
+  getCatalogBreadcrumbs,
+  getContentRoot,
+  postHref,
+  tagHref,
+} from "../lib/posts";
 
 interface Props {
   post: CollectionEntry<"posts">;
@@ -12,6 +19,12 @@ interface Props {
 
 const { post, variant = "standard", eager = false } = Astro.props;
 const { data } = post;
+const root = getContentRoot(post);
+const rootLabel = contentRootLabel(root);
+const directoryLabel = getCatalogBreadcrumbs(post, false)
+  .slice(1)
+  .map((entry) => entry.label)
+  .join(" / ");
 const formattedDate = new Intl.DateTimeFormat("zh-CN", {
   year: "numeric",
   month: "2-digit",
@@ -20,7 +33,7 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
 ---
 
 <article class="article-card" data-variant={variant}>
-  <a class="article-card__cover" href={`/posts/${post.id}/`}>
+  <a class="article-card__cover" href={postHref(post)}>
     <Image
       src={data.cover}
       alt={data.coverAlt}
@@ -34,11 +47,13 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
   </a>
   <div class="article-card__body">
     <div class="article-card__meta">
-      <a href={taxonomyHref("categories", data.category)}>{data.category}</a>
+      <a href={catalogHref(root)}>{rootLabel}</a>
+      {directoryLabel && <span>{directoryLabel}</span>}
+      {data.draft && <span class="article-card__draft">Draft</span>}
       <time datetime={data.pubDate.toISOString()}>{formattedDate}</time>
     </div>
     <h2>
-      <a href={`/posts/${post.id}/`}>{data.title}</a>
+      <a href={postHref(post)}>{data.title}</a>
     </h2>
     <p>{data.description}</p>
     <div class="article-card__footer">
@@ -46,14 +61,14 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
         {
           data.tags.slice(0, 3).map((tag) => (
             <li>
-              <a href={taxonomyHref("tags", tag)}>#{tag}</a>
+              <a href={tagHref(tag)}>#{tag}</a>
             </li>
           ))
         }
       </ul>
       <a
         class="article-card__open"
-        href={`/posts/${post.id}/`}
+        href={postHref(post)}
         aria-label={`阅读《${data.title}》`}
         title="阅读文章"
       >
@@ -99,8 +114,9 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
 
   .article-card__meta {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
+    gap: 7px 12px;
     color: var(--color-muted);
     font-family: var(--font-mono);
     font-size: 0.72rem;
@@ -111,6 +127,19 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
     font-weight: 800;
     text-decoration: none;
     text-transform: uppercase;
+  }
+
+  .article-card__draft {
+    padding: 2px 6px;
+    border: 1px solid var(--color-line);
+    color: var(--color-muted);
+    font-size: 0.61rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .article-card__meta time {
+    margin-left: auto;
   }
 
   .article-card h2 {

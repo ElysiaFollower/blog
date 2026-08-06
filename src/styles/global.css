@@ -51,6 +51,7 @@
 
 html {
   min-width: 320px;
+  overflow-x: clip;
   background: var(--color-bg);
   scroll-behavior: smooth;
   text-size-adjust: 100%;

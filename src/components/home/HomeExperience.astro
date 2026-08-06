@@ -10,11 +10,10 @@ import {
   Radio,
   Star,
 } from "@lucide/astro";
-import heroDay from "../../assets/demo/hero-day.png";
-import heroNight from "../../assets/demo/hero-night.jpg";
-import memoryPortrait from "../../assets/demo/elysia-portrait.png";
+import heroDay from "../../assets/demo/hero-day.webp";
+import heroNight from "../../assets/demo/hero-night.webp";
+import memoryPortrait from "../../assets/demo/elysia-portrait.webp";
 import ArticleCard from "../ArticleCard.astro";
-import ConceptSwitcher from "../ConceptSwitcher.astro";
 import DirectedPointer from "../DirectedPointer.astro";
 import MusicDock from "../MusicDock.astro";
 import OpeningSequence from "../OpeningSequence.astro";
@@ -23,11 +22,6 @@ import ScrollReveal from "../ScrollReveal.astro";
 import SiteHeader from "../SiteHeader.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-interface Props {
-  reviewMode?: boolean;
-}
-
-const { reviewMode = false } = Astro.props;
 const posts = (await getCollection("posts", ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
@@ -35,8 +29,8 @@ const channels = [
   {
     index: "01",
     label: "WRITING",
-    title: "航行记录",
-    description: "技术笔记、研究中的追问，以及值得被完整写下来的思考。",
+    title: "文章与笔记",
+    description: "技术笔记、论文阅读，也有偶尔写远的思绪。",
     href: "/posts/",
     icon: BookOpenText,
     accent: "cyan",
@@ -44,8 +38,8 @@ const channels = [
   {
     index: "02",
     label: "VISUAL ARCHIVE",
-    title: "图像收藏",
-    description: "角色、构图与创作途中拾起的视觉片段。",
+    title: "视觉档案",
+    description: "角色、构图，以及曾让目光停留的光影。",
     href: "/gallery/",
     icon: Images,
     accent: "rose",
@@ -53,8 +47,8 @@ const channels = [
   {
     index: "03",
     label: "PERSONAL TRANSMISSION",
-    title: "关于我",
-    description: "研究、好奇心，以及那些纯粹为了好玩的支线。",
+    title: "关于",
+    description: "研究方向、兴趣，以及屏幕背后的那个人。",
     href: "/about/",
     icon: CircleUserRound,
     accent: "gold",
@@ -63,11 +57,9 @@ const channels = [
 ---
 
 <BaseLayout
-  title={reviewMode ? "混合型首页" : undefined}
-  description="技术、生成媒体、图形学与那些仍被珍藏的故事。"
+  description="ElysiaFollower 的个人博客：研究笔记、工程记录、生成媒体，以及偶尔写远的念头。"
   bodyClass="hybrid-page"
   directedPointer
-  noIndex={reviewMode}
 >
   <SiteHeader variant="overlay" />
   <main id="main-content">
@@ -79,8 +71,9 @@ const channels = [
           alt=""
           widths={[960, 1440, 1920, 2560]}
           sizes="100vw"
-          loading="eager"
-          data-critical-image
+          loading="lazy"
+          fetchpriority="high"
+          data-hero-theme="light"
         />
         <Image
           class="hybrid-hero__night"
@@ -88,7 +81,9 @@ const channels = [
           alt=""
           widths={[960, 1440, 1942]}
           sizes="100vw"
-          loading="eager"
+          loading="lazy"
+          fetchpriority="high"
+          data-hero-theme="dark"
         />
       </div>
       <div class="hybrid-hero__shade" aria-hidden="true"></div>
@@ -111,10 +106,10 @@ const channels = [
             <span>航行日志</span>
           </h1>
           <p class="hybrid-hero__intro">
-            技术、生成媒体、图形学与那些仍被珍藏的故事。
+            研究、技术与创作；偶尔也追着一个念头，走得远一点。
           </p>
           <a class="hybrid-hero__action" href="/posts/">
-            <span>进入航行记录</span>
+            <span>翻阅航行记录</span>
             <ArrowDownRight aria-hidden="true" size={20} stroke-width={2} />
           </a>
         </div>
@@ -136,9 +131,9 @@ const channels = [
         <header class="hybrid-feed__header" data-reveal>
           <div>
             <span>02 / RECENT NOTES</span>
-            <h2>新的信号已经抵达</h2>
+            <h2>新近落笔</h2>
           </div>
-          <a href="/posts/">浏览全部记录 →</a>
+          <a href="/posts/">沿时间继续翻阅 →</a>
         </header>
 
         <div class="hybrid-feed__layout" data-reveal data-reveal-delay="1">
@@ -159,10 +154,10 @@ const channels = [
         <header class="hybrid-channels__header" data-reveal>
           <span>03 / CHANNEL INDEX</span>
           <h2 id="channels-title">
-            <span>每一条频道，</span><br />都有自己的叙事。
+            <span>信号不止</span><br />一种频率。
           </h2>
           <p>
-            这里不把所有内容压进同一种模板。文字需要安静地阅读，图像需要被看见，而个人信息值得拥有独立的舞台。
+            读文章，看图，或者认识一下写下它们的人。
           </p>
         </header>
 
@@ -214,11 +209,11 @@ const channels = [
       </div>
       <div class="hybrid-memory__copy" data-reveal="right">
         <span>04 / COLLECTION</span>
-        <h2 id="memory-title">图像也是记忆的索引</h2>
+        <h2 id="memory-title">记忆的回廊</h2>
         <p>
-          相册并不是文章系统的附件。它保存角色、构图与偶然遇见的视觉片段，也为之后的创作留下可以重新检索的线索。
+          光影停在画面里，旧日的心绪也有了归处。
         </p>
-        <a href="/gallery/">打开相册 →</a>
+        <a href="/gallery/">步入回廊 →</a>
       </div>
       <div class="hybrid-memory__stamp" aria-hidden="true">
         KEEP<br />THE<br />LIGHT
@@ -236,7 +231,6 @@ const channels = [
   <DirectedPointer />
   <MusicDock />
   <ScrollReveal />
-  {reviewMode && <ConceptSwitcher />}
   <OpeningSequence label="少女祈祷中..." code="BROADCAST // 017" />
 </BaseLayout>
 
@@ -659,7 +653,7 @@ const channels = [
   .hybrid-memory__copy h2 {
     max-width: 9ch;
     margin: 18px 0 24px;
-    font-size: clamp(2.9rem, 6vw, 5.8rem);
+    font-size: clamp(2.9rem, 5.4vw, 5rem);
     line-height: 0.98;
   }
 

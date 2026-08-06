@@ -7,11 +7,21 @@ import BaseLayout from "./BaseLayout.astro";
 import CodeCopy from "../components/content/CodeCopy.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import { contentRootLabel } from "../config/content";
 import {
+  catalogHref,
   estimateReadingMinutes,
-  getPublishedPosts,
-  taxonomyHref,
+  getCatalogAncestors,
+  getCatalogBreadcrumbs,
+  getContentRoot,
+  getParentCatalogPath,
+  getSourcePath,
+  getVisiblePosts,
+  postHref,
+  sortPosts,
+  tagHref,
 } from "../lib/posts";
+import "katex/dist/katex.min.css";
 import "../styles/reading.css";
 
 interface Props {
@@ -21,7 +31,17 @@ interface Props {
 
 const { post, headings } = Astro.props;
 const { data } = post;
-const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+const root = getContentRoot(post);
+const rootLabel = contentRootLabel(root);
+const catalogBreadcrumbs = getCatalogBreadcrumbs(post, false);
+const catalogAncestors = getCatalogAncestors(post);
+const catalogLabel = catalogBreadcrumbs.map((entry) => entry.label).join(" / ");
+const sourcePath = getSourcePath(post);
+const toc = headings.filter(
+  (heading) =>
+    (heading.depth === 2 || heading.depth === 3) &&
+    heading.slug !== "footnote-label",
+);
 const formattedDate = new Intl.DateTimeFormat("zh-CN", {
   year: "numeric",
   month: "long",
@@ -35,12 +55,19 @@ const formattedUpdatedDate = data.updatedDate
     }).format(data.updatedDate)
   : undefined;
 const readingMinutes = estimateReadingMinutes(post);
-const posts = await getPublishedPosts();
-const currentIndex = posts.findIndex((entry) => entry.id === post.id);
-const newerPost = currentIndex > 0 ? posts[currentIndex - 1] : undefined;
-const olderPost =
-  currentIndex >= 0 && currentIndex < posts.length - 1
-    ? posts[currentIndex + 1]
+const posts = await getVisiblePosts();
+const siblings = sortPosts(
+  posts.filter(
+    (candidate) =>
+      getParentCatalogPath(candidate) === getParentCatalogPath(post),
+  ),
+  "title-asc",
+);
+const currentIndex = siblings.findIndex((entry) => entry.id === post.id);
+const previousPost = currentIndex > 0 ? siblings[currentIndex - 1] : undefined;
+const nextPost =
+  currentIndex >= 0 && currentIndex < siblings.length - 1
+    ? siblings[currentIndex + 1]
     : undefined;
 ---
 
@@ -49,17 +76,70 @@ const olderPost =
   description={data.description}
   bodyClass="reading-page"
   image={data.cover}
+  imageAlt={data.coverAlt}
+  noIndex={data.draft}
   pageType="article"
+  publishedDate={data.pubDate}
+  updatedDate={data.updatedDate}
+  tags={data.tags}
 >
   <SiteHeader variant="reading" />
   <main id="main-content" class="post-shell">
-    <article>
+    <article data-pagefind-body>
+      <div class="search-catalog-index" aria-hidden="true" data-pagefind-ignore>
+        <span data-pagefind-meta="title" data-pagefind-sort="title">
+          {data.title}
+        </span>
+        <span data-pagefind-meta="catalog">{catalogLabel}</span>
+        <span data-pagefind-meta="source">{sourcePath}</span>
+        <Image
+          src={data.cover}
+          alt=""
+          width={320}
+          loading="lazy"
+          data-pagefind-meta="cover[src]"
+        />
+        <span data-pagefind-meta="cover-position">{data.coverPosition}</span>
+        {
+          catalogAncestors.map((path) => (
+            <span
+              data-pagefind-filter="directory"
+            >
+              {path}
+            </span>
+          ))
+        }
+        {
+          data.tags.map((tag) => (
+            <span data-pagefind-filter="tag">{tag}</span>
+          ))
+        }
+      </div>
       <header class="post-header">
-        <div class="post-header__eyebrow">
-          <a href={taxonomyHref("categories", data.category)}>
-            {data.category}
-          </a>
-          <time datetime={data.pubDate.toISOString()}>{formattedDate}</time>
+        <nav
+          class="post-catalog-path"
+          aria-label="文章目录位置"
+          data-pagefind-ignore
+        >
+          {
+            catalogBreadcrumbs.map((entry, index) => (
+              <>
+                {index > 0 && <span aria-hidden="true">/</span>}
+                <a href={catalogHref(entry.path)}>{entry.label}</a>
+              </>
+            ))
+          }
+        </nav>
+        <div class="post-header__eyebrow" data-pagefind-ignore>
+          <span>{rootLabel}</span>
+          {data.draft && <span class="post-header__draft">Draft</span>}
+          <time
+            datetime={data.pubDate.toISOString()}
+            data-pagefind-meta="date[datetime]"
+            data-pagefind-sort="date[datetime]"
+          >
+            {formattedDate}
+          </time>
           <span>约 {readingMinutes} 分钟阅读</span>
           {
             data.updatedDate && (
@@ -72,20 +152,28 @@ const olderPost =
             )
           }
         </div>
-        <h1>{data.title}</h1>
-        <p class="post-header__description">{data.description}</p>
-        <ul class="post-header__tags" aria-label="标签">
+        <h1 data-pagefind-ignore>{data.title}</h1>
+        <p class="post-header__description" data-pagefind-meta="description">
+          {data.description}
+        </p>
+        <ul class="post-header__tags" aria-label="标签" data-pagefind-ignore>
           {
             data.tags.map((tag) => (
               <li>
-                <a href={taxonomyHref("tags", tag)}>#{tag}</a>
+                <a
+                  href={tagHref(tag)}
+                  data-pagefind-filter="tag"
+                >
+                  #{tag}
+                </a>
               </li>
             ))
           }
         </ul>
+        <code class="post-source-path" data-pagefind-ignore>{sourcePath}</code>
       </header>
 
-      <div class="post-cover">
+      <div class="post-cover" data-pagefind-ignore>
         <Image
           src={data.cover}
           alt={data.coverAlt}
@@ -100,7 +188,7 @@ const olderPost =
       <div class="reading-grid">
         {
           toc.length > 0 && (
-            <nav class="post-toc" aria-label="文章目录">
+            <nav class="post-toc" aria-label="文章目录" data-pagefind-ignore>
               <span class="post-toc__label">Contents</span>
               <ol>
                 {toc.map((heading) => (
@@ -120,27 +208,27 @@ const olderPost =
 
     <footer class="post-footer">
       <p>
-        写于 {formattedDate}。文章仍可能继续修订；若发现技术错误，欢迎联系讨论。
+        写于 {formattedDate}。如有疏漏，欢迎指正。
       </p>
       {
-        (newerPost || olderPost) && (
+        (previousPost || nextPost) && (
           <nav class="post-navigation" aria-label="相邻文章">
-            {newerPost ? (
-              <a href={`/posts/${newerPost.id}/`} rel="prev">
+            {previousPost ? (
+              <a href={postHref(previousPost)} rel="prev">
                 <ArrowLeft aria-hidden="true" size={18} stroke-width={1.7} />
                 <span>
-                  <small>较新一篇</small>
-                  <strong>{newerPost.data.title}</strong>
+                  <small>同目录上一篇</small>
+                  <strong>{previousPost.data.title}</strong>
                 </span>
               </a>
             ) : (
               <span />
             )}
-            {olderPost && (
-              <a href={`/posts/${olderPost.id}/`} rel="next">
+            {nextPost && (
+              <a href={postHref(nextPost)} rel="next">
                 <span>
-                  <small>较早一篇</small>
-                  <strong>{olderPost.data.title}</strong>
+                  <small>同目录下一篇</small>
+                  <strong>{nextPost.data.title}</strong>
                 </span>
                 <ArrowRight aria-hidden="true" size={18} stroke-width={1.7} />
               </a>

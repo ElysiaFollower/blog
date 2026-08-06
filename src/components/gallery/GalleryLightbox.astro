@@ -1,479 +1,255 @@
 ---
-import {
-  ChevronLeft,
-  ChevronRight,
-  LoaderCircle,
-  RotateCcw,
-  X,
-  ZoomIn,
-  ZoomOut,
-} from "@lucide/astro";
+import "photoswipe/style.css";
 ---
 
-<dialog
-  class="gallery-lightbox"
-  data-gallery-lightbox
-  aria-label="图片查看器"
->
-  <div class="gallery-lightbox__toolbar panzoom-exclude" role="toolbar" aria-label="缩放控制">
-    <button
-      type="button"
-      data-gallery-zoom-out
-      aria-label="缩小"
-      title="缩小"
-    >
-      <ZoomOut aria-hidden="true" size={19} stroke-width={1.8} />
-    </button>
-    <output data-gallery-zoom aria-live="polite">100%</output>
-    <button
-      type="button"
-      data-gallery-zoom-in
-      aria-label="放大"
-      title="放大"
-    >
-      <ZoomIn aria-hidden="true" size={19} stroke-width={1.8} />
-    </button>
-    <button
-      type="button"
-      data-gallery-reset
-      aria-label="复位图片"
-      title="复位"
-    >
-      <RotateCcw aria-hidden="true" size={18} stroke-width={1.8} />
-    </button>
-  </div>
-
-  <button
-    class="gallery-lightbox__close panzoom-exclude"
-    type="button"
-    data-gallery-close
-    aria-label="关闭大图"
-    title="关闭"
-  >
-    <X aria-hidden="true" size={22} stroke-width={1.8} />
-  </button>
-
-  <button
-    class="gallery-lightbox__previous panzoom-exclude"
-    type="button"
-    data-gallery-previous
-    aria-label="查看上一张"
-    title="上一张"
-  >
-    <ChevronLeft aria-hidden="true" size={27} stroke-width={1.7} />
-  </button>
-
-  <figure>
-    <div class="gallery-lightbox__viewport" data-gallery-viewport data-loading="false">
-      <LoaderCircle
-        class="gallery-lightbox__loader"
-        aria-hidden="true"
-        size={30}
-        stroke-width={1.7}
-      />
-      <img alt="" hidden draggable="false" data-gallery-image />
-    </div>
-    <figcaption>
-      <span data-gallery-caption></span>
-      <small>
-        <span data-gallery-count></span>
-      </small>
-    </figcaption>
-  </figure>
-
-  <button
-    class="gallery-lightbox__next panzoom-exclude"
-    type="button"
-    data-gallery-next
-    aria-label="查看下一张"
-    title="下一张"
-  >
-    <ChevronRight aria-hidden="true" size={27} stroke-width={1.7} />
-  </button>
-</dialog>
-
 <script>
-  import Panzoom from "@panzoom/panzoom";
+  import PhotoSwipeLightbox from "photoswipe/lightbox";
 
-  const dialog =
-    document.querySelector<HTMLDialogElement>("[data-gallery-lightbox]");
-  const viewport =
-    dialog?.querySelector<HTMLElement>("[data-gallery-viewport]");
-  const dialogImage =
-    dialog?.querySelector<HTMLImageElement>("[data-gallery-image]");
-  const closeButton =
-    dialog?.querySelector<HTMLButtonElement>("[data-gallery-close]");
-  const previousButton = dialog?.querySelector<HTMLButtonElement>(
-    "[data-gallery-previous]",
-  );
-  const nextButton = dialog?.querySelector<HTMLButtonElement>(
-    "[data-gallery-next]",
-  );
-  const zoomInButton = dialog?.querySelector<HTMLButtonElement>(
-    "[data-gallery-zoom-in]",
-  );
-  const zoomOutButton = dialog?.querySelector<HTMLButtonElement>(
-    "[data-gallery-zoom-out]",
-  );
-  const resetButton = dialog?.querySelector<HTMLButtonElement>(
-    "[data-gallery-reset]",
-  );
-  const caption = dialog?.querySelector<HTMLElement>("[data-gallery-caption]");
-  const count = dialog?.querySelector<HTMLElement>("[data-gallery-count]");
-  const zoomOutput = dialog?.querySelector<HTMLOutputElement>(
-    "[data-gallery-zoom]",
-  );
-  const galleryItems = Array.from(
-    document.querySelectorAll<HTMLAnchorElement>("[data-gallery-item]"),
-  );
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
 
-  let currentIndex = 0;
-  let currentScale = 1;
-  let panzoom: ReturnType<typeof Panzoom> | undefined;
+  const lightbox = new PhotoSwipeLightbox({
+    gallery: "[data-gallery-grid]",
+    children: "[data-gallery-item]",
+    pswpModule: () => import("photoswipe"),
+    mainClass: "gallery-viewer",
+    bgOpacity: 1,
+    initialZoomLevel: "fit",
+    secondaryZoomLevel: 1,
+    maxZoomLevel: (zoomLevel) => Math.max(2, zoomLevel.fit * 5),
+    wheelToZoom: true,
+    allowPanToNext: false,
+    pinchToClose: false,
+    closeOnVerticalDrag: false,
+    imageClickAction: "zoom",
+    tapAction: "toggle-controls",
+    doubleTapAction: "zoom",
+    bgClickAction: "close",
+    showAnimationDuration: reduceMotion ? false : 260,
+    hideAnimationDuration: reduceMotion ? false : 220,
+    zoomAnimationDuration: reduceMotion ? false : 240,
+    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+    preload: [1, 2],
+    counter: false,
+    errorMsg: "图片加载失败",
+    closeTitle: "关闭",
+    zoomTitle: "切换缩放",
+    arrowPrevTitle: "上一张",
+    arrowNextTitle: "下一张",
+    paddingFn: (viewportSize) => {
+      if (viewportSize.x <= 620) {
+        return { top: 58, bottom: 70, left: 10, right: 10 };
+      }
+      return { top: 68, bottom: 72, left: 76, right: 76 };
+    },
+  });
 
-  const updateZoomOutput = (scale: number) => {
-    currentScale = scale;
-    if (zoomOutput) zoomOutput.value = `${Math.round(scale * 100)}%`;
-  };
+  lightbox.on("uiRegister", () => {
+    const viewer = lightbox.pswp;
+    if (!viewer?.ui) return;
 
-  const handlePanzoomChange = (event: Event) => {
-    const detail = (event as CustomEvent<{ scale: number }>).detail;
-    updateZoomOutput(detail.scale);
-  };
+    viewer.ui.registerElement({
+      name: "gallery-caption",
+      appendTo: "root",
+      onInit: (element, pswp) => {
+        const title = document.createElement("span");
+        const position = document.createElement("small");
+        element.append(title, position);
 
-  const disposePanzoom = () => {
-    if (viewport && panzoom) {
-      viewport.removeEventListener("wheel", panzoom.zoomWithWheel);
-    }
-    panzoom?.destroy();
-    panzoom = undefined;
-    updateZoomOutput(1);
-  };
+        const render = () => {
+          const item = pswp.currSlide?.data;
+          const source = item?.element as HTMLElement | undefined;
+          title.textContent = source?.dataset.caption ?? "";
+          position.textContent = `${String(pswp.currIndex + 1).padStart(2, "0")} / ${String(pswp.getNumItems()).padStart(2, "0")}`;
+        };
 
-  const initializePanzoom = () => {
-    if (!dialogImage || !viewport) return;
-    disposePanzoom();
-    panzoom = Panzoom(dialogImage, {
-      canvas: true,
-      maxScale: 6,
-      minScale: 1,
-      panOnlyWhenZoomed: true,
-      step: 0.22,
-      animate: true,
-      duration: 180,
+        pswp.on("change", render);
+        render();
+      },
     });
-    viewport.addEventListener("wheel", panzoom.zoomWithWheel, {
-      passive: false,
-    });
-  };
 
-  const preloadAdjacentImages = () => {
-    if (galleryItems.length < 2) return;
-    const indexes = [
-      (currentIndex - 1 + galleryItems.length) % galleryItems.length,
-      (currentIndex + 1) % galleryItems.length,
-    ];
-    indexes.forEach((index) => {
-      const source = galleryItems[index].dataset.fullSrc;
-      if (!source) return;
-      const image = new Image();
-      image.src = source;
-    });
-  };
-
-  const showImage = (index: number) => {
-    if (!dialogImage || !viewport || galleryItems.length === 0) return;
-    currentIndex = (index + galleryItems.length) % galleryItems.length;
-    const item = galleryItems[currentIndex];
-    const alt = item.dataset.alt ?? "";
-    const source = item.dataset.fullSrc ?? "";
-
-    disposePanzoom();
-    viewport.dataset.loading = "true";
-    dialogImage.hidden = true;
-    dialogImage.alt = alt;
-    dialogImage.onload = () => {
-      dialogImage.hidden = false;
-      initializePanzoom();
-      viewport.dataset.loading = "false";
-    };
-    dialogImage.onerror = () => {
-      viewport.dataset.loading = "false";
-    };
-    dialogImage.src = source;
-
-    if (caption) caption.textContent = alt;
-    if (count) {
-      count.textContent = `${String(currentIndex + 1).padStart(2, "0")} / ${String(galleryItems.length).padStart(2, "0")}`;
-    }
-    preloadAdjacentImages();
-  };
-
-  galleryItems.forEach((item, index) => {
-    item.addEventListener("click", (event) => {
-      if (!dialog || !dialogImage) return;
-      event.preventDefault();
-      dialog.showModal();
-      showImage(index);
-    });
   });
 
-  closeButton?.addEventListener("click", () => dialog?.close());
-  previousButton?.addEventListener("click", () => showImage(currentIndex - 1));
-  nextButton?.addEventListener("click", () => showImage(currentIndex + 1));
-  zoomInButton?.addEventListener("click", () =>
-    panzoom?.zoomIn({ animate: true }),
-  );
-  zoomOutButton?.addEventListener("click", () =>
-    panzoom?.zoomOut({ animate: true }),
-  );
-  resetButton?.addEventListener("click", () =>
-    panzoom?.reset({ animate: true }),
-  );
-  dialogImage?.addEventListener("dblclick", () => {
-    if (!panzoom) return;
-    if (currentScale > 1.05) {
-      panzoom.reset({ animate: true });
-    } else {
-      panzoom.zoom(2.2, { animate: true });
-    }
-  });
-  dialogImage?.addEventListener("panzoomchange", handlePanzoomChange);
-
-  dialog?.addEventListener("click", (event) => {
-    if (event.target === dialog) dialog.close();
-  });
-  dialog?.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft") showImage(currentIndex - 1);
-    if (event.key === "ArrowRight") showImage(currentIndex + 1);
-    if (event.key === "+" || event.key === "=") {
-      event.preventDefault();
-      panzoom?.zoomIn({ animate: true });
-    }
-    if (event.key === "-") {
-      event.preventDefault();
-      panzoom?.zoomOut({ animate: true });
-    }
-    if (event.key === "0") {
-      event.preventDefault();
-      panzoom?.reset({ animate: true });
-    }
-  });
-  dialog?.addEventListener("close", () => {
-    if (!dialogImage || !viewport) return;
-    disposePanzoom();
-    dialogImage.hidden = true;
-    dialogImage.removeAttribute("src");
-    dialogImage.alt = "";
-    viewport.dataset.loading = "false";
-    if (caption) caption.textContent = "";
-    if (count) count.textContent = "";
-  });
+  lightbox.init();
 </script>
 
-<style>
-  .gallery-lightbox {
-    width: 100vw;
-    max-width: none;
-    height: 100dvh;
-    max-height: none;
-    padding: 0;
-    border: 0;
-    overflow: hidden;
-    background: rgb(12 10 13 / 96%);
-    color: #fff;
+<style is:global>
+  .gallery-viewer {
+    --pswp-bg: #0c0a0d;
+    --pswp-icon-color: #f7f2f5;
+    --pswp-icon-color-secondary: #0c0a0d;
+    --pswp-placeholder-bg: #171419;
+    --pswp-root-z-index: 1000;
+    font-family: var(--font-sans);
   }
 
-  .gallery-lightbox::backdrop {
-    background: rgb(12 10 13 / 82%);
+  .gallery-viewer .pswp__icn-shadow {
+    display: none;
   }
 
-  .gallery-lightbox[open] {
-    display: block;
+  .gallery-viewer .pswp__top-bar {
+    height: 62px;
+    padding: 8px 12px;
   }
 
-  .gallery-lightbox figure {
-    position: fixed;
-    inset: 72px 78px 26px;
-    display: grid;
-    margin: 0;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 12px;
+  .gallery-viewer .pswp__top-bar > * {
+    opacity: 0.84;
+    transition:
+      color 160ms ease,
+      opacity 160ms ease,
+      transform 160ms ease;
   }
 
-  .gallery-lightbox__viewport {
-    position: relative;
-    display: grid;
-    min-width: 0;
-    min-height: 0;
-    place-items: center;
-    overflow: hidden;
-    cursor: grab;
-    touch-action: none;
-  }
-
-  .gallery-lightbox__viewport:active {
-    cursor: grabbing;
-  }
-
-  .gallery-lightbox__viewport img {
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    max-height: 100%;
-    object-fit: contain;
-    user-select: none;
-    will-change: transform;
-  }
-
-  .gallery-lightbox__loader {
-    position: absolute;
-    color: #ff78a5;
-    opacity: 0;
-    animation: gallery-spin 900ms linear infinite;
-    pointer-events: none;
-  }
-
-  .gallery-lightbox__viewport[data-loading="true"]
-    .gallery-lightbox__loader {
+  .gallery-viewer .pswp__top-bar > *:hover,
+  .gallery-viewer .pswp__top-bar > *:focus-visible {
+    color: #ff8fb4;
     opacity: 1;
   }
 
-  .gallery-lightbox button {
-    z-index: 3;
-    display: grid;
-    width: 44px;
-    height: 44px;
-    place-items: center;
-    border: 1px solid #fff7;
+  .gallery-viewer .pswp__button {
+    width: 46px;
+    height: 46px;
+  }
+
+  .gallery-viewer .pswp__button--zoom {
+    margin-left: auto;
+  }
+
+  .gallery-viewer .pswp__button--arrow {
+    width: 48px;
+    height: 48px;
+    margin-top: -24px;
+    border: 1px solid rgb(255 255 255 / 28%);
     border-radius: 50%;
-    background: #17151a;
-    color: #fff;
-    cursor: pointer;
+    background: rgb(18 15 19 / 82%);
+    opacity: 0.72;
+    transition:
+      border-color 160ms ease,
+      color 160ms ease,
+      opacity 160ms ease,
+      transform 160ms ease;
   }
 
-  .gallery-lightbox button:hover {
-    border-color: #ff78a5;
-    color: #ff9abb;
+  .gallery-viewer .pswp__button--arrow:hover,
+  .gallery-viewer .pswp__button--arrow:focus-visible {
+    border-color: #ff8fb4;
+    color: #ff8fb4;
+    opacity: 1;
   }
 
-  .gallery-lightbox__close {
-    position: fixed;
-    top: 18px;
-    right: 20px;
+  .gallery-viewer .pswp__button--arrow--prev {
+    left: 18px;
   }
 
-  .gallery-lightbox__toolbar {
-    position: fixed;
-    z-index: 3;
-    top: 16px;
-    left: 50%;
+  .gallery-viewer .pswp__button--arrow--next {
+    right: 18px;
+  }
+
+  .gallery-viewer .pswp__button--arrow .pswp__icn {
+    top: 8px;
+    width: 30px;
+    height: 30px;
+    margin-top: 0;
+  }
+
+  .gallery-viewer .pswp__button--arrow--prev .pswp__icn {
+    left: 8px;
+  }
+
+  .gallery-viewer .pswp__button--arrow--next .pswp__icn {
+    right: 8px;
+  }
+
+  .gallery-viewer .pswp__gallery-caption {
+    position: absolute;
+    right: clamp(22px, 5vw, 78px);
+    bottom: 22px;
+    left: clamp(22px, 5vw, 78px);
+    z-index: 10;
     display: flex;
-    min-height: 46px;
-    align-items: center;
-    gap: 3px;
-    padding: 3px;
-    border: 1px solid #ffffff42;
-    background: #17151ae8;
-    transform: translateX(-50%);
-  }
-
-  .gallery-lightbox__toolbar button {
-    position: static;
-    width: 38px;
-    height: 38px;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-  }
-
-  .gallery-lightbox__toolbar output {
-    min-width: 58px;
-    color: #ddd4da;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    text-align: center;
-  }
-
-  .gallery-lightbox__previous,
-  .gallery-lightbox__next {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .gallery-lightbox__previous {
-    left: 20px;
-  }
-
-  .gallery-lightbox__next {
-    right: 20px;
-  }
-
-  .gallery-lightbox figcaption {
-    display: flex;
-    min-height: 28px;
+    min-width: 0;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    color: #ddd4da;
-    font-size: 0.8rem;
+    color: #ddd5da;
+    font-size: 0.78rem;
+    line-height: 1.4;
+    pointer-events: none;
   }
 
-  .gallery-lightbox figcaption small {
-    display: flex;
+  .gallery-viewer .pswp__gallery-caption span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gallery-viewer .pswp__gallery-caption small {
     flex: none;
-    gap: 7px;
-    color: #aaa0a6;
+    color: #a49aa0;
     font-family: var(--font-mono);
-    font-size: 0.64rem;
-  }
-
-  @keyframes gallery-spin {
-    to {
-      transform: rotate(360deg);
-    }
+    font-size: 0.62rem;
   }
 
   @media (max-width: 620px) {
-    .gallery-lightbox figure {
-      inset: 68px 10px 76px;
+    .gallery-viewer .pswp__top-bar {
+      height: 54px;
+      padding: 4px 5px;
     }
 
-    .gallery-lightbox__close {
-      top: 12px;
-      right: 12px;
-    }
-
-    .gallery-lightbox__toolbar {
-      top: 11px;
-      left: 10px;
-      transform: none;
-    }
-
-    .gallery-lightbox__previous,
-    .gallery-lightbox__next {
+    .gallery-viewer .pswp__button--arrow {
       top: auto;
-      bottom: 16px;
-      transform: none;
+      bottom: 11px;
+      width: 42px;
+      height: 42px;
+      margin: 0;
     }
 
-    .gallery-lightbox__previous {
-      left: 16px;
+    .gallery-viewer .pswp__button--arrow--prev {
+      left: 10px;
     }
 
-    .gallery-lightbox__next {
-      right: 16px;
+    .gallery-viewer .pswp__button--arrow--next {
+      right: 10px;
     }
 
-    .gallery-lightbox figcaption {
+    .gallery-viewer .pswp__button--arrow .pswp__icn {
+      top: 5px;
+      width: 30px;
+      height: 30px;
+    }
+
+    .gallery-viewer .pswp__button--arrow--prev .pswp__icn {
+      left: 5px;
+    }
+
+    .gallery-viewer .pswp__button--arrow--next .pswp__icn {
+      right: 5px;
+    }
+
+    .gallery-viewer .pswp__gallery-caption {
+      right: 62px;
+      bottom: 15px;
+      left: 62px;
       display: grid;
-      gap: 2px;
+      justify-items: center;
+      gap: 1px;
+      font-size: 0.7rem;
+      text-align: center;
     }
 
-    .gallery-lightbox figcaption small {
-      justify-content: space-between;
+    .gallery-viewer .pswp__gallery-caption span {
+      max-width: 100%;
     }
 
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gallery-viewer *,
+    .gallery-viewer *::before,
+    .gallery-viewer *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
   }
 </style>

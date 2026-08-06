@@ -1,0 +1,124 @@
+---
+import { FileText, Folder, LibraryBig } from "@lucide/astro";
+import type { CatalogNode } from "../../lib/posts";
+import { postHref } from "../../lib/posts";
+
+interface Props {
+  nodes: CatalogNode[];
+  depth?: number;
+}
+
+const { nodes, depth = 0 } = Astro.props;
+---
+
+<ul class="catalog-tree" data-depth={depth}>
+  {
+    nodes.map((node) => (
+      <li>
+        {node.type === "directory" ? (
+          <details open={depth < 2}>
+            <summary
+              data-catalog-path={node.path}
+              data-catalog-label={node.label}
+              title={`查看 ${node.label}`}
+            >
+              {depth === 0 ? (
+                <LibraryBig aria-hidden="true" size={16} stroke-width={1.7} />
+              ) : (
+                <Folder aria-hidden="true" size={15} stroke-width={1.7} />
+              )}
+              <span>{node.label}</span>
+              <small>{String(node.count).padStart(2, "0")}</small>
+            </summary>
+            {node.children.length > 0 && (
+              <Astro.self nodes={node.children} depth={depth + 1} />
+            )}
+          </details>
+        ) : (
+          <a
+            class="catalog-tree__article"
+            href={postHref(node.post ?? node.path)}
+            title={node.label}
+          >
+            <FileText aria-hidden="true" size={14} stroke-width={1.7} />
+            <span>{node.label}</span>
+          </a>
+        )}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .catalog-tree {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .catalog-tree[data-depth]:not([data-depth="0"]) {
+    margin-left: 8px;
+    border-left: 1px solid var(--color-line);
+    padding-left: 12px;
+  }
+
+  li + li {
+    margin-top: 2px;
+  }
+
+  details > summary,
+  .catalog-tree__article {
+    display: grid;
+    width: 100%;
+    min-height: 34px;
+    padding: 5px 7px;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 7px;
+    color: var(--color-muted);
+    cursor: pointer;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    list-style: none;
+    text-decoration: none;
+  }
+
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details > summary:hover,
+  details > summary[data-selected="true"],
+  .catalog-tree__article:hover {
+    background: var(--color-surface-soft);
+    color: var(--color-ink);
+  }
+
+  details > summary[data-selected="true"] {
+    box-shadow: inset 2px 0 var(--color-rose);
+  }
+
+  details > summary span,
+  .catalog-tree__article span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  details > summary small {
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+  }
+
+  .catalog-tree[data-depth="0"] > li > details > summary {
+    min-height: 40px;
+    color: var(--color-ink);
+    font-weight: 760;
+  }
+
+  .catalog-tree__article {
+    grid-template-columns: 18px minmax(0, 1fr);
+    font-family: var(--font-reading);
+  }
+</style>

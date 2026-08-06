@@ -7,7 +7,15 @@
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
+          // A fast page jump can move an item from below to above the viewport
+          // without ever reporting an intersecting frame. Once passed, reveal it
+          // instead of leaving a permanent blank section.
+          if (
+            !entry.isIntersecting &&
+            entry.boundingClientRect.top >= 0
+          ) {
+            return;
+          }
           entry.target.classList.add("is-visible");
           observer.unobserve(entry.target);
         });

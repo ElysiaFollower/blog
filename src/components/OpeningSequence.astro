@@ -28,7 +28,8 @@ const { label = "少女祈祷中...", code = "LOADING // 017" } = Astro.props;
       opening.remove();
     } else {
       const startedAt = performance.now();
-      const minimumDuration = 900;
+      const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const minimumDuration = reduceMotion ? 0 : 900;
       let closing = false;
 
       const close = () => {
@@ -51,7 +52,7 @@ const { label = "少女祈祷中...", code = "LOADING // 017" } = Astro.props;
 
       const criticalImages = Array.from(
         document.querySelectorAll<HTMLImageElement>(
-          "img[data-critical-image]",
+          `img[data-critical-image], img[data-hero-theme="${document.documentElement.dataset.theme}"]`,
         ),
       );
       const imageReady = criticalImages.map((image) =>

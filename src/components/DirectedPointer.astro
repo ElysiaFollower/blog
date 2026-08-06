@@ -2,7 +2,7 @@
 
 <script>
   const finePointer = matchMedia(
-    "(pointer: fine) and (prefers-reduced-motion: no-preference)",
+    "(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)",
   );
   const pointer = document.querySelector<HTMLElement>(
     "[data-directed-pointer-dot]",
@@ -53,7 +53,7 @@
     display: none;
   }
 
-  @media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
     .js body[data-directed-pointer="true"],
     .js body[data-directed-pointer="true"] a,
     .js body[data-directed-pointer="true"] button {
@@ -72,6 +72,7 @@
       border-radius: 50%;
       pointer-events: none;
       mix-blend-mode: difference;
+      transform: translate3d(-100px, -100px, 0);
       transition:
         width 120ms ease,
         height 120ms ease,

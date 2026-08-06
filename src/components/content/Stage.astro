@@ -1,0 +1,123 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label } = Astro.props;
+---
+
+<section
+  class="reading-stage"
+  data-reading-stage
+  aria-label={label || undefined}
+>
+  {label && <span class="reading-stage__label">{label}</span>}
+  <div class="reading-stage__body">
+    <slot />
+  </div>
+</section>
+
+<script>
+  const stages = Array.from(
+    document.querySelectorAll<HTMLElement>("[data-reading-stage]"),
+  );
+  const activeStages = new Map<HTMLElement, Set<HTMLElement>>();
+
+  const updateGrid = (grid: HTMLElement) => {
+    const active = activeStages.get(grid);
+    grid.toggleAttribute("data-stage-active", Boolean(active?.size));
+  };
+
+  if ("IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const stage = entry.target as HTMLElement;
+          const grid = stage.closest<HTMLElement>(".reading-grid");
+          if (!grid) return;
+
+          const active = activeStages.get(grid) ?? new Set<HTMLElement>();
+          if (entry.isIntersecting) {
+            active.add(stage);
+            stage.setAttribute("data-active", "");
+          } else {
+            active.delete(stage);
+            stage.removeAttribute("data-active");
+          }
+
+          activeStages.set(grid, active);
+          updateGrid(grid);
+        });
+      },
+      {
+        rootMargin: "-18% 0px -18% 0px",
+        threshold: 0,
+      },
+    );
+
+    stages.forEach((stage) => observer.observe(stage));
+  }
+</script>
+
+<style>
+  .reading-stage {
+    position: relative;
+    z-index: 2;
+    display: block;
+    clear: both;
+    width: calc(
+      100% + var(--reading-toc-width) + var(--reading-note-width) +
+        var(--reading-gap) + var(--reading-gap)
+    );
+    margin: clamp(3rem, 7vw, 5.5rem) 0;
+    margin-left: calc(
+      0px - var(--reading-toc-width) - var(--reading-gap)
+    );
+    padding-block: clamp(24px, 4vw, 46px);
+    border-block: 1px solid var(--color-line);
+    background: var(--color-bg);
+  }
+
+  .reading-stage__label {
+    display: block;
+    margin-bottom: 14px;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .reading-stage__body {
+    min-width: 0;
+  }
+
+  :global(.reading-stage__body > :is(p, ul, ol, blockquote, h2, h3, h4, .content-callout, .sidenote)) {
+    width: min(100%, var(--reading-prose-width));
+    margin-inline: auto;
+  }
+
+  :global(.reading-stage .backprop-explorer) {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  :global(.reading-stage .sidenote) {
+    float: none;
+    clear: none;
+    width: min(100%, var(--reading-prose-width));
+    margin: 1.4em auto;
+    padding: 14px 16px;
+    border-top-width: 1px;
+    border-left: 3px solid var(--color-rose);
+    background: color-mix(in srgb, var(--color-rose) 6%, var(--color-surface));
+  }
+
+  @media (max-width: 1120px) {
+    .reading-stage {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+</style>

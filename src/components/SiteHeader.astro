@@ -36,15 +36,10 @@ const icons = {
       {
         siteConfig.navigation.map((item) => {
           const Icon = icons[item.href as keyof typeof icons];
-          const articleRoute =
-            item.href === "/posts/" &&
-            ["/posts/", "/archives/", "/categories/", "/tags/"].some(
-              (path) => currentPath.startsWith(path),
-            );
           const active =
             item.href === "/"
               ? currentPath === "/"
-              : articleRoute || currentPath.startsWith(item.href);
+              : currentPath.startsWith(item.href);
 
           return (
             <a
@@ -61,7 +56,9 @@ const icons = {
       }
     </nav>
 
-    <ThemeToggle />
+    <div class="site-header__actions">
+      <ThemeToggle />
+    </div>
   </div>
 </header>
 
@@ -149,6 +146,13 @@ const icons = {
     color: #b52f62;
   }
 
+  .site-header__actions {
+    display: flex;
+    justify-self: end;
+    align-items: center;
+    gap: 4px;
+  }
+
   .site-header :global(.theme-toggle) {
     justify-self: end;
   }
@@ -181,6 +185,41 @@ const icons = {
       width: 40px;
       height: 40px;
       flex-basis: 40px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .site-header__inner {
+      width: 100%;
+      padding-inline: 6px;
+      grid-template-columns: 32px minmax(0, 1fr) auto;
+      gap: 2px;
+    }
+
+    .site-brand {
+      width: 32px;
+      justify-content: center;
+    }
+
+    .site-nav {
+      gap: 0;
+    }
+
+    .site-nav__link {
+      width: 34px;
+      height: 38px;
+      min-height: 38px;
+    }
+
+    .site-header__actions {
+      gap: 0;
+    }
+
+    .site-search-link,
+    .site-header :global(.theme-toggle) {
+      width: 36px;
+      height: 38px;
+      flex-basis: 36px;
     }
   }
 </style>

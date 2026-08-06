@@ -1,0 +1,22 @@
+---
+import { render } from "astro:content";
+import { contentComponents } from "../../components/content/registry";
+import ReadingLayout from "../../layouts/ReadingLayout.astro";
+import { getVisiblePosts } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const posts = await getVisiblePosts();
+
+  return posts.map((post) => ({
+    params: { path: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+---
+
+<ReadingLayout post={post} headings={headings}>
+  <Content components={contentComponents} />
+</ReadingLayout>

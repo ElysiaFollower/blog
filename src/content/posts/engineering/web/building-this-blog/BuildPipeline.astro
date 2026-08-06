@@ -1,0 +1,355 @@
+---
+import {
+  CloudUpload,
+  FileText,
+  FolderSearch2,
+  Orbit,
+  PackageCheck,
+} from "@lucide/astro";
+
+const steps = [
+  {
+    index: "01",
+    short: "内容",
+    title: "Markdown、MDX 与站点配置",
+    runtime: "AUTHORING",
+    description:
+      "文章、图片和配置都保存在 Git 仓库中。文件目录同时表达知识分类与最终 URL。",
+    output: "src/content/ + src/config/",
+    icon: FileText,
+  },
+  {
+    index: "02",
+    short: "构建",
+    title: "Astro 生成静态页面",
+    runtime: "BUILD TIME",
+    description:
+      "Content Collections 校验元数据，动态路由展开每篇文章，Sharp 生成响应式图片，MDX 被编译为 HTML。",
+    output: "HTML + CSS + 少量页面脚本",
+    icon: Orbit,
+  },
+  {
+    index: "03",
+    short: "索引",
+    title: "Pagefind 扫描构建结果",
+    runtime: "POST BUILD",
+    description:
+      "搜索引擎不读取源码，而是扫描最终 HTML，并提取正文、目录、Tags、日期和封面等索引字段。",
+    output: "dist/pagefind/",
+    icon: FolderSearch2,
+  },
+  {
+    index: "04",
+    short: "产物",
+    title: "dist 成为完整网站",
+    runtime: "ARTIFACT",
+    description:
+      "最终目录包含页面、图片、搜索索引、RSS 与 sitemap。它不依赖 Node.js 服务器即可运行。",
+    output: "可独立托管的静态文件",
+    icon: PackageCheck,
+  },
+  {
+    index: "05",
+    short: "发布",
+    title: "GitHub Actions 部署 Pages",
+    runtime: "DEPLOY",
+    description:
+      "工作流重新安装锁定版本的依赖，执行检查和构建，再把 dist 作为 Pages artifact 发布。",
+    output: "elysiafollower.github.io",
+    icon: CloudUpload,
+  },
+] as const;
+---
+
+<section class="build-pipeline" data-build-pipeline aria-label="博客构建管线">
+  <header>
+    <p>BUILD PIPELINE // STATIC BY DEFAULT</p>
+    <span>选择任意阶段，查看一篇文章如何抵达浏览器。</span>
+  </header>
+
+  <div class="build-pipeline__workspace">
+    <div class="build-pipeline__steps" role="tablist" aria-label="构建阶段">
+      {
+        steps.map((step, index) => {
+          const Icon = step.icon;
+          return (
+            <button
+              type="button"
+              role="tab"
+              id={`pipeline-tab-${step.index}`}
+              aria-controls={`pipeline-panel-${step.index}`}
+              aria-selected={index === 0 ? "true" : "false"}
+              tabindex={index === 0 ? 0 : -1}
+              data-pipeline-step={String(index)}
+            >
+              <span>{step.index}</span>
+              <Icon aria-hidden="true" size={22} stroke-width={1.6} />
+              <strong>{step.short}</strong>
+            </button>
+          );
+        })
+      }
+    </div>
+
+    <div class="build-pipeline__panels">
+      {
+        steps.map((step, index) => (
+          <section
+            role="tabpanel"
+            id={`pipeline-panel-${step.index}`}
+            aria-labelledby={`pipeline-tab-${step.index}`}
+            data-pipeline-panel={String(index)}
+            hidden={index !== 0}
+          >
+            <p>{step.runtime} // STEP {step.index}</p>
+            <h3>{step.title}</h3>
+            <span>{step.description}</span>
+            <code>{step.output}</code>
+          </section>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-build-pipeline]").forEach(
+    (pipeline) => {
+      const tabs = Array.from(
+        pipeline.querySelectorAll<HTMLButtonElement>("[data-pipeline-step]"),
+      );
+      const panels = Array.from(
+        pipeline.querySelectorAll<HTMLElement>("[data-pipeline-panel]"),
+      );
+
+      const select = (index: number, moveFocus = false) => {
+        tabs.forEach((tab, tabIndex) => {
+          const active = tabIndex === index;
+          tab.setAttribute("aria-selected", String(active));
+          tab.tabIndex = active ? 0 : -1;
+          if (active && moveFocus) tab.focus();
+        });
+        panels.forEach((panel, panelIndex) => {
+          panel.hidden = panelIndex !== index;
+        });
+      };
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => select(index));
+        tab.addEventListener("keydown", (event) => {
+          if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+            return;
+          }
+
+          event.preventDefault();
+          const next =
+            event.key === "Home"
+              ? 0
+              : event.key === "End"
+                ? tabs.length - 1
+                : (index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) %
+                  tabs.length;
+          select(next, true);
+        });
+      });
+    },
+  );
+</script>
+
+<style>
+  .build-pipeline {
+    border-block: 1px solid var(--color-line);
+    background: var(--color-surface);
+    font-family: var(--font-ui);
+  }
+
+  .build-pipeline > header {
+    display: flex;
+    min-height: 72px;
+    padding: 16px 20px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .build-pipeline > header p,
+  .build-pipeline__panels section > p {
+    margin: 0;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 800;
+  }
+
+  .build-pipeline > header > span {
+    color: var(--color-muted);
+    font-size: 0.78rem;
+  }
+
+  .build-pipeline__workspace {
+    display: grid;
+    min-height: 350px;
+    grid-template-columns: minmax(0, 1.2fr) minmax(310px, 0.8fr);
+  }
+
+  .build-pipeline__steps {
+    position: relative;
+    display: grid;
+    padding: 48px 28px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  .build-pipeline__steps::before {
+    position: absolute;
+    right: 10%;
+    left: 10%;
+    height: 1px;
+    background: var(--color-line);
+    content: "";
+  }
+
+  .build-pipeline__steps button {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    min-width: 0;
+    min-height: 132px;
+    padding: 14px 6px;
+    place-items: center;
+    align-content: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+
+  .build-pipeline__steps button::before {
+    position: absolute;
+    z-index: -1;
+    width: 58px;
+    height: 58px;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+    content: "";
+    transform: rotate(45deg);
+    transition:
+      border-color 180ms ease,
+      background 180ms ease,
+      transform 220ms ease;
+  }
+
+  .build-pipeline__steps button > span {
+    position: absolute;
+    top: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+  }
+
+  .build-pipeline__steps button strong {
+    position: absolute;
+    bottom: 0;
+    font-size: 0.75rem;
+  }
+
+  .build-pipeline__steps button[aria-selected="true"] {
+    color: var(--color-ink);
+  }
+
+  .build-pipeline__steps button[aria-selected="true"]::before {
+    border-color: var(--color-rose);
+    background: color-mix(in srgb, var(--color-rose) 10%, var(--color-surface));
+    transform: rotate(45deg) scale(1.08);
+  }
+
+  .build-pipeline__panels {
+    display: grid;
+    border-left: 1px solid var(--color-line);
+    background:
+      linear-gradient(var(--color-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+    background-color: var(--color-surface-soft);
+    background-size: 32px 32px;
+  }
+
+  .build-pipeline__panels section {
+    display: grid;
+    min-height: 100%;
+    padding: clamp(28px, 5vw, 52px);
+    align-content: center;
+    background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+  }
+
+  .build-pipeline__panels section[hidden] {
+    display: none;
+  }
+
+  .build-pipeline__panels h3 {
+    margin: 14px 0 16px;
+    font-family: var(--font-reading);
+    font-size: clamp(1.65rem, 3vw, 2.35rem);
+    line-height: 1.25;
+  }
+
+  .build-pipeline__panels section > span {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+    line-height: 1.75;
+  }
+
+  .build-pipeline__panels code {
+    width: max-content;
+    max-width: 100%;
+    padding-top: 12px;
+    margin-top: 28px;
+    border-top: 2px solid var(--color-cyan);
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 820px) {
+    .build-pipeline > header {
+      display: grid;
+    }
+
+    .build-pipeline__workspace {
+      min-height: 0;
+      grid-template-columns: 1fr;
+    }
+
+    .build-pipeline__steps {
+      min-height: 180px;
+      padding: 34px 12px;
+    }
+
+    .build-pipeline__steps button {
+      min-height: 110px;
+    }
+
+    .build-pipeline__steps button::before {
+      width: 46px;
+      height: 46px;
+    }
+
+    .build-pipeline__panels {
+      min-height: 300px;
+      border-top: 1px solid var(--color-line);
+      border-left: 0;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .build-pipeline__steps button strong {
+      font-size: 0.65rem;
+    }
+
+    .build-pipeline__steps button::before {
+      width: 38px;
+      height: 38px;
+    }
+  }
+</style>

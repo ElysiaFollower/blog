@@ -1,15 +1,50 @@
 ---
-import { Image } from "astro:assets";
+import { getImage } from "astro:assets";
 import GalleryLightbox from "../../components/gallery/GalleryLightbox.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import { galleryImages } from "../../config/gallery";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const thumbnailSizes =
+  "(max-width: 620px) 50vw, (max-width: 980px) 33vw, 25vw";
+const transparentPlaceholder = (width: number, height: number) =>
+  `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${width} ${height}'%3E%3C/svg%3E`;
+const galleryEntries = await Promise.all(
+  galleryImages.map(async (image) => {
+    const widths = Array.from(
+      new Set(
+        [360, 540, 720]
+          .filter((width) => width < image.src.width)
+          .concat(Math.min(720, image.src.width)),
+      ),
+    ).sort((a, b) => a - b);
+    const sources = await Promise.all(
+      widths.map(async (width) => ({
+        width,
+        image: await getImage({
+          src: image.src,
+          width,
+          format: "webp",
+          quality: 80,
+        }),
+      })),
+    );
+
+    return {
+      ...image,
+      thumbnail: sources.at(-1)?.image.src ?? image.src.src,
+      srcset: sources
+        .map(({ width, image: source }) => `${source.src} ${width}w`)
+        .join(", "),
+    };
+  }),
+);
 ---
 
 <BaseLayout
   title="相册"
-  description="角色、构图与偶然遇见的视觉片段。"
+  description="角色、构图与视觉记忆的个人档案。"
   bodyClass="gallery-page"
 >
   <SiteHeader variant="reading" />
@@ -17,29 +52,60 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <header class="gallery-header page-width">
       <p>COLLECTION // {String(galleryImages.length).padStart(2, "0")}</p>
       <h1>相册</h1>
-      <span>角色、构图与偶然遇见的视觉片段。</span>
+      <span>收藏那些曾让目光停留的瞬间。</span>
     </header>
 
-    <section class="gallery-grid page-width" aria-label="图片收藏">
+    <section
+      class="gallery-grid page-width"
+      data-gallery-grid
+      aria-label="图片收藏"
+    >
       {
-        galleryImages.map((image, index) => (
+        galleryEntries.map((image, index) => (
           <a
             class="gallery-item"
             href={image.src.src}
             data-gallery-item
-            data-full-src={image.src.src}
-            data-alt={image.alt}
-            data-index={index}
+            data-pswp-width={image.src.width}
+            data-pswp-height={image.src.height}
+            data-caption={image.alt}
             aria-label={`查看大图：${image.alt}`}
           >
-            <Image
-              src={image.src}
+            <img
+              class:list={{
+                "gallery-item__image": true,
+                "gallery-item__image--deferred": index >= 4,
+              }}
+              src={
+                index < 4
+                  ? image.thumbnail
+                  : transparentPlaceholder(image.src.width, image.src.height)
+              }
+              srcset={index < 4 ? image.srcset : undefined}
+              data-gallery-src={index >= 4 ? image.thumbnail : undefined}
+              data-gallery-srcset={index >= 4 ? image.srcset : undefined}
               alt={image.alt}
-              widths={[360, 540, 720]}
-              sizes="(max-width: 620px) 50vw, (max-width: 980px) 33vw, 25vw"
+              width={image.src.width}
+              height={image.src.height}
+              sizes={thumbnailSizes}
               loading={index < 4 ? "eager" : "lazy"}
               decoding="async"
             />
+            {
+              index >= 4 && (
+                <noscript>
+                  <img
+                    src={image.thumbnail}
+                    srcset={image.srcset}
+                    sizes={thumbnailSizes}
+                    alt={image.alt}
+                    width={image.src.width}
+                    height={image.src.height}
+                    loading="lazy"
+                  />
+                </noscript>
+              )
+            }
             <span class="gallery-item__index" aria-hidden="true">
               {String(index + 1).padStart(2, "0")}
             </span>
@@ -48,6 +114,46 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
     </section>
   </main>
+
+  <script>
+    const deferredImages = document.querySelectorAll<HTMLImageElement>(
+      "[data-gallery-src]",
+    );
+
+    const loadImage = (image: HTMLImageElement) => {
+      const source = image.dataset.gallerySrc;
+      const sourceSet = image.dataset.gallerySrcset;
+      if (!source) return;
+
+      image.addEventListener(
+        "load",
+        () => image.classList.add("is-loaded"),
+        { once: true },
+      );
+      if (sourceSet) image.srcset = sourceSet;
+      image.src = source;
+      delete image.dataset.gallerySrc;
+      delete image.dataset.gallerySrcset;
+    };
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const image = entry.target as HTMLImageElement;
+            observer.unobserve(image);
+            loadImage(image);
+          });
+        },
+        { rootMargin: "300px 0px" },
+      );
+
+      deferredImages.forEach((image) => observer.observe(image));
+    } else {
+      deferredImages.forEach(loadImage);
+    }
+  </script>
 
   <GalleryLightbox />
   <SiteFooter />
@@ -110,8 +216,21 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     width: 100%;
     height: auto;
     transition:
+      opacity 220ms ease,
       transform 360ms ease,
       filter 360ms ease;
+  }
+
+  .gallery-item :global(.gallery-item__image--deferred) {
+    opacity: 0;
+  }
+
+  .gallery-item :global(.gallery-item__image--deferred.is-loaded) {
+    opacity: 1;
+  }
+
+  :global(html:not(.js)) .gallery-item__image--deferred {
+    display: none;
   }
 
   .gallery-item:hover :global(img) {

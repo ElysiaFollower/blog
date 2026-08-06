@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import { ArrowDownRight, ArrowUpRight, Radio, Sparkles } from "@lucide/astro";
 import DirectedPointer from "../../components/DirectedPointer.astro";
 import ScrollReveal from "../../components/ScrollReveal.astro";
@@ -12,7 +13,7 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
 
 <BaseLayout
   title="友链"
-  description="沿途遇见的人与站点。"
+  description="我长期阅读，也愿意不时回访的个人网站。"
   bodyClass="friends-page"
   directedPointer
 >
@@ -31,10 +32,10 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
             <strong>&amp; SIGNALS</strong>
           </h1>
           <p class="friends-hero__intro">
-            沿途遇见的人，以及他们认真维护的小小世界。
+            沿着这些链接，可以抵达一些很有意思的人。
           </p>
           <a href="#received-signals">
-            <span>读取外部信号</span>
+            <span>查看友链</span>
             <ArrowDownRight aria-hidden="true" size={20} stroke-width={2} />
           </a>
         </div>
@@ -47,7 +48,7 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
         </div>
       </div>
       <div class="friends-hero__footer">
-        <span>CONNECTION IS A FORM OF MEMORY</span>
+        <span>PEOPLE I MET ON THE WEB</span>
         <span>LOG 17 / RELAY</span>
       </div>
     </section>
@@ -56,9 +57,9 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
       <div class="page-width">
         <header class="friends-signals__header" data-reveal>
           <span>01 / RECEIVED SIGNALS</span>
-          <h2>保持连接的<br />小小世界</h2>
+          <h2>屏幕彼端，<br />仍有回声</h2>
           <p>
-            名单不必很长。友链记录的不是数量，而是互联网中那些愿意持续表达、也值得再次造访的坐标。
+            有人写技术，有人记生活。这里收录的是我愿意长期阅读的个人站点。
           </p>
         </header>
 
@@ -68,13 +69,29 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
               <a
                 href={link.href}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 data-reveal
                 data-reveal-delay={String(Math.min(index, 2))}
               >
                 <span class="friends-list__index">
                   {String(index + 1).padStart(2, "0")}
                 </span>
+                <figure class="friends-list__avatar" aria-hidden="true">
+                  {
+                    link.avatar ? (
+                      <Image
+                        src={link.avatar}
+                        alt=""
+                        widths={[128, 256]}
+                        sizes="(max-width: 600px) 72px, (max-width: 900px) 108px, 148px"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span>{link.title.slice(0, 1).toUpperCase()}</span>
+                    )
+                  }
+                </figure>
                 <div class="friends-list__identity">
                   <small>{link.label}</small>
                   <h3>{link.title}</h3>
@@ -91,7 +108,7 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
 
         <footer class="friends-signals__footer" data-reveal>
           <span>MORE SIGNALS MAY ARRIVE</span>
-          <p>这份列表会随着真正的相遇慢慢生长。</p>
+          <p>下一束信号，也许正在路上。</p>
         </footer>
       </div>
     </section>
@@ -331,7 +348,12 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
     display: grid;
     min-height: 270px;
     padding: 42px 12px;
-    grid-template-columns: 70px minmax(260px, 0.9fr) minmax(300px, 1.1fr) auto;
+    grid-template-columns:
+      54px
+      clamp(118px, 12vw, 148px)
+      minmax(210px, 0.78fr)
+      minmax(280px, 1.22fr)
+      auto;
     align-items: center;
     gap: 34px;
     border-bottom: 1px solid var(--color-line);
@@ -358,6 +380,68 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
 
   .friends-list__index {
     color: var(--color-rose);
+  }
+
+  .friends-list__avatar {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    margin: 0;
+    border: 1px solid var(--color-line);
+    border-radius: 50%;
+    background: var(--color-surface-soft);
+    isolation: isolate;
+    transition:
+      border-color 220ms ease,
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .friends-list__avatar::after {
+    position: absolute;
+    z-index: -1;
+    inset: 8px -8px -8px 8px;
+    border: 1px solid var(--color-cyan);
+    border-radius: 50%;
+    content: "";
+    opacity: 0.72;
+    transition:
+      border-color 220ms ease,
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .friends-list__avatar :global(img),
+  .friends-list__avatar > span {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: center;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .friends-list__avatar :global(img) {
+    object-fit: cover;
+    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .friends-list__avatar > span {
+    color: var(--color-muted);
+    font-family: var(--font-reading);
+    font-size: clamp(2.5rem, 5vw, 4.8rem);
+  }
+
+  .friends-list > a:hover .friends-list__avatar {
+    border-color: #17151a;
+    transform: translate(-3px, -3px);
+  }
+
+  .friends-list > a:hover .friends-list__avatar::after {
+    border-color: #17151a;
+    transform: translate(6px, 6px);
+  }
+
+  .friends-list > a:hover .friends-list__avatar :global(img) {
+    transform: scale(1.045);
   }
 
   .friends-list > a:hover .friends-list__index {
@@ -413,7 +497,12 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
     }
 
     .friends-list > a {
-      grid-template-columns: 48px minmax(200px, 0.8fr) minmax(220px, 1.2fr) auto;
+      grid-template-columns:
+        40px
+        108px
+        minmax(180px, 0.8fr)
+        minmax(220px, 1.2fr)
+        auto;
       gap: 20px;
     }
   }
@@ -466,9 +555,13 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
     .friends-list > a {
       min-height: 230px;
       padding: 30px 4px;
-      grid-template-columns: 36px minmax(0, 1fr) auto;
+      grid-template-columns:
+        20px
+        clamp(64px, 18vw, 72px)
+        minmax(0, 1fr)
+        28px;
       align-items: start;
-      gap: 12px;
+      gap: 8px;
     }
 
     .friends-list > a:hover {
@@ -476,11 +569,20 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
     }
 
     .friends-list__identity h3 {
-      font-size: 3.7rem;
+      overflow-wrap: anywhere;
+      font-size: clamp(2rem, 10vw, 3.2rem);
     }
 
     .friends-list__note {
       grid-column: 2 / -1;
+      padding-top: 8px;
+    }
+
+    .friends-list > a > :global(svg) {
+      grid-column: 4;
+      grid-row: 1;
+      align-self: center;
+      justify-self: end;
     }
 
     .friends-signals__footer {

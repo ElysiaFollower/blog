@@ -1,0 +1,805 @@
+---
+import presets from "./interactive/backprop-presets.json";
+
+interface Props {
+  preset?: keyof typeof presets;
+}
+
+interface Example {
+  label: string;
+  input: [number, number];
+  target: number;
+}
+
+interface Weights {
+  inputHidden: [[number, number], [number, number]];
+  hiddenBias: [number, number];
+  hiddenOutput: [number, number];
+  outputBias: number;
+}
+
+interface Preset {
+  title: string;
+  description: string;
+  weights: Weights;
+  examples: Example[];
+}
+
+const { preset = "xor" } = Astro.props;
+const selectedConfig = presets[preset] as Preset | undefined;
+
+if (!selectedConfig) {
+  throw new Error(`Unknown BackpropExplorer preset: ${preset}`);
+}
+
+const config: Preset = selectedConfig;
+const sigmoid = (value: number) => 1 / (1 + Math.exp(-value));
+const format = (value: number) => {
+  const normalized = Math.abs(value) < 0.0005 ? 0 : value;
+  return normalized.toFixed(3);
+};
+
+function evaluate(example: Example) {
+  const { inputHidden, hiddenBias, hiddenOutput, outputBias } = config.weights;
+  const hiddenZ = inputHidden.map(
+    (weights, index) =>
+      weights[0] * example.input[0] +
+      weights[1] * example.input[1] +
+      hiddenBias[index],
+  ) as [number, number];
+  const hidden = hiddenZ.map(sigmoid) as [number, number];
+  const outputZ =
+    hiddenOutput[0] * hidden[0] +
+    hiddenOutput[1] * hidden[1] +
+    outputBias;
+  const output = sigmoid(outputZ);
+  const clipped = Math.min(Math.max(output, 1e-7), 1 - 1e-7);
+  const loss =
+    -(example.target * Math.log(clipped) +
+      (1 - example.target) * Math.log(1 - clipped));
+  const outputDelta = output - example.target;
+  const hiddenDelta = hidden.map(
+    (activation, index) =>
+      hiddenOutput[index] *
+      outputDelta *
+      activation *
+      (1 - activation),
+  ) as [number, number];
+  const inputHiddenGradient = hiddenDelta.map((delta) =>
+    example.input.map((input) => delta * input),
+  ) as [[number, number], [number, number]];
+  const hiddenOutputGradient = hidden.map(
+    (activation) => outputDelta * activation,
+  ) as [number, number];
+
+  return {
+    hiddenZ,
+    hidden,
+    outputZ,
+    output,
+    loss,
+    outputDelta,
+    hiddenDelta,
+    inputHiddenGradient,
+    hiddenOutputGradient,
+  };
+}
+
+const initialExample = config.examples[0];
+const initial = evaluate(initialExample);
+const instanceId = `backprop-${preset}-${Math.random().toString(36).slice(2, 9)}`;
+const serializedConfig = JSON.stringify(config).replaceAll("<", "\\u003c");
+---
+
+<backprop-explorer
+  class="backprop-explorer"
+  data-stage="input"
+  data-pagefind-ignore
+>
+  <header class="backprop-explorer__header">
+    <div>
+      <span class="backprop-explorer__eyebrow">Interactive figure</span>
+      <h3>{config.title}</h3>
+      <p>{config.description}</p>
+    </div>
+    <div class="backprop-explorer__metrics" aria-live="polite">
+      <span>target <strong data-metric="target">{initialExample.target}</strong></span>
+      <span>ŷ <strong data-metric="output">{format(initial.output)}</strong></span>
+      <span>loss <strong data-metric="loss">{format(initial.loss)}</strong></span>
+    </div>
+  </header>
+
+  <div class="backprop-explorer__controls">
+    <fieldset>
+      <legend>样本</legend>
+      <div class="backprop-explorer__segments" data-control="sample">
+        {
+          config.examples.map((example, index) => (
+            <button
+              type="button"
+              data-sample={index}
+              aria-pressed={index === 0 ? "true" : "false"}
+            >
+              {example.label}
+            </button>
+          ))
+        }
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>观察阶段</legend>
+      <div class="backprop-explorer__segments" data-control="stage">
+        <button type="button" data-stage-button="input" aria-pressed="true">
+          输入
+        </button>
+        <button type="button" data-stage-button="hidden" aria-pressed="false">
+          隐层
+        </button>
+        <button type="button" data-stage-button="output" aria-pressed="false">
+          输出
+        </button>
+        <button type="button" data-stage-button="backward" aria-pressed="false">
+          反向
+        </button>
+      </div>
+    </fieldset>
+  </div>
+
+  <div class="backprop-explorer__canvas">
+    <svg
+      viewBox="0 0 820 330"
+      role="img"
+      aria-labelledby={`${instanceId}-title ${instanceId}-description`}
+    >
+      <title id={`${instanceId}-title`}>XOR 神经网络计算图</title>
+      <desc id={`${instanceId}-description`}>
+        两个输入节点、两个 sigmoid 隐层节点和一个 sigmoid 输出节点。控制按钮可以切换样本与观察阶段。
+      </desc>
+      <defs>
+        <marker
+          id={`${instanceId}-arrow`}
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z"></path>
+        </marker>
+      </defs>
+
+      <g class="network-labels" aria-hidden="true">
+        <text x="90" y="34">INPUT</text>
+        <text x="360" y="34">SIGMOID HIDDEN</text>
+        <text x="670" y="34">SIGMOID OUTPUT</text>
+      </g>
+
+      <g class="network-edges" aria-hidden="true">
+        <line x1="126" y1="100" x2="324" y2="90" data-edge="ih-0-0" marker-end={`url(#${instanceId}-arrow)`} />
+        <line x1="126" y1="100" x2="324" y2="240" data-edge="ih-1-0" marker-end={`url(#${instanceId}-arrow)`} />
+        <line x1="126" y1="230" x2="324" y2="90" data-edge="ih-0-1" marker-end={`url(#${instanceId}-arrow)`} />
+        <line x1="126" y1="230" x2="324" y2="240" data-edge="ih-1-1" marker-end={`url(#${instanceId}-arrow)`} />
+        <line x1="396" y1="90" x2="634" y2="165" data-edge="ho-0" marker-end={`url(#${instanceId}-arrow)`} />
+        <line x1="396" y1="240" x2="634" y2="165" data-edge="ho-1" marker-end={`url(#${instanceId}-arrow)`} />
+      </g>
+
+      <g class="network-edge-values" aria-hidden="true">
+        <text x="220" y="82" data-edge-label="ih-0-0">w 6.000</text>
+        <text x="194" y="150" data-edge-label="ih-1-0">w -6.000</text>
+        <text x="195" y="180" data-edge-label="ih-0-1">w 6.000</text>
+        <text x="220" y="248" data-edge-label="ih-1-1">w -6.000</text>
+        <text x="505" y="104" data-edge-label="ho-0">w 6.000</text>
+        <text x="505" y="237" data-edge-label="ho-1">w 6.000</text>
+      </g>
+
+      <g class="network-node network-node--input" data-layer="input">
+        <circle cx="90" cy="100" r="36"></circle>
+        <text x="90" y="92">x₁</text>
+        <text x="90" y="116" class="network-node__value" data-value="input-0">
+          {format(initialExample.input[0])}
+        </text>
+        <circle cx="90" cy="230" r="36"></circle>
+        <text x="90" y="222">x₂</text>
+        <text x="90" y="246" class="network-node__value" data-value="input-1">
+          {format(initialExample.input[1])}
+        </text>
+      </g>
+
+      <g class="network-node network-node--hidden" data-layer="hidden">
+        <circle cx="360" cy="90" r="36"></circle>
+        <text x="360" y="82">h₁</text>
+        <text x="360" y="106" class="network-node__value" data-value="hidden-0">
+          {format(initial.hidden[0])}
+        </text>
+        <circle cx="360" cy="240" r="36"></circle>
+        <text x="360" y="232">h₂</text>
+        <text x="360" y="256" class="network-node__value" data-value="hidden-1">
+          {format(initial.hidden[1])}
+        </text>
+      </g>
+
+      <g class="network-node network-node--output" data-layer="output">
+        <circle cx="670" cy="165" r="42"></circle>
+        <text x="670" y="157">ŷ</text>
+        <text x="670" y="181" class="network-node__value" data-value="output">
+          {format(initial.output)}
+        </text>
+      </g>
+
+      <g class="network-loss" data-layer="loss">
+        <path d="M716 165 H758"></path>
+        <text x="776" y="153">L</text>
+        <text x="776" y="176" data-value="loss">{format(initial.loss)}</text>
+      </g>
+    </svg>
+  </div>
+
+  <footer class="backprop-explorer__explanation">
+    <span data-stage-index>01 / 04</span>
+    <p data-stage-copy aria-live="polite">
+      输入层只携带样本特征。选择不同的 XOR 样本，后续所有激活值与梯度都会重新计算。
+    </p>
+  </footer>
+
+  <noscript>
+    <p class="backprop-explorer__noscript">
+      当前显示样本 0 ⊕ 0 的静态前向结果；启用 JavaScript 后可以切换样本并逐层查看梯度。
+    </p>
+  </noscript>
+
+  <script
+    is:inline
+    type="application/json"
+    data-backprop-config
+    set:html={serializedConfig}
+  />
+</backprop-explorer>
+
+<script>
+  interface ExplorerExample {
+    label: string;
+    input: [number, number];
+    target: number;
+  }
+
+  interface ExplorerConfig {
+    weights: {
+      inputHidden: [[number, number], [number, number]];
+      hiddenBias: [number, number];
+      hiddenOutput: [number, number];
+      outputBias: number;
+    };
+    examples: ExplorerExample[];
+  }
+
+  type Stage = "input" | "hidden" | "output" | "backward";
+
+  const stageContent: Record<Stage, { index: string; copy: string }> = {
+    input: {
+      index: "01 / 04",
+      copy: "输入层只携带样本特征。选择不同的 XOR 样本，后续所有激活值与梯度都会重新计算。",
+    },
+    hidden: {
+      index: "02 / 04",
+      copy: "每个隐层节点先做线性组合 z = Wx + b，再通过 sigmoid。两个节点分别近似 OR 与 NAND。",
+    },
+    output: {
+      index: "03 / 04",
+      copy: "输出层把两个中间特征组合成预测 ŷ；这里的 loss 是二元交叉熵。",
+    },
+    backward: {
+      index: "04 / 04",
+      copy: "反向传播从 ∂L/∂zₒ = ŷ − y 开始。边上的数值已切换为当前样本对各权重的梯度。",
+    },
+  };
+
+  const sigmoid = (value: number) => 1 / (1 + Math.exp(-value));
+  const format = (value: number) => {
+    const normalized = Math.abs(value) < 0.0005 ? 0 : value;
+    return normalized.toFixed(3);
+  };
+
+  class BackpropExplorerElement extends HTMLElement {
+    connectedCallback() {
+      if (this.dataset.ready === "true") return;
+
+      const configElement = this.querySelector<HTMLScriptElement>(
+        "[data-backprop-config]",
+      );
+      if (!configElement?.textContent) return;
+
+      const config = JSON.parse(configElement.textContent) as ExplorerConfig;
+      let sampleIndex = 0;
+      let stage: Stage = "input";
+
+      const setText = (selector: string, value: string | number) => {
+        const element = this.querySelector<HTMLElement>(selector);
+        if (element) element.textContent = String(value);
+      };
+
+      const evaluate = (example: ExplorerExample) => {
+        const { inputHidden, hiddenBias, hiddenOutput, outputBias } =
+          config.weights;
+        const hiddenZ = inputHidden.map(
+          (weights, index) =>
+            weights[0] * example.input[0] +
+            weights[1] * example.input[1] +
+            hiddenBias[index],
+        ) as [number, number];
+        const hidden = hiddenZ.map(sigmoid) as [number, number];
+        const outputZ =
+          hiddenOutput[0] * hidden[0] +
+          hiddenOutput[1] * hidden[1] +
+          outputBias;
+        const output = sigmoid(outputZ);
+        const clipped = Math.min(Math.max(output, 1e-7), 1 - 1e-7);
+        const loss =
+          -(example.target * Math.log(clipped) +
+            (1 - example.target) * Math.log(1 - clipped));
+        const outputDelta = output - example.target;
+        const hiddenDelta = hidden.map(
+          (activation, index) =>
+            hiddenOutput[index] *
+            outputDelta *
+            activation *
+            (1 - activation),
+        ) as [number, number];
+        const inputHiddenGradient = hiddenDelta.map((delta) =>
+          example.input.map((input) => delta * input),
+        ) as [[number, number], [number, number]];
+        const hiddenOutputGradient = hidden.map(
+          (activation) => outputDelta * activation,
+        ) as [number, number];
+
+        return {
+          hidden,
+          output,
+          loss,
+          inputHiddenGradient,
+          hiddenOutputGradient,
+        };
+      };
+
+      const render = () => {
+        const example = config.examples[sampleIndex];
+        const result = evaluate(example);
+        this.dataset.stage = stage;
+
+        setText('[data-metric="target"]', example.target);
+        setText('[data-metric="output"]', format(result.output));
+        setText('[data-metric="loss"]', format(result.loss));
+        setText('[data-value="input-0"]', format(example.input[0]));
+        setText('[data-value="input-1"]', format(example.input[1]));
+        setText('[data-value="hidden-0"]', format(result.hidden[0]));
+        setText('[data-value="hidden-1"]', format(result.hidden[1]));
+        setText('[data-value="output"]', format(result.output));
+        setText('[data-value="loss"]', format(result.loss));
+        setText("[data-stage-index]", stageContent[stage].index);
+        setText("[data-stage-copy]", stageContent[stage].copy);
+
+        this.querySelectorAll<HTMLButtonElement>("[data-sample]").forEach(
+          (button) => {
+            button.setAttribute(
+              "aria-pressed",
+              Number(button.dataset.sample) === sampleIndex ? "true" : "false",
+            );
+          },
+        );
+        this.querySelectorAll<HTMLButtonElement>("[data-stage-button]").forEach(
+          (button) => {
+            button.setAttribute(
+              "aria-pressed",
+              button.dataset.stageButton === stage ? "true" : "false",
+            );
+          },
+        );
+
+        const edgeValues: Record<string, number> = {
+          "ih-0-0":
+            stage === "backward"
+              ? result.inputHiddenGradient[0][0]
+              : config.weights.inputHidden[0][0],
+          "ih-1-0":
+            stage === "backward"
+              ? result.inputHiddenGradient[1][0]
+              : config.weights.inputHidden[1][0],
+          "ih-0-1":
+            stage === "backward"
+              ? result.inputHiddenGradient[0][1]
+              : config.weights.inputHidden[0][1],
+          "ih-1-1":
+            stage === "backward"
+              ? result.inputHiddenGradient[1][1]
+              : config.weights.inputHidden[1][1],
+          "ho-0":
+            stage === "backward"
+              ? result.hiddenOutputGradient[0]
+              : config.weights.hiddenOutput[0],
+          "ho-1":
+            stage === "backward"
+              ? result.hiddenOutputGradient[1]
+              : config.weights.hiddenOutput[1],
+        };
+        const maxMagnitude = Math.max(
+          ...Object.values(edgeValues).map(Math.abs),
+          0.001,
+        );
+
+        Object.entries(edgeValues).forEach(([edgeName, value]) => {
+          const line = this.querySelector<SVGLineElement>(
+            `[data-edge="${edgeName}"]`,
+          );
+          if (line) {
+            line.style.setProperty(
+              "--edge-strength",
+              String(1.25 + (Math.abs(value) / maxMagnitude) * 2.5),
+            );
+          }
+          setText(
+            `[data-edge-label="${edgeName}"]`,
+            `${stage === "backward" ? "∂ " : "w "}${format(value)}`,
+          );
+        });
+      };
+
+      this.querySelectorAll<HTMLButtonElement>("[data-sample]").forEach(
+        (button) => {
+          button.addEventListener("click", () => {
+            sampleIndex = Number(button.dataset.sample);
+            render();
+          });
+        },
+      );
+      this.querySelectorAll<HTMLButtonElement>("[data-stage-button]").forEach(
+        (button) => {
+          button.addEventListener("click", () => {
+            stage = button.dataset.stageButton as Stage;
+            render();
+          });
+        },
+      );
+
+      this.dataset.ready = "true";
+      render();
+    }
+  }
+
+  if (!customElements.get("backprop-explorer")) {
+    customElements.define("backprop-explorer", BackpropExplorerElement);
+  }
+</script>
+
+<style>
+  .backprop-explorer {
+    --explorer-accent: var(--color-cyan);
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin: 2.8em 0;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+    color: var(--color-ink);
+    font-family: var(--font-ui);
+  }
+
+  .backprop-explorer__header {
+    display: grid;
+    padding: 22px 24px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 28px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .backprop-explorer__eyebrow {
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .backprop-explorer__header h3 {
+    margin: 5px 0 3px;
+    font-family: var(--font-reading);
+    font-size: 1.35rem;
+  }
+
+  .backprop-explorer__header p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.82rem;
+  }
+
+  .backprop-explorer__metrics {
+    display: flex;
+    gap: 18px;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+  }
+
+  .backprop-explorer__metrics span {
+    white-space: nowrap;
+  }
+
+  .backprop-explorer__metrics strong {
+    display: block;
+    color: var(--color-ink);
+    font-size: 0.9rem;
+  }
+
+  .backprop-explorer__controls {
+    display: grid;
+    padding: 14px 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    border-bottom: 1px solid var(--color-line);
+    background: var(--color-surface-soft);
+  }
+
+  fieldset {
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    border: 0;
+  }
+
+  legend {
+    margin-bottom: 6px;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .backprop-explorer__segments {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+  }
+
+  .backprop-explorer__segments button {
+    min-height: 34px;
+    padding: 5px 8px;
+    border-right: 1px solid var(--color-line);
+    background: transparent;
+    color: var(--color-muted);
+    cursor: pointer;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+
+  .backprop-explorer__segments button:last-child {
+    border-right: 0;
+  }
+
+  .backprop-explorer__segments button:hover {
+    color: var(--color-ink);
+  }
+
+  .backprop-explorer__segments button[aria-pressed="true"] {
+    background: var(--color-ink);
+    color: var(--color-bg);
+    font-weight: 760;
+  }
+
+  .backprop-explorer__canvas {
+    padding: 18px 22px 8px;
+    background-image:
+      linear-gradient(var(--color-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .network-labels {
+    fill: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 800;
+    text-anchor: middle;
+  }
+
+  .network-edges line {
+    --edge-strength: 2.5;
+    stroke: color-mix(in srgb, var(--color-muted) 58%, transparent);
+    stroke-width: var(--edge-strength);
+    transition:
+      stroke 220ms ease,
+      stroke-width 220ms ease,
+      opacity 220ms ease;
+  }
+
+  marker path {
+    fill: var(--color-muted);
+  }
+
+  .network-edge-values {
+    fill: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    text-anchor: middle;
+    transition: fill 220ms ease;
+  }
+
+  .network-node circle {
+    fill: var(--color-surface);
+    stroke: var(--color-line);
+    stroke-width: 2;
+    transition:
+      fill 220ms ease,
+      stroke 220ms ease,
+      stroke-width 220ms ease;
+  }
+
+  .network-node text,
+  .network-loss text {
+    fill: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 800;
+    text-anchor: middle;
+  }
+
+  .network-node .network-node__value,
+  .network-loss text:last-child {
+    fill: var(--color-muted);
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .network-loss path {
+    fill: none;
+    stroke: var(--color-line);
+    stroke-width: 2;
+  }
+
+  .network-loss {
+    opacity: 0.34;
+    transition: opacity 220ms ease;
+  }
+
+  [data-layer] {
+    opacity: 0.34;
+    transition: opacity 220ms ease;
+  }
+
+  [data-stage="input"] [data-layer="input"],
+  [data-stage="hidden"] [data-layer="input"],
+  [data-stage="hidden"] [data-layer="hidden"],
+  [data-stage="output"] [data-layer],
+  [data-stage="backward"] [data-layer] {
+    opacity: 1;
+  }
+
+  [data-stage="input"] .network-edges,
+  [data-stage="input"] .network-edge-values {
+    opacity: 0.18;
+  }
+
+  [data-stage="hidden"] [data-edge^="ho"],
+  [data-stage="hidden"] [data-edge-label^="ho"] {
+    opacity: 0.14;
+  }
+
+  [data-stage="output"] .network-loss,
+  [data-stage="backward"] .network-loss {
+    opacity: 1;
+  }
+
+  [data-stage="input"] [data-layer="input"] circle,
+  [data-stage="hidden"] [data-layer="hidden"] circle,
+  [data-stage="output"] [data-layer="output"] circle {
+    fill: color-mix(in srgb, var(--explorer-accent) 9%, var(--color-surface));
+    stroke: var(--explorer-accent);
+    stroke-width: 3;
+  }
+
+  [data-stage="backward"] {
+    --explorer-accent: var(--color-rose);
+  }
+
+  [data-stage="backward"] .network-edges line {
+    stroke: var(--color-rose);
+  }
+
+  [data-stage="backward"] .network-edge-values {
+    fill: var(--color-rose);
+  }
+
+  [data-stage="backward"] marker path {
+    fill: var(--color-rose);
+  }
+
+  .backprop-explorer__explanation {
+    display: grid;
+    min-height: 76px;
+    padding: 16px 24px 18px;
+    grid-template-columns: 62px minmax(0, 1fr);
+    align-items: start;
+    gap: 18px;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .backprop-explorer__explanation span {
+    padding-top: 3px;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 800;
+  }
+
+  .backprop-explorer__explanation p,
+  .backprop-explorer__noscript {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 0.8rem;
+    line-height: 1.65;
+  }
+
+  .backprop-explorer__noscript {
+    padding: 0 24px 18px 104px;
+  }
+
+  [data-backprop-config] {
+    display: none;
+  }
+
+  @media (max-width: 1120px) {
+    .backprop-explorer {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .backprop-explorer {
+      margin-block: 2em;
+    }
+
+    .backprop-explorer__header {
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .backprop-explorer__metrics {
+      justify-content: space-between;
+    }
+
+    .backprop-explorer__controls {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    .backprop-explorer__canvas {
+      padding: 8px 6px 0;
+      overflow-x: auto;
+    }
+
+    svg {
+      width: 660px;
+      max-width: none;
+    }
+
+    .backprop-explorer__explanation {
+      grid-template-columns: 1fr;
+      gap: 5px;
+    }
+
+    .backprop-explorer__noscript {
+      padding-inline: 24px;
+    }
+  }
+</style>

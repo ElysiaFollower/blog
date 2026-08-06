@@ -1,0 +1,166 @@
+---
+title: "使用 Git 进行代码管理的经验谈"
+description: "Git 命令速查，并整理 Fork、Pull Request 与提交规范。"
+pubDate: 2025-08-30
+updatedDate: 2025-09-01
+tags: ["Git", "Manual", "Code Management"]
+cover: "./cover.webp"
+coverAlt: "希儿主题插画"
+coverPosition: "50% 45%"
+---
+这篇文章主要记录一些Git工具的使用方式，因为Git提供了很强大的功能，但是大部分功能在大多数情况下都不会用到，故在此简要记录方便未来作为速查表使用(使用ctrl+F可在浏览器快速查找关键词)。
+除此之外也记录一些在基于Git的开源社区如GitHub上观察到的一些**社区规范**或者说暗语, 在进行项目代码管理或参与开源贡献的时候可以作为参考。
+本文属于是不完全的梳理，所谓”经验谈”的意思其实就是当咱遇到了再进行相关的整理啦XD
+会持续更新的orz
+如有不恰当的地方或者想要补充的，欢迎在评论区交流 (^\_−)☆
+
+## 使用Git
+
+### 拉取和推送
+
+最常见的自然是`git pull`和`git fetch`，但是个人更喜欢先`fetch`, 再`merge`。因为事实上，`git pull`其实是一个组合件，它会先调用`git fetch`, 然后再根据情况选择调用`git rebase`或者`git merge`[^4][^5] ~~(或许大多数时候，它调用的是merge，基本可以认为它会调用merge，但只要咱把它拆开来用，把一切的掌控权拿在自己手中，不就不用纠结这个问题了喵(￣▽￣)\~\*)~~
+
+推荐流程:
+
+1.  `git fetch <远程仓库别名> <分支名>` 拉取远程仓库的指定分支的最新内容到本地，但**不会直接合并**, 先看看都发生了什么新的更改, 让自己拥有充分决策权
+2.  `git merge <远程仓库别名>/<分支名>` 将您看中的分支合并到**当前分支**，若出现冲突，则需要解决冲突，并提交
+3.  `git push <远程仓库别名> <分支名>` 将本地指定的分支上传到远端并**和同名分支进行合并**
+
+-   客观地说，最后一个部分可以改为`<本地分支名>:<远程分支名>`, 从而和指定分支进行合并，但是这真的有必要吗？中肯地说，**在每次push之前，都应该先fetch远端所有必要的更改并在本地merge解决冲突之后，再进行push**，所以最终分支名大抵是相同的。
+
+* * *
+
+### 管理远程仓库
+
+`git remote`系命令可用于管理与当前仓库链接的远程仓库，具体用法如下：
+
+```bash
+$ git remote add <别名> <仓库URL>
+```
+
+该命令可以添加一个远程仓库，其中’仓库URL’替换为目标仓库的URL，即xxx.git, ‘别名’替换为任意名称，如’origin’/‘upstream’
+eg: `git remote add upstream https://github.com/ElysiaFollower/ElysiaFollower.github.io.git`
+在下认为这是这个分支**最重要的一个命令**
+
+至于添加远程仓库以后？那就基本可以完全抛却负担，像正常使用git一样进行使用啦。因为当我们平时git clone一个仓库的时候，实际上只是git clone自动帮我们添加了一个远程仓库, 本质是一样的[^2]。
+关于这个问题，其实下面这条命令正好可以进行一定程度的佐证:
+`git remote -v`
+可以查看当前仓库的远程仓库
+举个例子:
+
+```bash
+(base) PS D:\myblog\blog_in_develop\themes\redefine> git remote -v
+origin  https://github.com/ElysiaFollower/hexo-theme-redefine.git (fetch)
+origin  https://github.com/ElysiaFollower/hexo-theme-redefine.git (push)
+upstream        https://github.com/EvanNotFound/hexo-theme-redefine.git (fetch)
+upstream        https://github.com/EvanNotFound/hexo-theme-redefine.git (push)
+```
+
+这是在下fork的一个仓库，这里的origin仓库就是git clone时自动产生的，而upstream仓库则是在下手动添加的。可以看到，在`git remote -v`眼里，他俩是同一回事。
+理解到此为止，所以添加之后只需要像正常一样使用`git push`和`git fetch`进行代码管理即可。
+不过需要注意的是，git fetch命令的’完整版’其实应该是[^2][^3] :
+`git fetch <远程仓库别名> <分支名>`
+只是git clone的时候，同时生成了一些缺省时的默认配置，但是在管理多个远程仓库的时候还是**全部显式声明更加所见即所得**。
+
+> When git fetch is run without specifying what branches and/or tags to fetch on the command line, e.g. git fetch origin or git fetch, remote..fetch values are used as the refspecs—​they specify which refs to fetch and which local refs to update[^3].
+
+fetch如此，push也是同理的:
+`git push <remote别名> <branch>`
+
+查看远程仓库相关信息:
+`git remote show <remote别名>`
+
+删除远程仓库：
+`git remote remove <remote别名>`
+
+## 社区暗语
+
+### 从Fork到Pull Request(PR)
+
+不知道大家是否会经常听到PR这个词呀，在下第一次听到这个词的时候，还以为是peer review的缩写 ~~(死去的fds和ads课程回忆突然开始攻击我)~~, 但是代入上下文语境总觉得有些违和。后来了解之后才知道在开源共享或者项目管理中，**PR**往往指的实际上是**Pull Request**，即**拉取请求** —— **您向原项目/仓库的维护者提交请求，建议他们合并你所做的修改**
+在我的观察中，PR实际上可以理解为: 存在一个仓库A，而我们的手里有一个仓库B，这是基于A的延伸，或者基于A的修改，我们在仓库B的git历史中存在某一个分支，就像正常分支合并一样，我们可以**通过Pull Request将这个分支合并/merge到仓库A的指定分支上中**。
+
+#### PR的好处都有啥
+
+PR的意义尤其在于**开源贡献**。
+请设想这样一个场景: 阁下在网上冲浪的时候发现了一份写得很好的代码，或者自己在使用某个开源工具的过程中体验到了一些难处，作者一直没有解决这个问题于是你决定自己动手。但是当您兴致满满地git clone完原仓库，幸苦完成了修改之后，自信满满地键入`git push origin xxx-new-feature`，您发现这个操作失败了，然后您意识到——您根本没有这个仓库的提交权限！若阁下尝试去直接联系仓库的维护者，且不说对方是否能够及时回复，就算回复了，对方可能也会出于*不想有人把代码搞得一团糟*甚至*删库跑路*等顾忌而不愿轻易提供写权限。
+那么难道这就死局了吗？非也非也，聪明的程序员们发明了PR机制来解决这个问题。它有以下几个特点(根据在*GitHub*上的观察):
+
+1.  **即便是对仓库没有写权限的人也可以发起PR**
+2.  **当阁下发起PR的时候，阁下可以为您的修改写一份声色俱茂的小作文，包括目的、动机、实现方法、效果和测试结果等**
+3.  **仓库的维护者可以直接查看您的修改 ~~(diff形式)~~，如果认为合适就可以合并到原仓库中，完成合并则等效于真的在原仓库中开了这么一条分支，在开发后合并到特定分支**
+4.  **PR拥有评论区，您可以和仓库的维护者或者其他人在这里展开充满激情的辩论。如果您认为他人说的有道理，您可以回到自己的分支中修改代码 ~~(GitHub的PR会自动更新最新提交内容-2025/8/19)~~，然后您就会惊奇发现，当时那条PR的commit记录自动延长了，阁下可以马上附上更新说明，在一个连续的历史上下文中完善您的这一次贡献**
+
+考虑到PR拥有的这些强大的能力——特别是“小作文”和评论区的设计——实际上为代码审查提供了很大的方便。所以在下肤浅的认为，对于一些大型项目的大型改动来说，即便是对于拥有写权限的开发者来说，学习使用PR也是非常有意义的！
+虽然网上能搜到的一些协作开发的范式大都是**不同人负责不同的分支**，开发完了合并。或许这对于较为小型的项目来说更为方便，但是试想那位进行merge的人需要承担多大的心里负担呐。**擅自**将自己开发完的分支**合并**到别人的分支或者main分支上，说不定过段时间就会有一位悲惨的程序员发现自己原来能跑的代码跑不了了，于是悄悄地破防了(；´д｀)ゞ。如果联系项目负责人，让Ta进行**审查合并**，且不说联系过程怪麻烦的，而且整个审查并不是**公开透明**的，未来出现了问题也增加了维护的难度。
+看，这些问题通过PR机制都能得到很好的解决ヽ(￣▽￣)ﾉ
+
+#### Fork实乃何物
+
+PR这么有用，那么怎么PR呢。这时候就不得不提Fork了。在下以为**Fork+PR**的组合拳，已经是进行PR的一种**社区规范**了。
+
+**Fork**实际上就是将一个仓库复制到自己的账号下，形成一个复制仓库，这样您就有了这个项目的副本，**可以随意进行修改，而不会影响到主项目**。
+
+-   也就是说，除了要发起PR的分支，阁下甚至可以开几条属于自己的**草稿分支**，并且不用担心遭到同伴亲切的问候“ *您在做神魔(O\_o)??* ”
+
+至于怎么发起PR，则只需要在GitHub web端进入Fork形成的仓库副本，在Pull Request栏发起PR请求即可。事实上于在下的印象之中，当已经commit了几条之后，Fork的仓库首页就会贴心地提示您”Compare & pull request”[^1]
+
+#### 小技巧
+
+在Fork的仓库中，阁下可以通过`git remote add upstream <原仓库URL>`来添加一个**上游仓库**~~([对应的git操作请参考](#%E7%AE%A1%E7%90%86%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93))~~，这样您就可以通过`git fetch upstream`来将原仓库的最新代码拉取到自己的仓库中并通过`git merge upstream/branch_name`合并了！(￣▽￣)~\*
+这样的话，就算是团队内部进行开发或者修改自己使用中的工具，使用**Fork仓库也完全无负担**，反而更方便，自由度更高
+
+-   不仅可以无缝追踪原仓库进度
+-   还有自己的草稿区
+
+注: 一般使用upstream作为原仓库的别名
+
+* * *
+
+### Commit Message规范
+
+网上很有多关于commits规范的说法，有的显得很复杂。在下以为，重要的还是**能不能把事情说清楚**~~(看到阿里在文章中说”建议使用中文（感觉中国人用中文描述问题能更清楚一些）”, 笑罢觉得还是有些事情值得反思的，形式主义没有意义)~~，所以这里摘些个人最认可也认为是最重要的部分充当一下互联网的记忆叭(￣^￣) [^6][^7]
+
+最值得参考的大抵还是**Angular规范**[^8]和后来在它的基础上发展出来的**Conventional Commits**叭[^6]
+**Angular范式**：
+
+```text
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+作用域scope，body和footer都是可选的；前面几个都挺有用的，相对而言footer的可有可无性略高
+
+然后类型这边在下稍微糅合了一下，但都是接受度比较高的类型:
+
+-   **feat**: 新功能
+-   **fix**: 修复bug
+-   docs: 文档
+-   style: 样式修改 —— 主要是代码样式修改，不影响运行的那种[^6]
+-   **refactor**: 重构，代码重构，逻辑重构
+-   **test**: 测试, 例如添加、删除、修改代码的测试用例等。
+-   chore: 用于对非业务性代码进行修改，例如修改构建流程或者工具配置等
+-   build: 用于修改项目构建系统，例如修改依赖库、外部接口或者升级 Node 版本等
+-   ci: 用于修改持续集成流程，例如修改 Travis、Jenkins 等工作流配置；
+-   **perf**: 用于优化性能，例如提升代码的性能、减少内存占用等；
+-   revert: 用于回滚版本
+
+footer里面的’**BREAKING CHANGE**‘是什么？—— 简单来说就是**不兼容修改**, 本次提交修改后将不兼容之前版本的API或者环境变量。建议写上**Before**和**After**，分别表示修改前的和修改后的版本。
+
+关于怎么写，学理论不如看几个例子感受一下(。-\`ω´-) ;取自[^8] :
+![example2](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/Git-experience/commit-example2.png)
+![example1](https://pub-a1cb67b2f5c34421bbd8c98bcf68643b.r2.dev/img/Git-experience/commit-example1.png)
+
+## References
+
+[^1]: Coding Is Fun. [开源贡献：从 Fork 到 Pull Request（PR）](https://blog.csdn.net/u010295555/article/details/144091180). CSDN, 2024
+[^2]: Git. [2.5 Git 基础 - 远程仓库的使用](https://git-scm.com/book/zh/v2/Git-%e5%9f%ba%e7%a1%80-%e8%bf%9c%e7%a8%8b%e4%bb%93%e5%ba%93%e7%9a%84%e4%bd%bf%e7%94%a8). git-scm,
+[^3]: Git. [git-fetch - Download objects and refs from another repository](https://git-scm.com/docs/git-fetch). git-scm, 2025
+[^4]: Runner\_Jack. [git fetch & pull详解](https://www.cnblogs.com/runnerjack/p/9342362.html). 博客园, 2018
+[^5]: Git. [git-pull - Fetch from and integrate with another repository or a local branch](https://git-scm.com/docs/git-pull). git-scm, 2025
+[^6]: . [convertionalcommits](https://www.conventionalcommits.org/zh-hans/v1.0.0/#%e7%ba%a6%e5%ae%9a%e5%bc%8f%e6%8f%90%e4%ba%a4%e8%a7%84%e8%8c%83). ,
+[^7]: 阿里云开发者​. [如何规范你的Git Commit?](https://zhuanlan.zhihu.com/p/182553920). 知乎, 2025
+[^8]: angular. [AngularJS Git Commit Message Conventions](https://github.com/angular/components/blob/main/CONTRIBUTING.md) [document](https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y/preview?tab=t.0#heading=h.uyo6cb12dt6w). github,
