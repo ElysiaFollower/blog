@@ -1,42 +1,65 @@
 ---
 import { getImage } from "astro:assets";
+import type { ImageMetadata } from "astro";
 import GalleryLightbox from "../../components/gallery/GalleryLightbox.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
-import { galleryImages } from "../../config/gallery";
+import { getGalleryItems } from "../../lib/gallery";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const rawItems = getGalleryItems();
 
 const thumbnailSizes =
   "(max-width: 620px) 50vw, (max-width: 980px) 33vw, 25vw";
 const transparentPlaceholder = (width: number, height: number) =>
   `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${width} ${height}'%3E%3C/svg%3E`;
+
 const galleryEntries = await Promise.all(
-  galleryImages.map(async (image) => {
-    const widths = Array.from(
-      new Set(
-        [360, 540, 720]
-          .filter((width) => width < image.src.width)
-          .concat(Math.min(720, image.src.width)),
-      ),
-    ).sort((a, b) => a - b);
-    const sources = await Promise.all(
-      widths.map(async (width) => ({
-        width,
-        image: await getImage({
-          src: image.src,
+  rawItems.map(async (item) => {
+    let fullSrc = typeof item.src === "string" ? item.src : item.src.src;
+    let thumbnail = fullSrc;
+    let srcset: string | undefined = undefined;
+
+    if (item.isLocal && typeof item.src !== "string") {
+      const meta = item.src as ImageMetadata;
+      const widths = Array.from(
+        new Set(
+          [360, 540, 720]
+            .filter((width) => width < meta.width)
+            .concat(Math.min(720, meta.width)),
+        ),
+      ).sort((a, b) => a - b);
+
+      const sources = await Promise.all(
+        widths.map(async (width) => ({
           width,
-          format: "webp",
-          quality: 80,
-        }),
-      })),
-    );
+          image: await getImage({
+            src: meta,
+            width,
+            format: "webp",
+            quality: 80,
+          }),
+        })),
+      );
+
+      thumbnail = sources.at(-1)?.image.src ?? meta.src;
+      srcset = sources
+        .map(({ width, image: source }) => `${source.src} ${width}w`)
+        .join(", ");
+    }
+
+    const caption = item.title
+      ? item.description
+        ? `${item.title} — ${item.description}`
+        : item.title
+      : item.alt ?? "";
 
     return {
-      ...image,
-      thumbnail: sources.at(-1)?.image.src ?? image.src.src,
-      srcset: sources
-        .map(({ width, image: source }) => `${source.src} ${width}w`)
-        .join(", "),
+      ...item,
+      fullSrc,
+      thumbnail,
+      srcset,
+      caption,
     };
   }),
 );
@@ -50,7 +73,7 @@ const galleryEntries = await Promise.all(
   <SiteHeader variant="reading" />
   <main id="main-content">
     <header class="gallery-header page-width">
-      <p>COLLECTION // {String(galleryImages.length).padStart(2, "0")}</p>
+      <p>COLLECTION // {String(galleryEntries.length).padStart(2, "0")}</p>
       <h1>相册</h1>
       <span>收藏那些曾让目光停留的瞬间。</span>
     </header>
@@ -64,12 +87,12 @@ const galleryEntries = await Promise.all(
         galleryEntries.map((image, index) => (
           <a
             class="gallery-item"
-            href={image.src.src}
+            href={image.fullSrc}
             data-gallery-item
-            data-pswp-width={image.src.width}
-            data-pswp-height={image.src.height}
-            data-caption={image.alt}
-            aria-label={`查看大图：${image.alt}`}
+            data-pswp-width={image.width}
+            data-pswp-height={image.height}
+            data-caption={image.caption}
+            aria-label={`查看大图：${image.caption || "相册图片"}`}
           >
             <img
               class:list={{
@@ -79,14 +102,14 @@ const galleryEntries = await Promise.all(
               src={
                 index < 4
                   ? image.thumbnail
-                  : transparentPlaceholder(image.src.width, image.src.height)
+                  : transparentPlaceholder(image.width, image.height)
               }
               srcset={index < 4 ? image.srcset : undefined}
               data-gallery-src={index >= 4 ? image.thumbnail : undefined}
               data-gallery-srcset={index >= 4 ? image.srcset : undefined}
-              alt={image.alt}
-              width={image.src.width}
-              height={image.src.height}
+              alt={image.caption || image.alt || "相册图片"}
+              width={image.width}
+              height={image.height}
               sizes={thumbnailSizes}
               loading={index < 4 ? "eager" : "lazy"}
               decoding="async"
@@ -98,9 +121,9 @@ const galleryEntries = await Promise.all(
                     src={image.thumbnail}
                     srcset={image.srcset}
                     sizes={thumbnailSizes}
-                    alt={image.alt}
-                    width={image.src.width}
-                    height={image.src.height}
+                    alt={image.caption || image.alt || "相册图片"}
+                    width={image.width}
+                    height={image.height}
                     loading="lazy"
                   />
                 </noscript>
@@ -115,164 +138,6 @@ const galleryEntries = await Promise.all(
     </section>
   </main>
 
-  <script>
-    const deferredImages = document.querySelectorAll<HTMLImageElement>(
-      "[data-gallery-src]",
-    );
-
-    const loadImage = (image: HTMLImageElement) => {
-      const source = image.dataset.gallerySrc;
-      const sourceSet = image.dataset.gallerySrcset;
-      if (!source) return;
-
-      image.addEventListener(
-        "load",
-        () => image.classList.add("is-loaded"),
-        { once: true },
-      );
-      if (sourceSet) image.srcset = sourceSet;
-      image.src = source;
-      delete image.dataset.gallerySrc;
-      delete image.dataset.gallerySrcset;
-    };
-
-    if ("IntersectionObserver" in window) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            const image = entry.target as HTMLImageElement;
-            observer.unobserve(image);
-            loadImage(image);
-          });
-        },
-        { rootMargin: "300px 0px" },
-      );
-
-      deferredImages.forEach((image) => observer.observe(image));
-    } else {
-      deferredImages.forEach(loadImage);
-    }
-  </script>
-
   <GalleryLightbox />
   <SiteFooter />
 </BaseLayout>
-
-<style>
-  .gallery-page {
-    background: var(--color-bg);
-  }
-
-  .gallery-header {
-    display: grid;
-    padding-block: clamp(58px, 9vw, 110px);
-    grid-template-columns: 1fr auto;
-    align-items: end;
-    gap: 12px 32px;
-    border-bottom: 1px solid var(--color-line);
-  }
-
-  .gallery-header p {
-    grid-column: 1 / -1;
-    margin: 0;
-    color: var(--color-rose);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 850;
-  }
-
-  .gallery-header h1 {
-    margin: 0;
-    font-family: var(--font-reading);
-    font-size: clamp(3.7rem, 10vw, 8rem);
-    line-height: 0.9;
-  }
-
-  .gallery-header span {
-    color: var(--color-muted);
-    font-size: 0.9rem;
-  }
-
-  .gallery-grid {
-    padding-block: clamp(42px, 7vw, 92px) 120px;
-    columns: 4 240px;
-    column-gap: 16px;
-  }
-
-  .gallery-item {
-    position: relative;
-    display: block;
-    width: 100%;
-    padding: 0;
-    margin: 0 0 16px;
-    break-inside: avoid;
-    overflow: hidden;
-    background: var(--color-surface-soft);
-    cursor: zoom-in;
-  }
-
-  .gallery-item :global(img) {
-    width: 100%;
-    height: auto;
-    transition:
-      opacity 220ms ease,
-      transform 360ms ease,
-      filter 360ms ease;
-  }
-
-  .gallery-item :global(.gallery-item__image--deferred) {
-    opacity: 0;
-  }
-
-  .gallery-item :global(.gallery-item__image--deferred.is-loaded) {
-    opacity: 1;
-  }
-
-  :global(html:not(.js)) .gallery-item__image--deferred {
-    display: none;
-  }
-
-  .gallery-item:hover :global(img) {
-    filter: saturate(1.06);
-    transform: scale(1.025);
-  }
-
-  .gallery-item__index {
-    position: absolute;
-    right: 10px;
-    bottom: 10px;
-    padding: 3px 7px;
-    background: rgb(15 13 16 / 72%);
-    color: #fff;
-    font-family: var(--font-mono);
-    font-size: 0.61rem;
-    opacity: 0;
-    transition: opacity 180ms ease;
-  }
-
-  .gallery-item:hover .gallery-item__index,
-  .gallery-item:focus-visible .gallery-item__index {
-    opacity: 1;
-  }
-
-  @media (max-width: 620px) {
-    .gallery-header {
-      grid-template-columns: 1fr;
-    }
-
-    .gallery-grid {
-      width: calc(100% - 20px);
-      columns: 2;
-      column-gap: 10px;
-    }
-
-    .gallery-item {
-      margin-bottom: 10px;
-    }
-
-    .gallery-item__index {
-      opacity: 1;
-    }
-  }
-</style>
