@@ -4,8 +4,8 @@ export const siteConfig = {
   title: "17号的航行日志",
   shortTitle: "LOG 17",
   description:
-    "ElysiaFollower 的个人博客：研究笔记、工程记录、生成媒体，以及偶尔写远的念头。",
-  author: "ElysiaFollower",
+    "Prometheus 的个人博客。漫步星海，记录研究思考、日常折腾与记忆回响。",
+  author: "Prometheus",
   email: "prometheus0017#qq.com",
   navigation: [
     { label: "首页", href: "/" },

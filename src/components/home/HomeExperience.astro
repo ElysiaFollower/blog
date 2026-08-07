@@ -25,30 +25,36 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 const posts = (await getCollection("posts", ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
+
+
+// =============================================================================
+// 首页【03 / 内容频道入口】板块的 3 个卡片配置
+// 对应页面上的：01 航行日志 | 02 珍藏画册 | 03 关于我
+// =============================================================================
 const channels = [
   {
     index: "01",
     label: "WRITING",
-    title: "文章与笔记",
-    description: "技术笔记、论文阅读，也有偶尔写远的思绪。",
+    title: "航行日志",
+    description: "零散随笔、日常折腾，留下天马行空的诳语",
     href: "/posts/",
     icon: BookOpenText,
     accent: "cyan",
   },
   {
     index: "02",
-    label: "VISUAL ARCHIVE",
-    title: "视觉档案",
-    description: "角色、构图，以及曾让目光停留的光影。",
+    label: "GALLERY",
+    title: "珍藏画册",
+    description: "喜欢的角色、动人的笔触，拾掇邂逅的点滴光影",
     href: "/gallery/",
     icon: Images,
     accent: "rose",
   },
   {
     index: "03",
-    label: "PERSONAL TRANSMISSION",
-    title: "关于",
-    description: "研究方向、兴趣，以及屏幕背后的那个人。",
+    label: "ABOUT ME",
+    title: "关于我",
+    description: "一个相信童话的妄想家",
     href: "/about/",
     icon: CircleUserRound,
     accent: "gold",
@@ -57,7 +63,7 @@ const channels = [
 ---
 
 <BaseLayout
-  description="ElysiaFollower 的个人博客：研究笔记、工程记录、生成媒体，以及偶尔写远的念头。"
+  description="Prometheus 的个人博客。漫步星海，记录研究思考、日常折腾与记忆回响。"
   bodyClass="hybrid-page"
   directedPointer
 >
@@ -99,14 +105,14 @@ const channels = [
         <div class="hybrid-hero__copy">
           <div class="hybrid-hero__signal">
             <Radio aria-hidden="true" size={17} stroke-width={1.8} />
-            <span>OPEN CHANNEL / 017</span>
+            <span>LOG 017</span>
           </div>
           <h1 id="hybrid-title">
             <span>17号的</span>
             <span>航行日志</span>
           </h1>
           <p class="hybrid-hero__intro">
-            研究、技术与创作；偶尔也追着一个念头，走得远一点。
+            漫步星海，收拢记忆回响
           </p>
           <a class="hybrid-hero__action" href="/posts/">
             <span>翻阅航行记录</span>
@@ -121,7 +127,7 @@ const channels = [
       </div>
 
       <div class="hybrid-hero__footer">
-        <span>SCROLL TO RECEIVE</span>
+        <span>SCROLL TO EXPLORE</span>
         <span>SHANGHAI / UTC+8</span>
       </div>
     </section>
