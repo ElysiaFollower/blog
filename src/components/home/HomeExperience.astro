@@ -22,6 +22,8 @@ import ScrollReveal from "../ScrollReveal.astro";
 import SiteHeader from "../SiteHeader.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
+import {siteConfig} from "../../config/site.ts";
+
 const posts = (await getCollection("posts", ({ data }) => !data.draft))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
   .slice(0, 3);
@@ -63,7 +65,7 @@ const channels = [
 ---
 
 <BaseLayout
-  description="Prometheus 的个人博客。漫步星海，记录研究思考、日常折腾与记忆回响。"
+  description={siteConfig.description}
   bodyClass="hybrid-page"
   directedPointer
 >
@@ -105,7 +107,7 @@ const channels = [
         <div class="hybrid-hero__copy">
           <div class="hybrid-hero__signal">
             <Radio aria-hidden="true" size={17} stroke-width={1.8} />
-            <span>LOG 017</span>
+            <span>LOG 0017</span>
           </div>
           <h1 id="hybrid-title">
             <span>17号的</span>
@@ -128,7 +130,7 @@ const channels = [
 
       <div class="hybrid-hero__footer">
         <span>SCROLL TO EXPLORE</span>
-        <span>SHANGHAI / UTC+8</span>
+        <span>UTC+8</span>
       </div>
     </section>
 
@@ -136,10 +138,13 @@ const channels = [
       <div class="hybrid-feed__inner page-width">
         <header class="hybrid-feed__header" data-reveal>
           <div>
-            <span>02 / RECENT NOTES</span>
-            <h2>新近落笔</h2>
+            <span class="hybrid-feed__tag">02 / RECENT POSTS</span>
+            <h2 class="hybrid-feed__title">新近落笔</h2>
           </div>
-          <a href="/posts/">沿时间继续翻阅 →</a>
+          <a href="/posts/" class="hybrid-feed__more">
+            <span>查看更多</span>
+            <ArrowUpRight class="hybrid-feed__more-icon" aria-hidden="true" size={15} stroke-width={2} />
+          </a>
         </header>
 
         <div class="hybrid-feed__layout" data-reveal data-reveal-delay="1">
@@ -160,10 +165,10 @@ const channels = [
         <header class="hybrid-channels__header" data-reveal>
           <span>03 / CHANNEL INDEX</span>
           <h2 id="channels-title">
-            <span>信号不止</span><br />一种频率。
+            <span>星光落处</span><br />皆可漫游
           </h2>
           <p>
-            读文章，看图，或者认识一下写下它们的人。
+            欢迎来到我的小天地，虽然没什么好东西可以招待，但若不嫌弃，请随意逛逛
           </p>
         </header>
 
@@ -217,7 +222,9 @@ const channels = [
         <span>04 / COLLECTION</span>
         <h2 id="memory-title">记忆的回廊</h2>
         <p>
-          光影停在画面里，旧日的心绪也有了归处。
+          岁月更迭，人事散尽，过去的心境或许再难寻回；<br />
+          记忆终会褪色，唯有画卷里的光影永不模糊。<br />
+          于须臾人间，向永恒寻找寄托，旧日的追忆也便有了归处。
         </p>
         <a href="/gallery/">步入回廊 →</a>
       </div>
@@ -230,7 +237,7 @@ const channels = [
   <footer class="hybrid-footer">
     <div class="page-width">
       <strong>17号的航行日志</strong>
-      <span>ELYSIAFOLLOWER © 2026</span>
+      <span>PROMETHEUS © 2026</span>
     </div>
   </footer>
 
@@ -462,7 +469,7 @@ const channels = [
     margin-bottom: 44px;
   }
 
-  .hybrid-feed__header span {
+  .hybrid-feed__tag {
     display: block;
     margin-bottom: 8px;
     color: var(--color-cyan);
@@ -471,17 +478,33 @@ const channels = [
     font-weight: 850;
   }
 
-  .hybrid-feed__header h2 {
+  .hybrid-feed__title {
     margin: 0;
     font-family: var(--font-reading);
     font-size: clamp(2.15rem, 5vw, 4.3rem);
     line-height: 1.12;
   }
 
-  .hybrid-feed__header > a {
+  .hybrid-feed__more {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
     color: var(--color-muted);
-    font-size: 0.82rem;
+    font-size: 0.88rem;
     text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  .hybrid-feed__more-icon {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .hybrid-feed__more:hover {
+    color: var(--color-foreground);
+  }
+
+  .hybrid-feed__more:hover .hybrid-feed__more-icon {
+    transform: translate(3px, -3px);
   }
 
   .hybrid-feed__layout {

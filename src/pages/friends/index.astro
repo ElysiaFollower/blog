@@ -8,12 +8,12 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import { friendLinks } from "../../config/friends";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
-const linkCount = String(friendLinks.length).padStart(2, "0");
+const linkCount = String(friendLinks.length);
 ---
 
 <BaseLayout
   title="友链"
-  description="我长期阅读，也愿意不时回访的个人网站。"
+  description="沿着这些链接，可以抵达一些很有意思的人"
   bodyClass="friends-page"
   directedPointer
 >
@@ -25,14 +25,14 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
         <div class="friends-hero__copy">
           <p>
             <Radio aria-hidden="true" size={17} stroke-width={1.8} />
-            EXTERNAL CHANNELS // {linkCount}
+            BLOGROLL · {linkCount}
           </p>
           <h1 id="friends-title">
             <span>LINKS</span>
-            <strong>&amp; SIGNALS</strong>
+            <strong>&amp; FRIENDS</strong>
           </h1>
           <p class="friends-hero__intro">
-            沿着这些链接，可以抵达一些很有意思的人。
+            沿着这些轨迹，可以抵达一些很有意思的人
           </p>
           <a href="#received-signals">
             <span>查看友链</span>
@@ -42,24 +42,24 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
 
         <div class="friends-hero__signal" aria-hidden="true">
           <Sparkles size={30} stroke-width={1.4} />
-          <span>RECEIVING</span>
+          <span>CONNECTED</span>
           <strong>{linkCount}</strong>
-          <small>KNOWN FREQUENCIES</small>
+          <small>WEB NEIGHBORS</small>
         </div>
       </div>
       <div class="friends-hero__footer">
-        <span>PEOPLE I MET ON THE WEB</span>
-        <span>LOG 17 / RELAY</span>
+        <span>PEOPLE I MET ON THE WORLD</span>
+        <span>LOG 0017 / BLOGROLL</span>
       </div>
     </section>
 
     <section id="received-signals" class="friends-signals">
       <div class="page-width">
         <header class="friends-signals__header" data-reveal>
-          <span>01 / RECEIVED SIGNALS</span>
-          <h2>屏幕彼端，<br />仍有回声</h2>
+          <span>01 / WEB NEIGHBORHOOD</span>
+          <h2>繁星落处<br />皆是风景</h2>
           <p>
-            有人写技术，有人记生活。这里收录的是我愿意长期阅读的个人站点。
+            偶尔去他们的小世界逛逛吧，去看看其他正在闪烁的星星～ 🌟
           </p>
         </header>
 
@@ -107,8 +107,8 @@ const linkCount = String(friendLinks.length).padStart(2, "0");
         </div>
 
         <footer class="friends-signals__footer" data-reveal>
-          <span>MORE SIGNALS MAY ARRIVE</span>
-          <p>下一束信号，也许正在路上。</p>
+          <span>MORE FRIENDS MAY JOIN</span>
+          <p>旅途仍在继续， 期待下一次偶然的邂逅</p>
         </footer>
       </div>
     </section>

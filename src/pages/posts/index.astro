@@ -19,6 +19,8 @@ import {
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const posts = await getVisiblePosts();
+//const posts: any[] = [];  //test for no posts
+
 const years = Array.from(
   new Set(posts.map((post) => post.data.pubDate.getFullYear())),
 ).map((year) => ({
@@ -43,7 +45,7 @@ const directoryLabel = (post: (typeof posts)[number]) =>
 
 <BaseLayout
   title="文章"
-  description="技术笔记、论文阅读、工程记录，以及偶尔写远的思绪。"
+  description="记录研究、工程与日常见闻。落笔成文，皆是老来回首的回忆"
   bodyClass="journal-page"
   directedPointer
 >
@@ -54,13 +56,12 @@ const directoryLabel = (post: (typeof posts)[number]) =>
     <header class="journal-masthead">
       <div class="journal-masthead__inner page-width">
         <div class="journal-masthead__title">
-          <p>WRITING ARCHIVE // {String(posts.length).padStart(2, "0")}</p>
+          <p>ESSAYS & NOTES · {String(posts.length)}</p>
           <h1>文章</h1>
         </div>
         <div class="journal-masthead__copy">
           <p>
-            技术笔记、论文阅读、工程记录，也有偶尔偏离主线的思考。<br />
-            所有文章依发布时间从新到旧排列。
+            记录研究、工程与日常见闻。落笔成文，皆是老来回首的回忆<br />
           </p>
           {
             posts.length > 0 && (
@@ -188,8 +189,7 @@ const directoryLabel = (post: (typeof posts)[number]) =>
         </section>
       ) : (
         <section class="journal-empty page-width">
-          <p>WRITING ARCHIVE // 00</p>
-          <h2>第一篇文章还在纸上。</h2>
+          <h2>文章还在路上orzzz</h2>
         </section>
       )
     }
@@ -198,8 +198,8 @@ const directoryLabel = (post: (typeof posts)[number]) =>
       <div class="page-width" data-reveal>
         <ListTree aria-hidden="true" size={29} stroke-width={1.5} />
         <div>
-          <p>KNOW WHERE TO LOOK?</p>
-          <h2 id="catalog-title">沿知识脉络，找回旧文。</h2>
+          <p>CATALOG DIRECTORY</p>
+          <h2 id="catalog-title">进入知识目录<br>检索全站馆藏</h2>
         </div>
         <a href="/posts/catalog/">
           打开知识目录

@@ -44,11 +44,12 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     <header class="library-masthead">
       <div class="page-width">
         <div class="library-masthead__title">
-          <p>KNOWLEDGE CATALOG // {String(posts.length).padStart(2, "0")}</p>
+          <p>KNOWLEDGE CATALOG · {String(posts.length)}</p>
           <h1>知识目录</h1>
         </div>
         <p class="library-masthead__description">
-          沿目录找到大致位置，或直接搜索标题、摘要与正文。
+          在这里检索全站馆藏吧～<br>
+          寻访那些闪闪发光的文字吧～ (*'▽'*)
         </p>
       </div>
     </header>
@@ -62,10 +63,10 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
       <div class="library-search" data-library-search>
         <Search aria-hidden="true" size={23} stroke-width={1.7} />
         <label>
-          <span class="visually-hidden">搜索文章正文</span>
+          <span class="visually-hidden">搜索标题、摘要、标签与正文关键词</span>
           <input
             type="search"
-            placeholder="搜索标题、摘要与正文…"
+            placeholder="搜索标题、摘要、标签与正文关键词…"
             autocomplete="off"
             data-library-search-input
           />

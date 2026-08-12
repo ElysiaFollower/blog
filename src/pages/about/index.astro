@@ -9,6 +9,7 @@ import {
   Mail,
   Microscope,
   Sparkles,
+  Tv,
 } from "@lucide/astro";
 import aboutPortrait from "../../assets/demo/elysia-portrait.webp";
 import playPortrait from "../../assets/demo/sparkle-portrait.webp";
@@ -21,7 +22,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
 <BaseLayout
   title="关于"
-  description={`${profileConfig.handle} 的研究方向、技术兴趣与个人创作。`}
+  description={`${profileConfig.handle} 的研究方向、技术兴趣与联系方式。`}
   bodyClass="about-page"
   directedPointer
 >
@@ -42,13 +43,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       <div class="about-hero__content page-width">
         <div class="about-hero__copy">
-          <p>PERSONAL TRANSMISSION // 017</p>
+          <p>PERSONAL INFORMATION // 0017</p>
           <h1 id="about-title">
             <span>Hello, this is</span>
-            <strong>{profileConfig.handle}.</strong>
+            <strong>{profileConfig.handle}</strong>
           </h1>
           <p class="about-hero__alias">
-            也使用网名 <b>{profileConfig.alias}</b>。
+            也使用网名 <b>{profileConfig.alias}</b>
           </p>
           <p class="about-hero__intro">{profileConfig.introduction}</p>
           <a href="#research">
@@ -73,10 +74,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <section id="research" class="about-research">
       <div class="page-width">
         <header data-reveal>
-          <span>01 / RESEARCH TRANSMISSION</span>
-          <h2>声音、对话与情感理解</h2>
+          <span>01 / RESEARCH DIRECTIONS</span>
+          <h2>目前关注的研究方向</h2>
           <p>
-            声音里藏着文字没有写下的东西：节奏、情绪，还有人与人之间微妙的关系。我的研究从这里开始。
+            刚开始接触这个领域，许多想法还在探索和构建中，以下是我目前比较感兴趣的方向
           </p>
         </header>
 
@@ -88,34 +89,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
               </article>
-            ))
-          }
-        </div>
-
-        <blockquote data-reveal>
-          <Sparkles aria-hidden="true" size={24} stroke-width={1.6} />
-          <p>
-            我希望 AI 不只听见一句话，也能听懂说话的人。音频对话，是我选择的起点。
-          </p>
-        </blockquote>
-      </div>
-    </section>
-
-    <section class="about-curiosity">
-      <div class="page-width">
-        <header data-reveal>
-          <span>02 / CURIOSITY MAP</span>
-          <h2>主线之外，<br />总有兔子洞。</h2>
-        </header>
-
-        <div class="about-curiosity__list">
-          {
-            profileConfig.curiosities.map((item, index) => (
-              <div data-reveal>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <h3>{item.title}</h3>
-                <p>{item.note}</p>
-              </div>
             ))
           }
         </div>
@@ -133,13 +106,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         />
       </div>
       <div class="about-play__copy" data-reveal="right">
-        <span>03 / AFTER HOURS</span>
-        <h2 id="play-title">研究之外，<br />也认真玩耍。</h2>
+        <span>02 / AFTER HOURS</span>
+        <h2 id="play-title">主线之外，<br />总有兔子洞</h2>
         <p>
-          我也会做些游戏原型，琢磨图形学和 MMD；闲下来，就回到动画和崩坏的世界里。
+          总有些奇奇怪怪的新世界，偶尔用好奇将我捕获 <br>
+          —— 那些闲暇时踏入的冒险领域(*'▽'*)
         </p>
         <ul>
-          {profileConfig.play.map((item) => <li>{item}</li>)}
+          {profileConfig.curiosities.map((item) => <li>{item}</li>)}
         </ul>
       </div>
     </section>
@@ -147,15 +121,16 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     <section class="about-contact">
       <div class="page-width">
         <div data-reveal>
-          <span>04 / OPEN CHANNEL</span>
-          <h2>若恰好关心<br />同一个问题，<br />欢迎来信。</h2>
+          <span>03 / CONTACT</span>
+          <h2>在其他地方<br>找到我</h2>
+          <p class="about-contact__invitation">
+            如果有任何想法 <br>
+            Feel free to reach out. (｡･ω･｡)ﾉ
+          </p>
         </div>
         <div class="about-contact__body" data-reveal data-reveal-delay="1">
           <p>
-            无论是研究、开源项目，还是生成媒体，我都很乐意交换想法。
-          </p>
-          <p class="about-contact__invitation">
-            Feel free to reach out. (｡･ω･｡)ﾉ
+            这里记录了我活跃在网络上的各个节点。如果想了解更多，欢迎通过以下平台找到我：
           </p>
           <nav aria-label="个人链接">
             <a href={profileConfig.links.github}>
@@ -163,9 +138,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
               <span>GitHub</span>
               <ArrowUpRight aria-hidden="true" size={17} stroke-width={1.8} />
             </a>
-            <a href={profileConfig.links.academic}>
+            <a href={profileConfig.links.academic} target="_blank" rel="noopener noreferrer">
               <GraduationCap aria-hidden="true" size={19} stroke-width={1.8} />
               <span>Academic</span>
+              <ArrowUpRight aria-hidden="true" size={17} stroke-width={1.8} />
+            </a>
+            <a href={profileConfig.links.bilibili} target="_blank" rel="noopener noreferrer">
+              <Tv aria-hidden="true" size={19} stroke-width={1.8} />
+              <span>Bilibili</span>
               <ArrowUpRight aria-hidden="true" size={17} stroke-width={1.8} />
             </a>
             <button
@@ -185,8 +165,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         </div>
       </div>
       <footer class="page-width">
-        <span>ELYSIAFOLLOWER © 2026</span>
-        <span>END OF PERSONAL TRANSMISSION</span>
+        <span>PROMETHEUS © 2026</span>
+        <span>END OF TRANSMISSION</span>
       </footer>
     </section>
   </main>
@@ -611,15 +591,18 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-contact__body > p:first-child {
     max-width: 560px;
-    margin: 6px 0 0;
+    margin: 12px 0 36px;
     font-size: 1.05rem;
     line-height: 1.85;
   }
 
   .about-contact__invitation {
-    margin: 24px 0 34px;
-    font-family: var(--font-reading);
-    font-size: 1.4rem;
+    max-width: 340px;
+    margin-top: 36px;
+    margin-left: 10px;
+    color: #3b2a06;
+    font-size: 1.05rem;
+    line-height: 1.7;
   }
 
   .about-contact nav {

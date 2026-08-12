@@ -13,10 +13,11 @@ import { siteConfig } from "../config/site";
       <p>{siteConfig.description}</p>
     </div>
     <nav aria-label="页脚导航">
-      <a href="/posts/">文章浏览</a>
-      <a href="/posts/catalog/">知识目录</a>
-      <a href="/gallery/">相册</a>
-      <a href="/about/">关于</a>
+      {
+        siteConfig.navigation.map((item) => (
+          <a href={item.href}>{item.label}</a>
+        ))
+      }
       <a href="/rss.xml">
         <Rss aria-hidden="true" size={15} stroke-width={1.8} />
         RSS
@@ -24,8 +25,8 @@ import { siteConfig } from "../config/site";
     </nav>
   </div>
   <div class="site-footer__meta page-width">
-    <span>ELYSIAFOLLOWER © 2026</span>
-    <span>END OF CURRENT TRANSMISSION</span>
+    <span>PROMETHEUS © 2026</span>
+    <span>{siteConfig.license}</span>
     <a href="#top" aria-label="回到页面顶部" title="回到顶部">
       <ArrowUp aria-hidden="true" size={18} stroke-width={1.8} />
     </a>

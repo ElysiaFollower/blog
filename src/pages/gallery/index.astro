@@ -66,16 +66,16 @@ const galleryEntries = await Promise.all(
 ---
 
 <BaseLayout
-  title="相册"
-  description="角色、构图与视觉记忆的个人档案。"
+  title="画廊"
+  description="收藏那些曾让目光停留的瞬间"
   bodyClass="gallery-page"
 >
   <SiteHeader variant="reading" />
   <main id="main-content">
     <header class="gallery-header page-width">
       <p>COLLECTION // {String(galleryEntries.length).padStart(2, "0")}</p>
-      <h1>相册</h1>
-      <span>收藏那些曾让目光停留的瞬间。</span>
+      <h1>画廊</h1>
+      <span>收藏那些曾让目光停留的瞬间</span>
     </header>
 
     <section
@@ -138,6 +138,164 @@ const galleryEntries = await Promise.all(
     </section>
   </main>
 
+  <script>
+    const deferredImages = document.querySelectorAll<HTMLImageElement>(
+      "[data-gallery-src]",
+    );
+
+    const loadImage = (image: HTMLImageElement) => {
+      const source = image.dataset.gallerySrc;
+      const sourceSet = image.dataset.gallerySrcset;
+      if (!source) return;
+
+      image.addEventListener(
+        "load",
+        () => image.classList.add("is-loaded"),
+        { once: true },
+      );
+      if (sourceSet) image.srcset = sourceSet;
+      image.src = source;
+      delete image.dataset.gallerySrc;
+      delete image.dataset.gallerySrcset;
+    };
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            const image = entry.target as HTMLImageElement;
+            observer.unobserve(image);
+            loadImage(image);
+          });
+        },
+        { rootMargin: "300px 0px" },
+      );
+
+      deferredImages.forEach((image) => observer.observe(image));
+    } else {
+      deferredImages.forEach(loadImage);
+    }
+  </script>
+
   <GalleryLightbox />
   <SiteFooter />
 </BaseLayout>
+
+<style>
+  .gallery-page {
+    background: var(--color-bg);
+  }
+
+  .gallery-header {
+    display: grid;
+    padding-block: clamp(58px, 9vw, 110px);
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 12px 32px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .gallery-header p {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--color-rose);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 850;
+  }
+
+  .gallery-header h1 {
+    margin: 0;
+    font-family: var(--font-reading);
+    font-size: clamp(3.7rem, 10vw, 8rem);
+    line-height: 0.9;
+  }
+
+  .gallery-header span {
+    color: var(--color-muted);
+    font-size: 0.9rem;
+  }
+
+  .gallery-grid {
+    padding-block: clamp(42px, 7vw, 92px) 120px;
+    columns: 4 240px;
+    column-gap: 16px;
+  }
+
+  .gallery-item {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0 0 16px;
+    break-inside: avoid;
+    overflow: hidden;
+    background: var(--color-surface-soft);
+    cursor: zoom-in;
+  }
+
+  .gallery-item :global(img) {
+    width: 100%;
+    height: auto;
+    transition:
+      opacity 220ms ease,
+      transform 360ms ease,
+      filter 360ms ease;
+  }
+
+  .gallery-item :global(.gallery-item__image--deferred) {
+    opacity: 0;
+  }
+
+  .gallery-item :global(.gallery-item__image--deferred.is-loaded) {
+    opacity: 1;
+  }
+
+  :global(html:not(.js)) .gallery-item__image--deferred {
+    display: none;
+  }
+
+  .gallery-item:hover :global(img) {
+    filter: saturate(1.06);
+    transform: scale(1.025);
+  }
+
+  .gallery-item__index {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    padding: 3px 7px;
+    background: rgb(15 13 16 / 72%);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 0.61rem;
+    opacity: 0;
+    transition: opacity 180ms ease;
+  }
+
+  .gallery-item:hover .gallery-item__index,
+  .gallery-item:focus-visible .gallery-item__index {
+    opacity: 1;
+  }
+
+  @media (max-width: 620px) {
+    .gallery-header {
+      grid-template-columns: 1fr;
+    }
+
+    .gallery-grid {
+      width: calc(100% - 20px);
+      columns: 2;
+      column-gap: 10px;
+    }
+
+    .gallery-item {
+      margin-bottom: 10px;
+    }
+
+    .gallery-item__index {
+      opacity: 1;
+    }
+  }
+</style>
