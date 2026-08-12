@@ -64,17 +64,20 @@ src/content/posts/
 
 页面构图、字体关系和交互节奏属于主题本身，不作为通用配置开放。
 
-## 部署
+## 分支与部署机制
 
-`.github/workflows/deploy-pages.yml` 会在 `main` 分支更新后安装依赖、执行检查
-与生产构建、验证发布产物，并把 `dist/` 部署到 GitHub Pages。仓库的 Pages
-Source 需要选择 **GitHub Actions**。
+### 🌿 分支规范
+- **`dev` 分支**：日常写作、草稿撰写与功能开发分支。在 `dev` 分支上的 Commit 与 Push 不会触发线上部署，安全无负担。
+- **`main` 分支**：正式发布与生产分支。代码合并或推送到 `main` 分支后，会自动触发 GitHub Actions 编译部署。
 
-`astro.config.mjs` 当前以 `https://elysiafollower.github.io` 为正式站点地址。
-若把主题部署到其他账号或项目仓库，需要同时调整 `site`，项目站点还需要设置
-对应的 `base`。
-
-替换旧发布仓库的完整步骤见 [`docs/migration.md`](docs/migration.md)。
+### 🚀 自动化跨仓库部署
+项目采用 **源码与部署分离（Multi-Repo Architecture）**：
+- **源码仓库 (`blog`)**：存放 Astro 源码与 MDX 文章，站点根路径保持标准的 `/`（避免子路径 404 困扰，且方便未来无缝绑定自定义独立域名）。
+- **部署仓库 (`ElysiaFollower.github.io`)**：托管打包编译后的静态网页。
+- `.github/workflows/deploy-pages.yml` 监听到 `main` 分支更新后，自动运行 `pnpm build`；
+- 编译产物 `dist/` 会通过 GitHub Action 自动推送并全量覆盖至 `ElysiaFollower/ElysiaFollower.github.io` 的 `main` 分支，直接在顶级域名 `https://elysiafollower.github.io/` 上渲染上线。
+- `public/README.md` 会在构建时自动带入产物根目录，确保目标仓库的 `README.md` 不会丢失。
+- **权限要求**：需在 `blog` 仓库的 `Settings -> Secrets and variables -> Actions` 中配置名为 `GH_PAT` 的 Personal Access Token。
 
 ## 进一步维护
 
