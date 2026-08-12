@@ -46,6 +46,7 @@ jobs:
           source-directory: 'dist'
           destination-repository-username: 'ElysiaFollower'
           destination-repository-name: 'ElysiaFollower.github.io'
+          user-name: 'Prometheus0017'
           user-email: '1615534978@qq.com'
           target-branch: 'main'
           commit-message: 'Site updated: $COMMIT_TIMESTAMP'
