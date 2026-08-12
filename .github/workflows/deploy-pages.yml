@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to ElysiaFollower.github.io
 
 on:
   push:
@@ -6,33 +6,25 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v3
 
       - name: Set up Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v6
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -46,18 +38,14 @@ jobs:
       - name: Verify production output
         run: pnpm verify:build
 
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+      - name: Deploy to ElysiaFollower.github.io
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.GH_PAT }}
         with:
-          path: dist
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+          source-directory: 'dist'
+          destination-repository-username: 'ElysiaFollower'
+          destination-repository-name: 'ElysiaFollower.github.io'
+          user-email: '1615534978@qq.com'
+          target-branch: 'main'
+          commit-message: 'Site updated: $COMMIT_TIMESTAMP'
