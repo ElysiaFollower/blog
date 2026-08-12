@@ -38,6 +38,9 @@ jobs:
       - name: Verify production output
         run: pnpm verify:build
 
+      - name: Get current timestamp
+        run: echo "TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_ENV
+
       - name: Deploy to ElysiaFollower.github.io
         uses: cpina/github-action-push-to-another-repository@main
         env:
@@ -49,4 +52,4 @@ jobs:
           user-name: 'Prometheus0017'
           user-email: '1615534978@qq.com'
           target-branch: 'main'
-          commit-message: "Site updated: $COMMIT_TIMESTAMP"
+          commit-message: 'Site updated: ${{ env.TIMESTAMP }}'
