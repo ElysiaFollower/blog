@@ -1,0 +1,53 @@
+---
+import type { GalleryEntry } from "../../types/gallery";
+import { galleryGeometry } from "./layout";
+import "./gallery.css";
+interface Props { items: GalleryEntry[] }
+const { items } = Astro.props;
+const initial = items.slice(0, 24);
+const geometry = galleryGeometry(initial);
+---
+<section class="collection page-width" data-gallery aria-label="图片收藏">
+  <div class="collection-toolbar">
+    <span class="collection-label">随目光漫游 <span aria-hidden="true">↘</span></span>
+    <span class="collection-total">{items.length} 件收藏</span>
+  </div>
+  <div class="collection-surface">
+    <div class="collection-canvas" data-gallery-canvas style={geometry.canvas}>
+      {initial.map((item, index) => {
+        const Tag = item.kind === "video" ? "div" : "a";
+        return <Tag class="gallery-card" href={item.kind === "image" ? item.src : undefined} data-gallery-index={index} data-id={item.id}
+          style={geometry.cards[index]} aria-label={`查看：${item.title || item.alt}`}>
+          {item.kind === "video" ? <>
+            <video src={item.src} poster={item.poster} muted loop playsinline controls preload="none" width={item.width} height={item.height} aria-label={item.title || item.alt} />
+            <button class="gallery-card__open" data-gallery-open={index} aria-label={`放大观看：${item.title || item.alt}`}>↗</button>
+          </> : <>
+          <img src={index < 4 ? item.src : undefined} class="gallery-card__image"
+            width={item.width} height={item.height} alt={item.alt}
+            loading={index < 4 ? "eager" : "lazy"} decoding="async" />
+          <noscript><img src={item.src} width={item.width} height={item.height} alt={item.alt} loading="lazy" /></noscript>
+          </>}
+          <span class="gallery-card__caption"><span>{item.title || item.alt}</span><span aria-hidden="true">↗</span></span>
+          <span class="gallery-card__error">{item.kind === "video" ? "视频暂不可用 · 可在查看器打开原片 ↗" : "图片暂不可用 · 打开原图 ↗"}</span>
+        </Tag>;
+      })}
+    </div>
+  </div>
+  <div class="collection-end" data-gallery-sentinel>
+    <button type="button" data-gallery-more hidden>继续浏览 <span aria-hidden="true">↓</span></button>
+    <p data-gallery-status role="status" aria-live="polite"></p>
+  </div>
+  <noscript>
+    <p>点击作品查看原图。</p>
+    <div class="collection-fallback">
+      {items.slice(initial.length).map(item => item.kind === "video"
+        ? <video src={item.src} poster={item.poster} controls preload="none" width={item.width} height={item.height} />
+        : <a href={item.src}><img src={item.src} width={item.width} height={item.height} alt={item.alt} loading="lazy" /></a>)}
+    </div>
+  </noscript>
+  <script is:inline type="application/json" data-gallery-data set:html={JSON.stringify(items).replaceAll("<", "\\u003c")} />
+</section>
+<script>
+  import { mountGallery } from "./browse";
+  document.querySelectorAll<HTMLElement>("[data-gallery]").forEach(mountGallery);
+</script>

@@ -1,12 +1,14 @@
-import type { ImageMetadata } from "astro";
-
-export interface GalleryItem {
+/** Serializable media data shared by the gallery browser and viewer. */
+export interface GalleryEntry {
   id: string;
-  src: string | ImageMetadata;
+  kind: "image" | "video";
+  src: string;
   width: number;
   height: number;
-  isLocal: boolean;
+  thumbnail: string;
+  poster?: string;
+  srcset?: string;
+  alt: string;
   title?: string;
   description?: string;
-  alt?: string;
 }
