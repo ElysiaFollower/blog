@@ -39,7 +39,7 @@ import { Moon, Sun } from "@lucide/astro";
         const next =
           document.documentElement.dataset.theme === "dark" ? "light" : "dark";
         document.documentElement.dataset.theme = next;
-        localStorage.setItem("theme", next);
+        try { localStorage.setItem("theme", next); } catch { /* Theme changes still work for this page. */ }
         syncThemeControls();
       });
     },

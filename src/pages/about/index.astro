@@ -8,7 +8,6 @@ import {
   GraduationCap,
   Mail,
   Microscope,
-  Sparkles,
   Tv,
 } from "@lucide/astro";
 import aboutPortrait from "../../assets/demo/elysia-portrait.webp";
@@ -17,6 +16,7 @@ import DirectedPointer from "../../components/DirectedPointer.astro";
 import ScrollReveal from "../../components/ScrollReveal.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import { profileConfig } from "../../config/profile";
+import ArtDirection from "../../components/art/ArtDirection.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 ---
 
@@ -29,7 +29,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <SiteHeader variant="overlay" />
 
   <main id="main-content">
-    <section class="about-hero" aria-labelledby="about-title">
+    <section class="about-hero" aria-labelledby="about-title" data-art-scene>
       <Image
         class="about-hero__art"
         src={aboutPortrait}
@@ -45,7 +45,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <div class="about-hero__copy">
           <p>PERSONAL INFORMATION // 0017</p>
           <h1 id="about-title">
-            <span>Hello, this is</span>
+            <span>你好，我是</span>
             <strong>{profileConfig.handle}</strong>
           </h1>
           <p class="about-hero__alias">
@@ -75,9 +75,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <div class="page-width">
         <header data-reveal>
           <span>01 / RESEARCH DIRECTIONS</span>
-          <h2>目前关注的研究方向</h2>
+          <h2>关注的方向</h2>
           <p>
-            刚开始接触这个领域，许多想法还在探索和构建中，以下是我目前比较感兴趣的方向
+            我关心模型怎样听懂话语，也怎样理解说话的人。
           </p>
         </header>
 
@@ -109,8 +109,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <span>02 / AFTER HOURS</span>
         <h2 id="play-title">主线之外，<br />总有兔子洞</h2>
         <p>
-          总有些奇奇怪怪的新世界，偶尔用好奇将我捕获 <br>
-          —— 那些闲暇时踏入的冒险领域(*'▽'*)
+          研究之外，也认真玩耍。<br />好奇心把我带到了这些地方。
         </p>
         <ul>
           {profileConfig.curiosities.map((item) => <li>{item}</li>)}
@@ -130,7 +129,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         </div>
         <div class="about-contact__body" data-reveal data-reveal-delay="1">
           <p>
-            这里记录了我活跃在网络上的各个节点。如果想了解更多，欢迎通过以下平台找到我：
+            代码、研究和偶尔的创作，散落在这些地方。
           </p>
           <nav aria-label="个人链接">
             <a href={profileConfig.links.github}>
@@ -173,6 +172,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   <DirectedPointer />
   <ScrollReveal />
+  <ArtDirection />
 </BaseLayout>
 
 <script>
@@ -206,7 +206,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   .about-hero {
     position: relative;
     display: grid;
-    height: min(86svh, 880px);
+    height: min(90svh, 980px);
     min-height: 660px;
     overflow: hidden;
     color: #fff;
@@ -226,12 +226,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     height: 100%;
     object-fit: cover;
     object-position: center 29%;
-    transform: scale(1.02);
+    transform: translateY(calc(var(--scene-scroll, 0) * 70px)) scale(1.03);
   }
 
   .about-hero__shade {
     z-index: -2;
-    background: rgb(7 13 18 / 42%);
+    background: linear-gradient(90deg, #1c1a31b8, #24203720 80%);
     box-shadow:
       inset 46vw 0 190px rgb(7 12 17 / 50%),
       inset 0 -160px 130px rgb(8 12 16 / 36%);
@@ -239,29 +239,30 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-hero__frame {
     z-index: 1;
-    inset: 86px var(--page-inline) 56px;
-    border: 1px solid #ffffff73;
+    inset: 112px var(--page-inline) 54px;
+    border: 0;
+    border-bottom: 1px solid #ffffff40;
     pointer-events: none;
   }
 
   .about-hero__frame::before,
   .about-hero__frame::after {
     position: absolute;
-    width: 70px;
-    height: 8px;
+    width: 48px;
+    height: 1px;
     content: "";
   }
 
   .about-hero__frame::before {
     top: -4px;
     left: 9%;
-    background: #75d4d2;
+    background: #bdcfda;
   }
 
   .about-hero__frame::after {
     right: 9%;
     bottom: -4px;
-    background: #ff78a5;
+    background: #dfb3d1;
   }
 
   .about-hero__content {
@@ -280,11 +281,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-hero__copy > p:first-child,
   .about-research header > span,
-  .about-curiosity header > span,
   .about-play__copy > span,
   .about-contact h2 + span,
   .about-contact [data-reveal] > span {
-    color: #75d4d2;
+    color: #c6c8df;
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 850;
@@ -292,20 +292,22 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-hero h1 {
     margin: 14px 0 0;
-    line-height: 0.88;
+    line-height: 1.2;
   }
 
   .about-hero h1 span {
     display: block;
     font-family: var(--font-reading);
-    font-size: 3.6rem;
+    font-size: clamp(1.5rem, 2.5vw, 2.4rem);
     font-weight: 500;
   }
 
   .about-hero h1 strong {
     display: block;
-    font-size: 7.6rem;
-    font-weight: 900;
+    font-family: var(--font-reading);
+    font-size: clamp(3.2rem, 6.1vw, 6rem);
+    overflow-wrap: anywhere;
+    font-weight: 500;
   }
 
   .about-hero__alias {
@@ -315,7 +317,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   }
 
   .about-hero__alias b {
-    color: #ff9fbd;
+    color: #eec5dc;
   }
 
   .about-hero__intro {
@@ -369,7 +371,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   }
 
   .about-research h2,
-  .about-curiosity h2,
   .about-play h2,
   .about-contact h2 {
     margin: 0;
@@ -378,7 +379,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-research h2 {
     font-family: var(--font-reading);
-    font-size: 5.2rem;
+    font-size: clamp(2.7rem, 4.5vw, 4.5rem);
+    font-weight: 500;
     line-height: 1.06;
   }
 
@@ -412,7 +414,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-research__list h3 {
     margin: 0;
-    font-size: 2rem;
+    font-size: clamp(1.35rem, 2vw, 1.9rem);
+    overflow-wrap: anywhere;
+    line-height: 1.4;
   }
 
   .about-research__list p {
@@ -441,61 +445,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     font-family: var(--font-reading);
     font-size: 3rem;
     line-height: 1.45;
-  }
-
-  .about-curiosity {
-    padding-block: clamp(82px, 11vw, 150px);
-    background: #17151a;
-    color: #fff;
-  }
-
-  .about-curiosity > div {
-    display: grid;
-    grid-template-columns: minmax(330px, 0.8fr) minmax(0, 1.2fr);
-    gap: clamp(54px, 8vw, 120px);
-  }
-
-  .about-curiosity header > span {
-    color: #75d4d2;
-  }
-
-  .about-curiosity h2 {
-    margin-top: 20px;
-    font-size: 4.5rem;
-    line-height: 0.96;
-  }
-
-  .about-curiosity__list {
-    border-top: 1px solid #ffffff3d;
-  }
-
-  .about-curiosity__list > div {
-    display: grid;
-    min-height: 126px;
-    padding-block: 22px;
-    grid-template-columns: 58px minmax(220px, 1fr) minmax(180px, 0.8fr);
-    align-items: center;
-    gap: 18px;
-    border-bottom: 1px solid #ffffff3d;
-  }
-
-  .about-curiosity__list span {
-    color: #ff88ae;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 850;
-  }
-
-  .about-curiosity__list h3 {
-    margin: 0;
-    font-size: clamp(1.15rem, 2vw, 1.65rem);
-  }
-
-  .about-curiosity__list p {
-    margin: 0;
-    color: #bcb3b9;
-    font-size: 0.84rem;
-    line-height: 1.65;
   }
 
   .about-play {
@@ -532,8 +481,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   .about-play h2 {
     margin-top: 20px;
     font-family: var(--font-reading);
-    font-size: 4.5rem;
-    line-height: 1.02;
+    font-size: clamp(2.6rem, 4.5vw, 4.5rem);
+    font-weight: 500;
+    line-height: 1.2;
   }
 
   .about-play__copy > p {
@@ -569,8 +519,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-contact {
     padding: clamp(84px, 11vw, 150px) 0 34px;
-    background: #efbd43;
-    color: #17151a;
+    background: var(--art-paper);
+    color: var(--color-ink);
   }
 
   .about-contact > div {
@@ -580,12 +530,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   }
 
   .about-contact [data-reveal] > span {
-    color: #4f3a0a;
+    color: var(--color-rose);
   }
 
   .about-contact h2 {
     margin-top: 18px;
-    font-size: 5rem;
+    font-family: var(--font-reading);
+    font-size: clamp(3rem, 5vw, 5rem);
+    font-weight: 500;
     line-height: 0.98;
   }
 
@@ -600,14 +552,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     max-width: 340px;
     margin-top: 36px;
     margin-left: 10px;
-    color: #3b2a06;
+    color: var(--color-muted);
     font-size: 1.05rem;
     line-height: 1.7;
   }
 
   .about-contact nav {
     display: grid;
-    border-top: 2px solid #17151a;
+    border-top: 1px solid var(--color-line);
   }
 
   .about-contact nav a,
@@ -618,7 +570,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 14px;
-    border-bottom: 1px solid #17151a80;
+    border-bottom: 1px solid var(--color-line);
     background: transparent;
     color: inherit;
     text-align: left;
@@ -655,7 +607,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
 
     .about-hero h1 strong {
-      font-size: 5.4rem;
+      font-size: clamp(2.75rem, 6vw, 5rem);
     }
 
     .about-hero__status {
@@ -664,7 +616,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
     .about-hero__content,
     .about-research header,
-    .about-curiosity > div,
     .about-play,
     .about-contact > div {
       grid-template-columns: 1fr;
@@ -675,7 +626,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
 
     .about-research h2 {
-      font-size: 3.6rem;
+      font-size: clamp(1.5rem, 2.5vw, 2.4rem);
     }
 
     .about-research__list h3 {
@@ -686,8 +637,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       font-size: 2.2rem;
     }
 
-    .about-curiosity h2,
-    .about-contact h2 {
+      .about-contact h2 {
       font-size: 4.2rem;
     }
 
@@ -729,8 +679,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
 
     .about-hero h1 strong {
-      overflow-wrap: normal;
-      font-size: 2.75rem;
+      overflow-wrap: anywhere;
+      font-size: clamp(2rem, 8.8vw, 3rem);
     }
 
     .about-hero h1 span {
@@ -768,8 +718,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       font-size: 1.65rem;
     }
 
-    .about-curiosity h2,
-    .about-contact h2 {
+      .about-contact h2 {
       font-size: 2.7rem;
     }
 
@@ -777,14 +726,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       font-size: 2.8rem;
     }
 
-    .about-curiosity__list > div {
-      grid-template-columns: 42px 1fr;
-      gap: 7px 12px;
-    }
 
-    .about-curiosity__list p {
-      grid-column: 2;
-    }
 
     .about-play__image {
       width: 100%;
@@ -807,9 +749,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     }
   }
 
+  @media (prefers-reduced-motion: reduce) { .about-hero__art { transform: none; } }
+
   @media (max-width: 350px) {
     .about-hero h1 strong {
-      font-size: 2.25rem;
+      font-size: 2rem;
     }
   }
 </style>

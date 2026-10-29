@@ -124,6 +124,7 @@ for (const file of htmlFiles) {
   const source = await readFile(file, "utf8");
   const document = parse(source);
   const ids = new Set();
+  const galleryIds = new Set();
   const references = [];
   let canonical;
   let isRedirect = false;
@@ -139,6 +140,13 @@ for (const file of htmlFiles) {
 
   visit(document, (node) => {
     const attrs = attributes(node);
+    if (node.tagName === "script" && Object.hasOwn(attrs, "data-gallery-data")) {
+      try {
+        for (const entry of JSON.parse(textContent(node))) galleryIds.add(entry.id);
+      } catch {
+        failures.push(`${route} 的相册收藏数据不可解析`);
+      }
+    }
     if (attrs.id) {
       if (ids.has(attrs.id)) {
         failures.push(`${route} 中存在重复 id：${attrs.id}`);
@@ -201,7 +209,7 @@ for (const file of htmlFiles) {
       noIndex = true;
     }
 
-    for (const name of ["href", "src", "poster"]) {
+    for (const name of ["href", "src", "poster", "data-gallery-href"]) {
       if (attrs[name]) references.push(attrs[name]);
     }
 
@@ -215,7 +223,7 @@ for (const file of htmlFiles) {
     }
   });
 
-  documents.set(route, { file, ids, references });
+  documents.set(route, { file, ids, galleryIds, references });
 
   if (!isRedirect && language !== "zh-CN") {
     failures.push(`${route} 的文档语言不是 zh-CN`);
@@ -271,6 +279,14 @@ for (const [route, document] of documents) {
       const targetRoute = reference.pathname;
       const targetDocument = documents.get(targetRoute);
       const fragment = decodeURIComponent(reference.hash.slice(1));
+      // Gallery fragments address collection data, including works not yet mounted in the DOM.
+      if (targetRoute === "/gallery/" && fragment.startsWith("work=")) {
+        const workId = new URLSearchParams(fragment).get("work");
+        if (!targetDocument?.galleryIds.has(workId)) {
+          failures.push(`${route} 引用了不存在的收藏：${raw}`);
+        }
+        continue;
+      }
       if (targetDocument && fragment && !targetDocument.ids.has(fragment)) {
         failures.push(`${route} 引用了不存在的锚点：${raw}`);
       }

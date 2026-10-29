@@ -19,7 +19,6 @@ import {
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const posts = await getVisiblePosts();
-//const posts: any[] = [];  //test for no posts
 
 const years = Array.from(
   new Set(posts.map((post) => post.data.pubDate.getFullYear())),
@@ -219,6 +218,7 @@ const directoryLabel = (post: (typeof posts)[number]) =>
   }
 
   .journal-masthead {
+    background: radial-gradient(ellipse at 85% 0%, color-mix(in srgb, var(--color-rose) 8%, transparent), transparent 65%);
     position: relative;
     border-bottom: 1px solid var(--color-line);
     overflow: hidden;
@@ -248,7 +248,8 @@ const directoryLabel = (post: (typeof posts)[number]) =>
   .journal-masthead h1 {
     margin: 16px 0 0;
     font-family: var(--font-reading);
-    font-size: clamp(4.5rem, 10vw, 8rem);
+    font-size: clamp(4.5rem, 9vw, 7.5rem);
+    font-weight: 500;
     line-height: 0.88;
   }
 
@@ -282,7 +283,7 @@ const directoryLabel = (post: (typeof posts)[number]) =>
     bottom: 0;
     left: 0;
     display: flex;
-    height: 5px;
+    height: 1px;
   }
 
   .journal-masthead__rule span:nth-child(1) {
@@ -297,7 +298,7 @@ const directoryLabel = (post: (typeof posts)[number]) =>
 
   .journal-masthead__rule span:nth-child(3) {
     width: 38px;
-    background: var(--color-yellow);
+    background: var(--color-gold);
   }
 
   .journal-timeline {

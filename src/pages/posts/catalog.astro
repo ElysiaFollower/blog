@@ -48,8 +48,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
           <h1>知识目录</h1>
         </div>
         <p class="library-masthead__description">
-          在这里检索全站馆藏吧～<br>
-          寻访那些闪闪发光的文字吧～ (*'▽'*)
+          按目录翻找，或直接搜索。<br />从标题到正文，都可以找到。
         </p>
       </div>
     </header>
@@ -66,7 +65,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
           <span class="visually-hidden">搜索标题、摘要、标签与正文关键词</span>
           <input
             type="search"
-            placeholder="搜索标题、摘要、标签与正文关键词…"
+            placeholder="搜索文章、标签或正文…"
             autocomplete="off"
             data-library-search-input
           />
@@ -770,6 +769,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   }
 
   .library-masthead {
+    background: radial-gradient(ellipse at 85% 0%, color-mix(in srgb, var(--color-rose) 7%, transparent), transparent 65%);
     border-bottom: 1px solid var(--color-line);
   }
 
@@ -793,7 +793,8 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   .library-masthead h1 {
     margin: 0;
     font-family: var(--font-reading);
-    font-size: clamp(3.3rem, 7vw, 6rem);
+    font-size: clamp(3rem, 6vw, 5.4rem);
+    font-weight: 500;
     line-height: 0.95;
   }
 
@@ -823,6 +824,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
 
   .library-search:focus-within {
     box-shadow: inset 0 -2px var(--color-rose);
+    background: color-mix(in srgb, var(--color-rose) 4%, transparent);
   }
 
   .library-search label,

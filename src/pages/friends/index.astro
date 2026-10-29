@@ -1,11 +1,13 @@
 ---
 import { Image } from "astro:assets";
-import { ArrowDownRight, ArrowUpRight, Radio, Sparkles } from "@lucide/astro";
+import { ArrowDownRight, ArrowUpRight, Radio } from "@lucide/astro";
 import DirectedPointer from "../../components/DirectedPointer.astro";
 import ScrollReveal from "../../components/ScrollReveal.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import { friendLinks } from "../../config/friends";
+import OrbitSculpture from "../../components/art/OrbitSculpture.astro";
+import ArtDirection from "../../components/art/ArtDirection.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const linkCount = String(friendLinks.length);
@@ -19,8 +21,8 @@ const linkCount = String(friendLinks.length);
 >
   <SiteHeader variant="overlay" />
   <main id="main-content">
-    <section class="friends-hero" aria-labelledby="friends-title">
-      <div class="friends-hero__frame" aria-hidden="true"></div>
+    <section class="friends-hero" aria-labelledby="friends-title" data-art-scene>
+      <div class="friends-hero__sculpture"><OrbitSculpture id="friends-orbit" /></div>
       <div class="friends-hero__inner page-width">
         <div class="friends-hero__copy">
           <p>
@@ -28,11 +30,11 @@ const linkCount = String(friendLinks.length);
             BLOGROLL · {linkCount}
           </p>
           <h1 id="friends-title">
-            <span>LINKS</span>
-            <strong>&amp; FRIENDS</strong>
+            <span>沿着链接，</span>
+            <strong>遇见同路的人。</strong>
           </h1>
           <p class="friends-hero__intro">
-            沿着这些轨迹，可以抵达一些很有意思的人
+            一些常去的小站，和认真写作的人。
           </p>
           <a href="#received-signals">
             <span>查看友链</span>
@@ -40,12 +42,7 @@ const linkCount = String(friendLinks.length);
           </a>
         </div>
 
-        <div class="friends-hero__signal" aria-hidden="true">
-          <Sparkles size={30} stroke-width={1.4} />
-          <span>CONNECTED</span>
-          <strong>{linkCount}</strong>
-          <small>WEB NEIGHBORS</small>
-        </div>
+
       </div>
       <div class="friends-hero__footer">
         <span>PEOPLE I MET ON THE WORLD</span>
@@ -57,9 +54,9 @@ const linkCount = String(friendLinks.length);
       <div class="page-width">
         <header class="friends-signals__header" data-reveal>
           <span>01 / WEB NEIGHBORHOOD</span>
-          <h2>繁星落处<br />皆是风景</h2>
+          <h2>互联网上的<br />邻居们</h2>
           <p>
-            偶尔去他们的小世界逛逛吧，去看看其他正在闪烁的星星～ 🌟
+            路过时，不妨进去坐坐。
           </p>
         </header>
 
@@ -108,7 +105,7 @@ const linkCount = String(friendLinks.length);
 
         <footer class="friends-signals__footer" data-reveal>
           <span>MORE FRIENDS MAY JOIN</span>
-          <p>旅途仍在继续， 期待下一次偶然的邂逅</p>
+          <p>期待下一次偶然的邂逅。</p>
         </footer>
       </div>
     </section>
@@ -117,6 +114,7 @@ const linkCount = String(friendLinks.length);
   <SiteFooter />
   <DirectedPointer />
   <ScrollReveal />
+  <ArtDirection />
 </BaseLayout>
 
 <style>
@@ -127,75 +125,26 @@ const linkCount = String(friendLinks.length);
   .friends-hero {
     position: relative;
     display: grid;
-    height: min(78svh, 780px);
+    height: min(76svh, 820px);
     min-height: 620px;
     overflow: hidden;
-    background: #17151a;
+    background: var(--art-night);
     color: #fff;
     isolation: isolate;
   }
 
-  .friends-hero::before,
-  .friends-hero::after {
-    position: absolute;
-    z-index: -1;
-    content: "";
+  .friends-hero__sculpture {
+    position:absolute; width:min(60vw,760px); right:-2%; top:50%;
+    color:#e9d9ee; transform:translateY(-50%) rotate(calc(var(--scene-x, 0) * 8deg));
   }
-
-  .friends-hero::before {
-    top: 20%;
-    right: -7vw;
-    width: min(44vw, 640px);
-    aspect-ratio: 1;
-    border: 1px solid #ffffff29;
-    border-radius: 50%;
-    box-shadow:
-      0 0 0 64px #ffffff0a,
-      0 0 0 128px #ffffff08;
-  }
-
-  .friends-hero::after {
-    top: 0;
-    left: 61%;
-    width: 1px;
-    height: 100%;
-    background: #ffffff21;
-  }
-
-  .friends-hero__frame {
-    position: absolute;
-    inset: 86px var(--page-inline) 54px;
-    border: 1px solid #ffffff63;
-    pointer-events: none;
-  }
-
-  .friends-hero__frame::before,
-  .friends-hero__frame::after {
-    position: absolute;
-    height: 8px;
-    content: "";
-  }
-
-  .friends-hero__frame::before {
-    top: -4px;
-    left: 11%;
-    width: 72px;
-    background: #75d4d2;
-  }
-
-  .friends-hero__frame::after {
-    right: 14%;
-    bottom: -4px;
-    width: 48px;
-    background: #ff78a5;
-  }
+  .friends-hero__sculpture :global(.orbit-sculpture) { color:#e9d9ee; }
 
   .friends-hero__inner {
     position: relative;
     z-index: 1;
     display: grid;
     padding: 118px 44px 90px;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
     gap: 48px;
   }
@@ -206,7 +155,7 @@ const linkCount = String(friendLinks.length);
     align-items: center;
     gap: 9px;
     margin: 0;
-    color: #75d4d2;
+    color: #c9bad5;
     font-family: var(--font-mono);
     font-size: 0.68rem;
     font-weight: 850;
@@ -214,7 +163,8 @@ const linkCount = String(friendLinks.length);
 
   .friends-hero h1 {
     margin: 24px 0 0;
-    line-height: 0.82;
+    line-height: 1.3;
+    font-family: var(--font-reading);
   }
 
   .friends-hero h1 span,
@@ -223,22 +173,8 @@ const linkCount = String(friendLinks.length);
     letter-spacing: 0;
   }
 
-  .friends-hero h1 span {
-    font-family: var(--font-reading);
-    font-size: clamp(4.2rem, 10vw, 9rem);
-    font-weight: 500;
-  }
-
-  .friends-hero h1 strong {
-    width: max-content;
-    padding: 10px 16px 13px;
-    margin-top: 16px;
-    background: #efbd43;
-    box-shadow: 9px 9px 0 #ff78a5;
-    color: #17151a;
-    font-size: clamp(2.2rem, 5vw, 4.8rem);
-    line-height: 0.9;
-  }
+  .friends-hero h1 span { font-size:clamp(2rem,4vw,3.5rem); font-weight:400; color:#d7c4df; }
+  .friends-hero h1 strong { margin-top:14px; font-size:clamp(2.7rem,5.5vw,5rem); font-weight:500; }
 
   .friends-hero__intro {
     max-width: 460px;
@@ -256,39 +192,6 @@ const linkCount = String(friendLinks.length);
     border-bottom: 2px solid currentColor;
     font-weight: 800;
     text-decoration: none;
-  }
-
-  .friends-hero__signal {
-    display: grid;
-    width: 210px;
-    height: 210px;
-    justify-self: center;
-    place-content: center;
-    border: 1px solid #ffffff59;
-    border-radius: 50%;
-    text-align: center;
-  }
-
-  .friends-hero__signal :global(svg) {
-    margin: 0 auto 10px;
-    color: #ff78a5;
-  }
-
-  .friends-hero__signal span,
-  .friends-hero__signal small {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 800;
-  }
-
-  .friends-hero__signal strong {
-    margin-block: 3px;
-    font-size: 3.8rem;
-    line-height: 1;
-  }
-
-  .friends-hero__signal small {
-    color: #aaa0a6;
   }
 
   .friends-hero__footer {
@@ -346,7 +249,7 @@ const linkCount = String(friendLinks.length);
   .friends-list > a {
     position: relative;
     display: grid;
-    min-height: 270px;
+    min-height: 230px;
     padding: 42px 12px;
     grid-template-columns:
       54px
@@ -367,8 +270,8 @@ const linkCount = String(friendLinks.length);
 
   .friends-list > a:hover {
     padding-inline: 30px;
-    background: #ff78a5;
-    color: #17151a;
+    background: var(--art-paper);
+    color: var(--color-ink);
   }
 
   .friends-list__index,
@@ -445,13 +348,14 @@ const linkCount = String(friendLinks.length);
   }
 
   .friends-list > a:hover .friends-list__index {
-    color: #5c1b32;
+    color: var(--color-rose);
   }
 
   .friends-list__identity h3 {
     margin: 8px 0 0;
     font-family: var(--font-reading);
-    font-size: clamp(3.6rem, 7vw, 6.8rem);
+    font-size: clamp(2.2rem, 4.2vw, 4rem);
+    font-weight: 500;
     line-height: 0.9;
   }
 
@@ -461,7 +365,7 @@ const linkCount = String(friendLinks.length);
   }
 
   .friends-list > a:hover small {
-    color: #4c2d38;
+    color: var(--color-muted);
   }
 
   .friends-list__note p {
@@ -488,9 +392,6 @@ const linkCount = String(friendLinks.length);
       grid-template-columns: 1fr;
     }
 
-    .friends-hero__signal {
-      display: none;
-    }
 
     .friends-signals__header {
       grid-template-columns: 1fr;
@@ -513,26 +414,16 @@ const linkCount = String(friendLinks.length);
       min-height: 610px;
     }
 
-    .friends-hero::after {
-      left: 72%;
-    }
 
-    .friends-hero__frame {
-      inset: 74px 14px 42px;
-    }
 
     .friends-hero__inner {
       padding: 108px 0 74px;
     }
 
-    .friends-hero h1 span {
-      font-size: clamp(3.6rem, 19vw, 5.6rem);
-    }
+    .friends-hero h1 span { font-size: 1.8rem; }
 
-    .friends-hero h1 strong {
-      padding: 8px 10px 10px;
-      font-size: clamp(1.65rem, 9vw, 2.5rem);
-    }
+    .friends-hero h1 strong { font-size:clamp(2rem,8.5vw,3.3rem); }
+    .friends-hero__sculpture { width:110vw; top:20%; right:-38%; opacity:.5; }
 
     .friends-hero__footer {
       right: 26px;

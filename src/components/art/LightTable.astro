@@ -1,0 +1,312 @@
+---
+import { Image } from "astro:assets";
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "@lucide/astro";
+import bloom from "../../assets/demo/gallery/elysia-in-bloom.webp";
+import kiana from "../../assets/demo/gallery/kiana-in-light.webp";
+import spring from "../../assets/demo/gallery/seele-spring.webp";
+import moment from "../../assets/demo/gallery/golden-moment.webp";
+import journey from "../../assets/demo/gallery/journey.webp";
+import { getGalleryEntries } from "../../lib/gallery";
+
+const collection = await getGalleryEntries();
+const selection = [kiana, spring, bloom, moment, journey].map((image) => {
+  const entry = collection.find((item) => item.src === image.src);
+  if (!entry) throw new Error(`Selected artwork is missing from the gallery: ${image.src}`);
+  return { image, entry };
+});
+---
+
+<section class="light-table" id="selected-light" aria-labelledby="light-table-title" data-light-table>
+  <div class="light-table__heading page-width" data-reveal>
+    <div><p class="art-kicker">04 / SELECTED LIGHT</p><h2 id="light-table-title">记忆的回廊</h2></div>
+    <p>有些瞬间，<br />总想再看一眼。</p>
+    <a href="/gallery/">浏览全部收藏 <ArrowUpRight size={18} aria-hidden="true" /></a>
+  </div>
+  <div class="light-table__stage" data-light-stage role="region" aria-roledescription="轮播" aria-label="五幅精选收藏" tabindex="0">
+    <div class="light-table__horizon" aria-hidden="true"></div>
+    <div class="light-table__track">
+      {selection.map(({image, entry}, index) => (
+        <a class="light-table__work" data-light-work href={entry.src} data-gallery-href={`/gallery/#work=${encodeURIComponent(entry.id)}`} aria-label={`查看原图：${entry.title ?? entry.alt}`}>
+          <figure>
+            <Image src={image} alt={entry.alt} widths={[420, 680, 900]} sizes="(max-width: 620px) 70vw, 360px" loading="lazy" draggable="false" />
+            <figcaption><span>{String(index + 1).padStart(2,"0")}</span><span>{entry.title ?? entry.alt}</span><ArrowUpRight size={15} aria-hidden="true" /></figcaption>
+          </figure>
+        </a>
+      ))}
+    </div>
+  </div>
+  <div class="light-table__footer page-width">
+    <p class="light-table__hint">五幅精选 · 点开看大图</p>
+    <p class="light-table__position" data-light-position aria-live="polite" aria-atomic="true">精选收藏</p>
+    <div class="light-table__controls" hidden data-light-controls>
+      <button type="button" data-light-prev aria-label="上一幅精选"><ArrowLeft size={19} aria-hidden="true" /></button>
+      <button type="button" data-light-next aria-label="下一幅精选"><ArrowRight size={19} aria-hidden="true" /></button>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { mountLightTable } from "./light-table";
+  document.querySelectorAll<HTMLElement>("[data-light-table]").forEach(mountLightTable);
+</script>
+
+<style>
+  .light-table {
+    position: relative;
+    overflow: hidden;
+    padding: 110px 0 40px;
+    background: var(--art-night);
+    color: var(--art-chalk);
+    isolation: isolate;
+  }
+
+  .light-table::before {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    background: radial-gradient(ellipse at 50% 60%,#74608035,transparent 65%);
+  }
+
+  .light-table__heading {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 32px;
+  }
+
+  .art-kicker {
+    margin: 0 0 16px;
+    color: #c5a8c6;
+    font: .65rem var(--font-mono);
+    letter-spacing: .13em;
+  }
+
+  h2 {
+    margin: 0;
+    font: 500 clamp(2.5rem,4.5vw,4.5rem)/1.2 var(--font-reading);
+  }
+
+  .light-table__heading > p {
+    margin: 0;
+    color: #c8bfce;
+    line-height: 1.9;
+    justify-self: center;
+    font-family: var(--font-reading);
+  }
+
+  .light-table__heading > a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #c8bfce70;
+    text-decoration: none;
+    font-size: .8rem;
+  }
+
+  .light-table__stage {
+    position: relative;
+    margin-block: 42px 16px;
+    padding: 24px var(--page-inline);
+  }
+
+  .light-table__track {
+    display: flex;
+    gap: 24px;
+    overflow: auto;
+    align-items: center;
+  }
+
+  .light-table__work {
+    display: block;
+    flex: 0 0 300px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  figure {
+    margin: 0;
+    padding: 14px;
+    background: #eee7eb;
+    color: #302836;
+    box-shadow: 0 20px 44px #0004;
+  }
+
+  figure img {
+    width: 100%;
+    height: auto;
+    max-height: 360px;
+    object-fit: contain;
+    background: #e6dfe6;
+    user-select: none;
+  }
+
+  figcaption {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px 0 2px;
+    font-size: .7rem;
+  }
+
+  figcaption span:first-child {
+    color: #7e627e;
+    font-family: var(--font-mono);
+  }
+
+  figcaption span:nth-child(2) {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .is-ready .light-table__stage {
+    height: 540px;
+    perspective: 1200px;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .is-ready .light-table__track {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    transform-style: preserve-3d;
+  }
+
+  .is-ready .light-table__work {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: clamp(260px,26vw,350px);
+    transform: translate(-50%,-50%) translateX(calc(var(--offset) * 78%)) translateZ(calc(var(--distance) * -120px)) rotateY(calc(var(--offset) * -13deg)) rotateZ(calc(var(--offset) * 3deg));
+    filter: brightness(calc(1 - var(--distance) * .1));
+    z-index: calc(10 - var(--distance));
+    transition: transform 650ms var(--ease-art),filter 500ms;
+  }
+
+  .is-ready .light-table__work[data-active="true"] figure {
+    box-shadow: 0 30px 65px #0006,0 0 50px #d5afd212;
+  }
+
+  .is-dragging .light-table__work {
+    transition: none;
+  }
+
+  .is-dragging .light-table__stage {
+    cursor: grabbing;
+  }
+
+  .light-table__horizon {
+    display: none;
+    position: absolute;
+    width: 130%;
+    height: 200px;
+    bottom: 0;
+    left: -15%;
+    border: 1px solid #cbb5d12b;
+    border-radius: 50%;
+    transform: rotate(-8deg);
+    pointer-events: none;
+  }
+
+  .is-ready .light-table__horizon {
+    display: block;
+  }
+
+  .light-table__footer {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    border-top: 1px solid #c8bfce33;
+    padding-top: 22px;
+  }
+
+  .light-table__footer p {
+    margin: 0;
+    font: .7rem var(--font-mono);
+    color: #c8bfce;
+  }
+
+  .light-table__position {
+    margin-left: auto!important;
+  }
+
+  .light-table__controls:not([hidden]) {
+    display: flex;
+    gap: 10px;
+  }
+
+  button {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    place-items: center;
+    border: 1px solid #c8bfce66;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background 200ms,color 200ms;
+  }
+
+  button: hover {
+    background: #e1c4d8;
+    color: #292334;
+  }
+
+  button: disabled {
+    opacity: .3;
+    cursor: default;
+  }
+
+  @media(max-width:760px) {
+    .light-table {
+      padding-top: 72px;
+    }
+
+    .light-table__heading {
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+    }
+
+    .light-table__heading > p {
+      display: none;
+    }
+
+    .is-ready .light-table__stage {
+      height: 460px;
+    }
+
+    .is-ready .light-table__work {
+      width: min(70vw,300px);
+    }
+
+    figure img {
+      max-height: 310px;
+    }
+
+    .light-table__hint {
+      display: none;
+    }
+
+    .light-table__position {
+      margin-left: 0!important;
+      margin-right: auto!important;
+    }
+
+    .light-table__heading > a {
+      font-size: .7rem;
+    }
+
+  }
+
+  @media(prefers-reduced-motion:reduce) {
+    .is-ready .light-table__work {
+      transition: none;
+    }
+
+  }
+</style>
