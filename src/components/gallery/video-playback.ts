@@ -12,19 +12,23 @@ export function manageVideoPlayback(video: HTMLVideoElement, canPlay: () => bool
         }
     }
     function update() {
-        if (!canPlay() || !video.hasAttribute("src") || intent === "pause" || (intent === "auto" && reduceMotion())) {
+        if (!canPlay() || !video.hasAttribute("src")) {
             pause();
             return;
         }
-        if (!video.paused || pendingPlays.size) return;
         if (resumeAt !== undefined && video.readyState < 1) {
-            // preload=none would otherwise wait for play(), while restoration waits for metadata.
-            if (video.preload === "none") {
+            // Restore the paused frame too; preload=none would otherwise wait for play().
+            if (video.paused && video.preload === "none") {
                 video.preload = "metadata";
                 video.load();
             }
             return;
         }
+        if (intent === "pause" || (intent === "auto" && reduceMotion())) {
+            pause();
+            return;
+        }
+        if (!video.paused || pendingPlays.size) return;
         const request = Symbol();
         pendingPlays.add(request);
         void video.play().catch(() => {

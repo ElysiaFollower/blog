@@ -30,6 +30,6 @@ const items = await getGalleryEntries();
   @media (max-width:620px) {
     .gallery-header { padding-top:46px; gap:24px 12px; }
     .gallery-description { font-size:.7rem; letter-spacing:0; }
-    h1 { font-size:4.6rem; }
+    h1 { font-size:clamp(3.5rem,19vw,4.6rem); white-space:nowrap; }
   }
 </style>

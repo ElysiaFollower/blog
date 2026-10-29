@@ -94,12 +94,10 @@ export async function createGalleryViewer(
     });
     active = viewer;
 
-    // Thumbnail srcset describes small previews, not the detail image's resolution.
     viewer.addFilter("itemData", (data, itemIndex) => ({
       ...data,
       type: items[itemIndex].kind,
-      srcset: undefined,
-      msrc: items[itemIndex].thumbnail,
+      msrc: items[itemIndex].poster || items[itemIndex].src,
       element: visibleThumbnail(itemIndex),
     }));
 
@@ -200,7 +198,7 @@ function registerVideoContent(viewer: PhotoSwipe, items: GalleryEntry[]) {
     video.playsInline = true;
     video.preload = "metadata";
     video.tabIndex = content.slide?.isActive ? 0 : -1;
-    const poster = item.poster || item.thumbnail;
+    const poster = item.poster;
     if (poster) video.poster = poster;
     video.setAttribute("aria-label", item.title || item.alt || "视频");
     video.onloadedmetadata = () => content.onLoaded();

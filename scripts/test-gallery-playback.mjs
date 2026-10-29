@@ -137,6 +137,10 @@ test("releasing a manually paused video restores its position without playing", 
     await settle();
     playback.release();
     video.src = "video.mp4";
+    playback.update();
+    assert.equal(video.preload, "metadata", "A paused video must request metadata to restore its frame");
+    assert.equal(video.paused, true);
+    assert.equal(video.plays, 1);
     video.metadata();
     await settle();
     assert.equal(video.currentTime, 37);

@@ -1,3 +1,8 @@
+/* A scrollbar can leave less than 320px usable space in a narrow viewport. */
+:root:has(body.gallery-page) {
+  min-width:0;
+}
+
 .collection {
   padding-bottom: 70px;
 }
@@ -228,4 +233,3 @@ html:not(.js) .gallery-card__image {
     columns:2;
   }
 }
-

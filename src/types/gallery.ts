@@ -5,9 +5,7 @@ export interface GalleryEntry {
   src: string;
   width: number;
   height: number;
-  thumbnail: string;
   poster?: string;
-  srcset?: string;
   alt: string;
   title?: string;
   description?: string;

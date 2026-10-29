@@ -59,6 +59,7 @@ src/content/posts/
 - `src/config/profile.ts`：About 页面使用的个人资料与外部入口。
 - `src/config/friends.ts`：友链数据。
 - `src/config/gallery.ts`：相册图片、替代文本与展示顺序。
+- 相册来源、视频接入、布局与加载边界见 [相册维护](docs/gallery.md)。
 - `src/config/content.ts`：文章目录的固定根节点及显示名称。
 - `src/content.config.ts`：文章 frontmatter 的类型与约束。
 
