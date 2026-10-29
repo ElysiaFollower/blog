@@ -82,6 +82,7 @@ src/content/posts/
 ## 进一步维护
 
 - [`docs/design-brief.md`](docs/design-brief.md)：页面职责与设计边界。
+- [`docs/art-inspiration/README.md`](docs/art-inspiration/README.md)：美术参考、设计语言、实现成本与页面应用提案。
 - [`docs/voice.md`](docs/voice.md)：公开文案的语气与禁区。
 
 图片、音乐与文章内容按各自来源和许可使用；主题代码的许可不会自动覆盖这些
