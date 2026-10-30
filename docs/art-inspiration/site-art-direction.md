@@ -1,6 +1,10 @@
 # PC 设计稿：紧凑页头与错层揭页
 
-分支 `dev-art`。作者明确否定 `808518c`：文章页的大幅白纸与微缩文字不好看，首页
+本轮起于分支 `dev-art`，随后在 `dev-gellary` 完成展览与共享运动。作者于 2026-10-31
+认可 PC 全站体验，授权合入 `dev`，以 `pc-art-mature-2026-10-31` 标记 PC 美术成熟节点。
+该节点不表示已完成手机、平板或真实触屏设备验收；后续适配在独立分支进行。
+
+前轮作者明确否定 `808518c`：文章页的大幅白纸与微缩文字不好看，首页
 翻页被降级为水平平移，先前宣称的转向衔接也没有产生预期观感。参考中的构图手法是
 灵感，不能形式化地写成固定角点等硬约束。后续 `55bd2ae` 获作者同意保留，评价为
 “勉强可行”，本轮美术调整收尾。其他媒体端和完整性能尚未验收。
@@ -86,4 +90,5 @@ After Hours 恢复到 `cc39a0b` 的关键构图和时序。联系区保留既有
 | `AuthorPortrait.astro` | 首页人物末章 |
 | `AboutPortraitStory.astro`、`about-portrait.ts` | About 身份与研究段 |
 | `about-story.ts` | After Hours 与联系段 |
-| `scroll-scene.ts`、`art-motion.ts` | 原有局部进度与拖拽运动 |
+| `scroll-scene.ts`、`art-motion.ts` | 局部滚动进度与进度平滑 |
+| `src/lib/inertia-motion.ts` | 首页收藏回廊与画廊展览共享的连续运动，见 [连续运动](../motion.md) |

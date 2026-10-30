@@ -3,7 +3,14 @@ import { galleryGeometry } from "./layout";
 import type { createGalleryViewer } from "./viewer";
 import { manageVideoPlayback } from "./video-playback";
 
-export function mountGallery(root: HTMLElement) {
+interface GalleryPresentation {
+    isBrowsing: () => boolean;
+    thumbnail: (index: number) => HTMLElement | null;
+    onViewing: (index: number | null) => void;
+    onError: (index: number) => void;
+}
+
+export function mountGallery(root: HTMLElement, presentation?: GalleryPresentation) {
     const items = JSON.parse(root.querySelector("[data-gallery-data]")!.textContent!) as GalleryEntry[];
     const canvas = root.querySelector<HTMLElement>("[data-gallery-canvas]")!;
     const more = root.querySelector<HTMLButtonElement>("[data-gallery-more]")!;
@@ -74,7 +81,7 @@ export function mountGallery(root: HTMLElement) {
         if (media instanceof HTMLVideoElement) {
             playback.set(media, manageVideoPlayback(media, () => {
                 const rect = media.getBoundingClientRect();
-                return activeIndex === null && !document.hidden && rect.bottom > 0 && rect.top < innerHeight;
+                return activeIndex === null && (!presentation || presentation.isBrowsing()) && !document.hidden && rect.width > 0 && rect.bottom > 0 && rect.top < innerHeight;
             }, () => reduceMotion.matches));
             videoObserver.observe(media);
         }
@@ -156,6 +163,7 @@ export function mountGallery(root: HTMLElement) {
         if (index < 0 || index >= items.length)
             return;
         activeIndex = index;
+        presentation?.onViewing(index);
         canvas.querySelectorAll("video").forEach(video => playback.get(video)?.pause());
         if (fromClick && readIndex() < 0) {
             writeURL(index, true);
@@ -164,12 +172,13 @@ export function mountGallery(root: HTMLElement) {
         if (!viewerPromise) {
             viewerPromise = import("./viewer").then(async ({ createGalleryViewer }) => {
                 viewer = await createGalleryViewer(items, {
-                    getThumbnail: thumbnail,
-                    onChange(index) { activeIndex = index; writeURL(index); },
+                    getThumbnail: index => presentation && !presentation.isBrowsing() ? presentation.thumbnail(index) : thumbnail(index),
+                    onChange(index) { activeIndex = index; presentation?.onViewing(index); writeURL(index); },
                     onClose() {
                         const index = activeIndex;
                         activeIndex = null;
-                        if (index !== null) {
+                        presentation?.onViewing(null);
+                        if (index !== null && (!presentation || presentation.isBrowsing())) {
                             appendUntil(Math.ceil((index + 1) / 24) * 24);
                             const card = thumbnail(index);
                             const rect = card?.getBoundingClientRect();
@@ -190,7 +199,9 @@ export function mountGallery(root: HTMLElement) {
             }).catch(() => {
                 viewerPromise = undefined;
                 activeIndex = null;
+                presentation?.onViewing(null);
                 status.textContent = "查看器暂不可用，可通过作品链接打开原图。";
+                presentation?.onError(index);
                 if (pushed)
                     history.back();
                 else
@@ -238,6 +249,7 @@ export function mountGallery(root: HTMLElement) {
                 viewer.close();
             else {
                 activeIndex = null;
+                presentation?.onViewing(null);
                 pushed = false;
                 closingFromHistory = false;
             }
@@ -247,4 +259,14 @@ export function mountGallery(root: HTMLElement) {
     const initialIndex = readIndex();
     if (initialIndex >= 0)
         void open(initialIndex);
+    return {
+        items,
+        open: (index: number) => open(index, true),
+        reveal(index: number) {
+            appendUntil(Math.ceil((index + 1) / 24) * 24);
+            const card = thumbnail(index);
+            card?.scrollIntoView({ block: "center", behavior: "instant" });
+            (card?.querySelector<HTMLElement>("[data-gallery-open]") ?? card)?.focus({ preventScroll: true });
+        },
+    };
 }

@@ -1,5 +1,5 @@
 import type { GalleryEntry } from "../../types/gallery";
-import { RailMotion } from "./art-motion";
+import { InertiaMotion } from "../../lib/inertia-motion";
 import { scrollScene, entryProgress, ease } from "./scroll-scene";
 
 /** A window onto the same collection as /gallery/, with only nearby media mounted. */
@@ -22,18 +22,33 @@ export function mountLightTable(root: HTMLElement): void {
     const index = entries.findIndex(item => item.id === saved);
     if (index >= 0) selected = index;
   } catch { /* The gallery remains usable without session storage. */ }
-  let motion: RailMotion;
-  let sizes: { width: number; height: number }[] = [];
+  const sizes = entries.map(entry => {
+    const ratio = entry.width / entry.height;
+    const height = Math.min(360, 440 / ratio);
+    return { width: height * ratio, height };
+  });
+  const centers: number[] = [];
+  sizes.forEach((size, index) => {
+    centers.push(index === 0 ? 0 : centers[index - 1] + (sizes[index - 1].width + size.width) / 2 + 52);
+  });
+  const motion = new InertiaMotion({ position: centers[selected], scale: 420, bounds: [0, centers.at(-1)!] });
+  const nearest = (position = motion.position) => {
+    let closest = 0;
+    for (let index = 1; index < centers.length; index++) {
+      if (Math.abs(centers[index] - position) < Math.abs(centers[closest] - position)) closest = index;
+    }
+    return closest;
+  };
   let visible = false;
   let frame = 0;
   let lastTime = 0;
-  let gesture: { id: number; start: number; moved: boolean } | undefined;
+  let gesture: { id: number; start: number; moved: boolean; caught: boolean } | undefined;
   let suppressClick = false;
   let clickTimer = 0;
   let entrance = 1;
 
   const announce = () => {
-    selected = motion.nearest;
+    selected = nearest();
     status.textContent = `${String(selected + 1).padStart(3,"0")} / ${entries.length} · ${entries[selected].title ?? entries[selected].alt}`;
     previous.disabled = selected === 0;
     next.disabled = selected === entries.length - 1;
@@ -42,10 +57,10 @@ export function mountLightTable(root: HTMLElement): void {
 
   const render = () => {
     if (!visible) return;
-    const active = motion.nearest;
+    const active = nearest();
     const range = stage.clientWidth / 2 + 450;
     entries.forEach((entry, index) => {
-      const x = motion.centers[index] - motion.position;
+      const x = centers[index] - motion.position;
       const nearby = Math.abs(x) < range + sizes[index].width / 2;
       let link = mounted.get(index);
       if (!nearby) {
@@ -69,7 +84,7 @@ export function mountLightTable(root: HTMLElement): void {
         if (entry.kind === "video") link.querySelector(".light-table__kind")!.textContent = "影像";
         link.addEventListener("click", (event) => {
           if (suppressClick) { event.preventDefault(); return; }
-          if (index !== motion.nearest || motion.moving) {
+          if (index !== nearest() || motion.moving) {
             event.preventDefault();
             select(index);
           }
@@ -102,46 +117,41 @@ export function mountLightTable(root: HTMLElement): void {
 
   const tick = (time: number) => {
     frame = 0;
-    motion.step(lastTime ? Math.min(40, time - lastTime) : 16);
+    if (!visible || document.hidden) return;
+    motion.step(time - lastTime);
     lastTime = time;
     render();
     if (motion.moving && visible) frame = requestAnimationFrame(tick);
     else { lastTime = 0; announce(); }
   };
   const animate = () => {
-    if (reduced.matches) {
-      motion.position = motion.target;
-      motion.velocity = 0;
-      render();
-      announce();
-    } else if (!frame && visible) {
-      lastTime = 0;
+    if (!frame && visible && !document.hidden) {
+      lastTime = performance.now();
       frame = requestAnimationFrame(tick);
     }
   };
+  const clearGesture = () => {
+    const id = gesture?.id;
+    gesture = undefined;
+    root.classList.remove("is-dragging");
+    if (id !== undefined && stage.hasPointerCapture(id)) stage.releasePointerCapture(id);
+  };
+  const cancelGesture = () => {
+    if (!gesture) return;
+    motion.end(gesture.start, 0, true);
+    clearGesture();
+  };
   const select = (index: number) => {
-    motion.select(index);
+    clearGesture();
+    motion.select(centers[Math.max(0, Math.min(centers.length - 1, index))], reduced.matches);
+    render();
     animate();
   };
-  const measure = () => {
-    const centers: number[] = [];
-    sizes = entries.map(entry => {
-      const ratio = entry.width / entry.height;
-      const height = Math.min(360, 440 / ratio);
-      return { width: height * ratio, height };
-    });
-    sizes.forEach((size, index) => {
-      centers.push(index === 0 ? 0 : centers[index - 1] + (sizes[index - 1].width + size.width) / 2 + 52);
-    });
-    motion = new RailMotion(centers, selected);
-    announce();
-    render();
-  };
 
-  previous.addEventListener("click", () => select(motion.nearest - 1));
-  next.addEventListener("click", () => select(motion.nearest + 1));
+  previous.addEventListener("click", () => select(nearest(motion.target) - 1));
+  next.addEventListener("click", () => select(nearest(motion.target) + 1));
   stage.addEventListener("keydown", (event) => {
-    const index = motion.nearest;
+    const index = nearest(motion.target);
     const target = { ArrowLeft:index - 1, ArrowRight:index + 1, Home:0, End:entries.length - 1 }[event.key];
     if (target === undefined) return;
     event.preventDefault();
@@ -155,7 +165,7 @@ export function mountLightTable(root: HTMLElement): void {
     frame = 0;
     window.clearTimeout(clickTimer);
     suppressClick = false;
-    gesture = { id:event.pointerId, start:event.clientX, moved:false };
+    gesture = { id:event.pointerId, start:event.clientX, moved:false, caught:motion.moving };
     motion.begin(event.clientX, event.timeStamp);
   });
   stage.addEventListener("pointermove", (event) => {
@@ -166,17 +176,17 @@ export function mountLightTable(root: HTMLElement): void {
       root.classList.add("is-dragging");
       gesture.moved = true;
     }
+    for (const sample of event.getCoalescedEvents?.() ?? []) motion.move(sample.clientX, sample.timeStamp);
     motion.move(event.clientX, event.timeStamp);
     render();
   });
   const release = (event: PointerEvent, cancelled = false) => {
     if (!gesture || gesture.id !== event.pointerId) return;
-    const moved = gesture.moved;
-    gesture = undefined;
-    root.classList.remove("is-dragging");
-    motion.end(event.clientX, event.timeStamp, cancelled, reduced.matches);
-    if (stage.hasPointerCapture(event.pointerId)) stage.releasePointerCapture(event.pointerId);
-    if (moved) {
+    const moved = gesture.moved || (!cancelled && Math.abs(gesture.start - event.clientX) >= 4);
+    const caught = gesture.caught;
+    motion.end(event.clientX, event.timeStamp, cancelled || !moved, reduced.matches);
+    clearGesture();
+    if (moved || caught) {
       suppressClick = true;
       clickTimer = window.setTimeout(() => { suppressClick = false; }, 0);
     }
@@ -186,16 +196,21 @@ export function mountLightTable(root: HTMLElement): void {
   stage.addEventListener("pointerup", event => release(event));
   stage.addEventListener("pointercancel", event => release(event, true));
   stage.addEventListener("lostpointercapture", event => release(event, true));
-  reduced.addEventListener("change", animate);
+  stage.addEventListener("pointerleave", event => { if (gesture && !gesture.moved) release(event, true); });
+  reduced.addEventListener("change", () => { cancelGesture(); motion.stop(); render(); announce(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { cancelGesture(); cancelAnimationFrame(frame); frame = 0; }
+    else animate();
+  });
   root.querySelector("[data-light-controls]")?.removeAttribute("hidden");
   root.querySelector("[data-light-hint]")!.textContent = "拖动浏览全部收藏 · 点击当前作品进入画廊";
   root.classList.add("is-ready");
-  measure();
+  announce();
   scrollScene(stage, entryProgress, p => { entrance = ease((p - .03) / .72); render(); });
-  new ResizeObserver(measure).observe(stage);
+  new ResizeObserver(render).observe(stage);
   new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
     if (visible) { render(); animate(); }
-    else { cancelAnimationFrame(frame); frame = 0; lastTime = 0; }
+    else { cancelGesture(); cancelAnimationFrame(frame); frame = 0; lastTime = 0; }
   }, { rootMargin:"200px" }).observe(root);
 }

@@ -47,7 +47,3 @@ const geometry = galleryGeometry(initial);
   </noscript>
   <script is:inline type="application/json" data-gallery-data set:html={JSON.stringify(items).replaceAll("<", "\\u003c")} />
 </section>
-<script>
-  import { mountGallery } from "./browse";
-  document.querySelectorAll<HTMLElement>("[data-gallery]").forEach(mountGallery);
-</script>
