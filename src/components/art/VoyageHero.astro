@@ -46,12 +46,12 @@ import heroNight from "../../assets/demo/hero-night.webp";
   }
 
   .voyage[data-enhanced] {
-    height: 190svh;
+    height: calc(var(--scene-height, 100svh) + 90svh);
   }
 
   .voyage__stage {
     position: sticky;
-    top: 0;
+    top: min(0px, calc(100svh - var(--scene-height, 100svh)));
     height: 100svh;
     min-height: 700px;
     overflow: hidden;
@@ -223,7 +223,7 @@ import heroNight from "../../assets/demo/hero-night.webp";
 
   .voyage__statement {
     position: absolute;
-    top: 42%;
+    top: calc(42% + max(0px, var(--scene-height, 100svh) - 100svh) * .58);
     left: 9%;
     opacity: var(--statement-opacity,0);
     transform: translateY(var(--statement-y,24px));
@@ -320,7 +320,7 @@ import heroNight from "../../assets/demo/hero-night.webp";
     }
 
     .voyage[data-enhanced] {
-      height: 165svh;
+      height: calc(var(--scene-height, 100svh) + 65svh);
     }
 
     .voyage__stage {
@@ -377,7 +377,7 @@ import heroNight from "../../assets/demo/hero-night.webp";
 
     .voyage__statement {
       left: var(--page-inline);
-      top: 43%;
+      top: calc(43% + max(0px, var(--scene-height, 100svh) - 100svh) * .57);
       font-size: clamp(2rem,7vw,3.5rem);
     }
 

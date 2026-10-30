@@ -195,7 +195,7 @@ export function mountLightTable(root: HTMLElement): void {
   };
   stage.addEventListener("pointerup", event => release(event));
   stage.addEventListener("pointercancel", event => release(event, true));
-  stage.addEventListener("lostpointercapture", event => release(event, true));
+  stage.addEventListener("lostpointercapture", event => { if (event.target === stage) release(event, true); });
   stage.addEventListener("pointerleave", event => { if (gesture && !gesture.moved) release(event, true); });
   reduced.addEventListener("change", () => { cancelGesture(); motion.stop(); render(); announce(); });
   document.addEventListener("visibilitychange", () => {

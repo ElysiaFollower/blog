@@ -1,4 +1,5 @@
 import { dampProgress } from "./art-motion";
+import { pinnedProgress } from "./scroll-scene";
 
 const smooth = (value: number) => {
   const t = Math.max(0, Math.min(1, value));
@@ -11,7 +12,6 @@ export function mountVoyage(root: HTMLElement): void {
     return;
   const shadow = root.querySelector<SVGPathElement>("[data-window-shadow]");
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
-  const short = matchMedia("(max-height: 600px)");
   const narrow = matchMedia("(max-width: 760px)");
   let visible = true;
   let frame = 0;
@@ -21,8 +21,7 @@ export function mountVoyage(root: HTMLElement): void {
     frame = 0;
     if (!visible || !root.hasAttribute("data-enhanced"))
       return;
-    const travel = root.offsetHeight - stage.offsetHeight;
-    const target = Math.max(0, Math.min(1, -root.getBoundingClientRect().top / Math.max(1, travel)));
+    const target = Math.max(0, Math.min(1, pinnedProgress(root.getBoundingClientRect(), innerHeight, stage.offsetHeight)));
     progress = dampProgress(progress, target, lastTime ? Math.min(48, time - lastTime) : 16);
     lastTime = time;
     const p = progress;
@@ -63,8 +62,9 @@ export function mountVoyage(root: HTMLElement): void {
     }
   };
   const configure = () => {
-    root.toggleAttribute("data-enhanced", !motion.matches && !short.matches);
-    if (motion.matches || short.matches) {
+    root.toggleAttribute("data-enhanced", !motion.matches);
+    root.style.setProperty("--scene-height", `${stage.offsetHeight}px`);
+    if (motion.matches) {
       stage.removeAttribute("style");
       root.removeAttribute("data-progressed");
       root.querySelectorAll<HTMLAnchorElement>("a").forEach((link) => { link.inert = false; });
@@ -76,9 +76,10 @@ export function mountVoyage(root: HTMLElement): void {
     new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; request(); }).observe(root);
   }
   window.addEventListener("scroll", request, { passive: true });
-  window.addEventListener("resize", request, { passive: true });
+  const resize = () => { root.style.setProperty("--scene-height", `${stage.offsetHeight}px`); request(); };
+  new ResizeObserver(resize).observe(stage);
+  window.addEventListener("resize", resize, { passive: true });
   window.addEventListener("pageshow", request);
   motion.addEventListener("change", configure);
-  short.addEventListener("change", configure);
   configure();
 }

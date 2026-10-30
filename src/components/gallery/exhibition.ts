@@ -273,7 +273,8 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
   }
   stage.addEventListener("pointerup", event => release(event));
   stage.addEventListener("pointercancel", event => release(event, true));
-  stage.addEventListener("lostpointercapture", event => release(event, true));
+  // Touch capture transfers from the artwork to the stage; its bubbled loss is not a cancellation.
+  stage.addEventListener("lostpointercapture", event => { if (event.target === stage) release(event, true); });
   stage.addEventListener("pointerleave", event => { if (gesture && !gesture.moved) release(event, true); });
   reduced.addEventListener("change", () => { stopWandering(); cancelGesture(); motion.stop(); updateMedia(); animate(); });
   document.addEventListener("visibilitychange", () => {

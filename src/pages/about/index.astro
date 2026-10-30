@@ -205,12 +205,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   }
 
   .about-play[data-scene-ready] {
-    height: 165svh;
+    height: calc(var(--scene-height, 100svh) + 65svh);
   }
 
   [data-scene-ready] .about-play__stage {
     position: sticky;
-    top: 0;
+    top: min(0px, calc(100svh - var(--scene-height, 100svh)));
     height: 100svh;
     min-height: 650px;
     overflow: hidden;
@@ -370,6 +370,17 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     .about-play__copy {
       padding: 50px var(--page-inline);
     }
+
+    [data-scene-ready] .about-play__stage { height: auto; min-height: 100svh; gap: 0; }
+    [data-scene-ready] .about-play__image { height: auto; }
+    [data-scene-ready] .about-play__copy {
+      position: relative;
+      left: auto;
+      top: auto;
+      width: auto;
+      padding: 90px var(--page-inline);
+    }
+    [data-scene-ready] .about-play__stage::after { background: linear-gradient(90deg,#211d2d88,#211d2dee); }
 
   }
 </style>

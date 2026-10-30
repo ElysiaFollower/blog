@@ -16,6 +16,10 @@
   --art-paper: #efebef;
   --art-night: #1b1928;
   --art-chalk: #f1eaf2;
+  --paper-cyan: #e7efed;
+  --paper-rose: #f1e7ee;
+  --paper-gold: #f2ecdf;
+  --paper-white: #fffdfa;
   --ease-art: cubic-bezier(.22, 1, .36, 1);
   --shadow-soft: 0 14px 45px rgb(32 32 39 / 9%);
   --font-ui:
@@ -46,6 +50,10 @@
   --color-focus: #84dbe0;
   --art-paper: #1d1b2a;
   --art-night: #12111d;
+  --paper-cyan: #1e2b2d;
+  --paper-rose: #302433;
+  --paper-gold: #302b27;
+  --paper-white: #24232d;
   --shadow-soft: 0 20px 55px rgb(0 0 0 / 26%);
 }
 
@@ -166,22 +174,12 @@ button {
 :where(p) { text-wrap: pretty; }
 :target { scroll-margin-top: 30px; }
 
-/* Page-scale typography and tinted papers belong to the desktop art direction. */
+/* Scale page typography with available space; the art palette is shared at every size. */
 @media (min-width: 1024px) {
   :root {
     --type-page-title: clamp(4rem, 5.2vw, 5.25rem);
     --type-section-title: clamp(2.5rem, 3.3vw, 3.4rem);
     --type-reading-title: clamp(2.25rem, 3.1vw, 3rem);
-    --paper-cyan: #e7efed;
-    --paper-rose: #f1e7ee;
-    --paper-gold: #f2ecdf;
-    --paper-white: #fffdfa;
-  }
-  :root[data-theme="dark"] {
-    --paper-cyan: #1e2b2d;
-    --paper-rose: #302433;
-    --paper-gold: #302b27;
-    --paper-white: #24232d;
   }
 }
 

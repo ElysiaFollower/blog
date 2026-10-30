@@ -18,4 +18,8 @@
 
 ## 验证
 
+首页与展厅的 DOM 输入均使用 Pointer Events。触摸会先隐式捕获到图片，拖动开始后转交舞台；
+子元素的 `lostpointercapture` 会冒泡，不能当作舞台取消。仅在事件目标为舞台本身时结束该手势，
+保持鼠标、触摸与笔共用同一套物理模型。依据 [Pointer Events 捕获转移约定](https://www.w3.org/TR/pointerevents/#process-pending-pointer-capture)。
+
 `pnpm test:motion` 覆盖轻拖停在中间、快速短甩、末段位移、反向、抓停、边界、坐标单位缩放、输入/帧率一致性，以及巡航与暂停。`pnpm test:gallery` 包含这些测试，因此本地完整检查与现有部署检查都会执行。数学测试验证运动契约，实际设备的手感仍需浏览器审阅。

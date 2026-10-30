@@ -47,11 +47,11 @@ const display = [windows[0], windows[1], windows[2]].filter(Boolean);
       root.style.setProperty("--passage-side-angle", `${p * 65}deg`);
       root.style.setProperty("--passage-side-opacity", String(1 - ease((p - .55) / .45)));
       root.style.setProperty("--passage-middle-width", `${54 + p * 46}vw`);
-      root.style.setProperty("--passage-middle-height", `${64 + p * 36}svh`);
-      root.style.setProperty("--passage-middle-top", `${20 * (1 - p)}svh`);
+      root.style.setProperty("--passage-middle-height", `${64 + p * 36}%`);
+      root.style.setProperty("--passage-middle-top", `${20 * (1 - p)}%`);
       root.style.setProperty("--passage-copy-y", `${-p * 95}px`);
       root.style.setProperty("--passage-copy-opacity", String(1 - ease((p - .12) / .65)));
-    });
+    }, root.querySelector<HTMLElement>(".gallery-passage__stage")!);
   });
 </script>
 <style>
@@ -192,12 +192,12 @@ const display = [windows[0], windows[1], windows[2]].filter(Boolean);
   }
 
   .gallery-passage[data-scene-ready] {
-    height: 155svh;
+    height: calc(var(--scene-height, 100svh) + 55svh);
   }
 
   [data-scene-ready] .gallery-passage__stage {
     position: sticky;
-    top: 0;
+    top: min(0px, calc(100svh - var(--scene-height, 100svh)));
     height: 100svh;
   }
 

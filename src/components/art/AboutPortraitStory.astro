@@ -235,7 +235,7 @@ const introduction = pause < 0 ? [profileConfig.introduction] : [profileConfig.i
     .portrait-story__portrait {
       position: relative;
       top: auto;
-      height: auto;
+      height: calc(clamp(400px, calc(100svh - 210px), 680px) + 45px);
       max-width: 500px;
     }
 

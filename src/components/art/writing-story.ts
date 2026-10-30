@@ -5,13 +5,14 @@ export function mountWritingStory(root: HTMLElement): void {
   const pages = [...root.querySelectorAll<HTMLElement>("[data-writing-page]")];
   const indexes = [...root.querySelectorAll<HTMLElement>("[data-writing-index]")];
   const cue = root.querySelector<HTMLElement>("[data-writing-cue]");
+  const stage = root.querySelector<HTMLElement>(".writing-story__stage")!;
   let travel = 1;
   let height = innerHeight;
   // Observe approach and departure too; the composition keeps changing across native pin boundaries.
-  scrollScene(root, (rect, viewport) => {
+  scrollScene(root, (rect, viewport, stageHeight) => {
     height = viewport;
-    travel = Math.max(1, rect.height - viewport);
-    return (viewport * 0.6 - rect.top) / (travel + viewport * 1.2);
+    travel = Math.max(1, rect.height - stageHeight);
+    return (viewport * 0.6 - rect.top + Math.min(0, viewport - stageHeight)) / (travel + viewport * 1.2);
   }, progress => {
     const pose = writingPose(progress * (travel + height * 1.2) - height * 0.6, pages.length, travel, height);
     // The incoming sheet is already in front before the midpoint; its visible links must work.
@@ -56,5 +57,5 @@ export function mountWritingStory(root: HTMLElement): void {
       else link.removeAttribute("aria-current");
       link.style.setProperty("--index-progress", String(clamp01(pose.cursor - index + 1)));
     });
-  });
+  }, stage);
 }

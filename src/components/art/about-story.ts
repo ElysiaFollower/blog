@@ -15,7 +15,7 @@ export function mountAboutStory(): void {
     play.style.setProperty("--play-shade", String(1 - p * .5));
     const cue = play.querySelector<HTMLElement>(".about-play__cue");
     if (cue) cue.textContent = progress > .82 ? "继续，在别处找到我 ↓" : "向下，跟着好奇心走走 ↓";
-  });
+  }, play.querySelector<HTMLElement>(".about-play__stage")!);
   const contact = document.querySelector<HTMLElement>("[data-about-contact]");
   if (contact) scrollScene(contact, entryProgress, p => {
     const entered = ease(clamp01((p - .05) / .45));
