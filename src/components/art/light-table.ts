@@ -1,5 +1,6 @@
 import type { GalleryEntry } from "../../types/gallery";
 import { RailMotion } from "./art-motion";
+import { scrollScene, entryProgress, ease } from "./scroll-scene";
 
 /** A window onto the same collection as /gallery/, with only nearby media mounted. */
 export function mountLightTable(root: HTMLElement): void {
@@ -29,6 +30,7 @@ export function mountLightTable(root: HTMLElement): void {
   let gesture: { id: number; start: number; moved: boolean } | undefined;
   let suppressClick = false;
   let clickTimer = 0;
+  let entrance = 1;
 
   const announce = () => {
     selected = motion.nearest;
@@ -75,15 +77,21 @@ export function mountLightTable(root: HTMLElement): void {
         track.append(link);
         mounted.set(index, link);
       }
-      const distance = Math.min(4, Math.abs(x) / 380);
+      const distance = Math.min(4, Math.abs(x) / 360);
+      const show = stage.hasAttribute("data-scene-ready") ? entrance : 1;
+      const delay = Math.min(.28, Math.abs(index - active) * .055);
+      const arriving = ease((show - delay) / (.9 - delay));
+      const focus = ease(1 - Math.min(1, distance / 1.15));
       link.style.setProperty("--work-width", `${sizes[index].width}px`);
       link.style.setProperty("--work-height", `${sizes[index].height}px`);
-      link.style.setProperty("--work-x", `${x}px`);
-      link.style.setProperty("--work-y", `${distance * 9 + (index % 3 - 1) * 12}px`);
-      link.style.setProperty("--work-z", `${-distance * 100}px`);
-      link.style.setProperty("--work-scale", String(1 - Math.min(.24, distance * .12)));
-      link.style.setProperty("--work-angle", `${Math.max(-22, Math.min(22, -x / 50))}deg`);
-      link.style.setProperty("--work-light", String(1 - Math.min(.28, distance * .08)));
+      link.style.setProperty("--work-x", `${x * .92 + (1 - arriving) * Math.sign(x || 1) * 240}px`);
+      link.style.setProperty("--work-y", `${distance * 18 + (1 - arriving) * 100}px`);
+      link.style.setProperty("--work-z", `${-distance * 145 - (1 - arriving) * 550}px`);
+      link.style.setProperty("--work-scale", String((.78 + focus * .48) * (.6 + arriving * .4)));
+      const angle = Math.max(-70, Math.min(70, -x / 7));
+      link.style.setProperty("--work-angle", `${angle + (1 - arriving) * (index % 2 ? 82 : -82)}deg`);
+      link.style.setProperty("--work-light", String(1 - Math.min(.36, distance * .13)));
+      link.style.setProperty("--work-opacity", String(arriving));
       link.dataset.active = String(index === active);
       link.tabIndex = index === active ? 0 : -1;
       link.setAttribute("aria-label", `${index === active ? "在画廊查看" : "选择作品"}：${entry.alt}`);
@@ -123,7 +131,7 @@ export function mountLightTable(root: HTMLElement): void {
       return { width: height * ratio, height };
     });
     sizes.forEach((size, index) => {
-      centers.push(index === 0 ? 0 : centers[index - 1] + (sizes[index - 1].width + size.width) / 2 + 74);
+      centers.push(index === 0 ? 0 : centers[index - 1] + (sizes[index - 1].width + size.width) / 2 + 52);
     });
     motion = new RailMotion(centers, selected);
     announce();
@@ -183,6 +191,7 @@ export function mountLightTable(root: HTMLElement): void {
   root.querySelector("[data-light-hint]")!.textContent = "拖动浏览全部收藏 · 点击当前作品进入画廊";
   root.classList.add("is-ready");
   measure();
+  scrollScene(stage, entryProgress, p => { entrance = ease((p - .03) / .72); render(); });
   new ResizeObserver(measure).observe(stage);
   new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;

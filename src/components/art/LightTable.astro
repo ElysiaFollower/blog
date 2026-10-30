@@ -58,7 +58,7 @@ const payload = JSON.stringify(collection).replace(/</g, "\\u003c");
     isolation: isolate;
     background: #211c2d;
     color: #f3edf3;
-    padding: 72px 0 42px;
+    padding: 48px 0 34px;
   }
 
   .light-table__room {
@@ -179,9 +179,9 @@ const payload = JSON.stringify(collection).replace(/</g, "\\u003c");
   .light-table__stage {
     display: none;
     position: relative;
-    height: 460px;
+    height: 480px;
     margin-block: 28px 12px;
-    perspective: 1500px;
+    perspective: 1100px;
     touch-action: pan-y;
     cursor: grab;
   }
@@ -209,6 +209,7 @@ const payload = JSON.stringify(collection).replace(/</g, "\\u003c");
     text-decoration: none;
     transform: translate(-50%,-50%) translate3d(var(--work-x), var(--work-y), var(--work-z)) rotateY(var(--work-angle)) scale(var(--work-scale));
     filter: brightness(var(--work-light));
+    opacity: var(--work-opacity,1);
     user-select: none;
   }
 
@@ -265,6 +266,10 @@ const payload = JSON.stringify(collection).replace(/</g, "\\u003c");
     white-space: nowrap;
   }
 
+  :global(.light-table__work[data-active="true"]) .light-table__picture {
+    outline: 1px solid #e4b6d277;
+    box-shadow: 0 26px 70px #0806118c;
+  }
   :global(.light-table__work[data-active="true"]) figcaption {
     color: #f2e7f3;
   }

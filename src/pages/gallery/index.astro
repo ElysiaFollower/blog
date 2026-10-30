@@ -1,130 +1,34 @@
 ---
 import GalleryBrowse from "../../components/gallery/GalleryBrowse.astro";
 import GalleryLightbox from "../../components/gallery/GalleryLightbox.astro";
+import GalleryPassage from "../../components/art/GalleryPassage.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import { getGalleryEntries } from "../../lib/gallery";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 const items = await getGalleryEntries();
-const videoCount = items.filter(item => item.kind === "video").length;
 ---
 <BaseLayout title="画廊" description="收藏那些曾让目光停留的瞬间" bodyClass="gallery-page">
-  <SiteHeader variant="reading" />
+  <SiteHeader variant="scene" />
   <main id="main-content">
-    <div class="gallery-introduction"><header class="gallery-header page-width">
-      <p class="gallery-kicker">COLLECTION <span aria-hidden="true">/</span> {String(items.length).padStart(3, "0")}</p>
-      <h1>画廊<span aria-hidden="true">.</span></h1>
-      <div class="gallery-description"><p>收藏那些<br />曾让目光停留的瞬间。</p><span>{items.length - videoCount} 幅图像{videoCount > 0 && ` · ${videoCount} 段影像`}</span></div>
-    </header></div>
-    <GalleryBrowse items={items} />
+    <GalleryPassage items={items} />
+    <div class="gallery-browse-sheet" id="gallery-collection"><GalleryBrowse items={items} /></div>
   </main>
   <GalleryLightbox />
   <SiteFooter />
 </BaseLayout>
 <style>
-:global(.gallery-page) {
-  background:var(--color-bg);
-}
-
-.gallery-header {
-  position:relative;
-  display:grid;
-  grid-template-columns:1fr auto;
-  align-items:end;
-  gap:24px;
-  padding-block:clamp(50px,6vw,84px) clamp(32px,4vw,54px);
-  border-bottom:1px solid var(--color-line);
-}
-
-.gallery-kicker {
-  grid-column:1 / -1;
-  margin:0;
-  color:var(--color-muted);
-  font-family:var(--font-mono);
-  font-size:.66rem;
-  letter-spacing:.14em;
-}
-
-.gallery-kicker span {
-  padding:0 12px;
-  color:var(--color-rose);
-}
-
-h1 {
-  margin:0;
-  font-family:var(--font-reading);
-  font-size:clamp(4.7rem,9vw,8rem);
-  font-weight:600;
-  line-height:1;
-  letter-spacing:-.06em;
-}
-
-h1 span {
-  color:var(--color-rose);
-  font-family:var(--font-reading);
-  margin-left:.06em;
-}
-
-.gallery-description {
-  margin:0 0 5px;
-  color:var(--color-muted);
-  font-size:.85rem;
-  line-height:1.9;
-  letter-spacing:.08em;
-}
-
-@media (max-width:620px) {
-  .gallery-header {
-    padding-top:46px;
-    gap:24px 12px;
+  .gallery-browse-sheet {
+    position: relative;
+    z-index: 3;
+    margin-top: -24px;
+    border-radius: 24px 24px 0 0;
+    background: var(--color-bg);
+    padding-top: 18px;
   }
 
-  .gallery-description {
-    font-size:.8rem;
-    letter-spacing:0;
-  }
-
-  h1 {
-    font-size:clamp(3.5rem,19vw,4.6rem);
-    white-space:nowrap;
-  }
-
-}
-  .gallery-description > p { margin: 0; }
-  .gallery-description > span { display: block; margin-top: 16px; color: var(--color-rose); font: .7rem var(--font-mono); letter-spacing: .03em; }
-  @media (min-width:1024px) {
-    .gallery-introduction {
-      background: var(--paper-rose);
-      border-bottom: 1px solid color-mix(in srgb,var(--color-rose) 25%,transparent);
-    }
-
-    .gallery-header {
-      padding-block: 50px 40px;
-      border-bottom: 0;
-    }
-
-    .gallery-kicker {
-      font-size: .7rem;
-      color: var(--color-rose);
-    }
-
-    .gallery-header h1 {
-      font-size: var(--type-page-title);
-      font-weight: 400;
-      line-height: 1.05;
-    }
-
-    .gallery-description {
-      min-width: 250px;
-      padding: 0 0 0 28px;
-      border-left: 1px solid color-mix(in srgb,var(--color-rose) 30%,transparent);
-      font: 1rem/1.9 var(--font-reading);
-      letter-spacing: 0;
-    }
-
-    .gallery-description > span {
-      margin-top: 12px;
-    }
-
+  :global(body[data-gallery-direct]) .gallery-browse-sheet {
+    margin-top: 0;
+    border-radius: 0;
   }
 </style>

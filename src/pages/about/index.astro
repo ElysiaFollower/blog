@@ -12,9 +12,7 @@ import {
 } from "@lucide/astro";
 import aboutPortrait from "../../assets/demo/elysia-portrait.webp";
 import playPortrait from "../../assets/demo/sparkle-portrait.webp";
-import ResearchSketch from "../../components/art/ResearchSketch.astro";
 import DirectedPointer from "../../components/DirectedPointer.astro";
-import ScrollReveal from "../../components/ScrollReveal.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import { profileConfig } from "../../config/profile";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -29,7 +27,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <SiteHeader variant="reading" />
 
   <main id="main-content">
-    <div class="about-introduction-shell"><section class="about-introduction page-width" aria-labelledby="about-title">
+    <div class="about-introduction-shell" data-about-intro><section class="about-introduction page-width" aria-labelledby="about-title">
       <div class="about-introduction__copy">
         <p class="about-introduction__eyebrow">ABOUT / 0017</p>
         <h1 id="about-title"><span>你好，我是</span><strong>{profileConfig.handle}</strong></h1>
@@ -47,22 +45,21 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </figure>
     </section></div>
 
-    <section id="research" class="about-research">
+    <section id="research" class="about-research" data-about-research>
       <div class="page-width">
-        <header data-reveal>
+        <header>
           <div><span>01 / RESEARCH DIRECTIONS</span><h2>关注的方向</h2></div>
           <p>
-            我关心模型怎样听懂话语，也怎样理解说话的人。
+            我关心模型怎样听懂话语，<br />也怎样理解说话的人。
           </p>
         </header>
 
         <div class="about-research__list">
           {
             profileConfig.research.map((item) => (
-              <article data-reveal>
+              <article data-direction>
                 <span>{item.index}</span>
                 <h3>{item.title}</h3>
-                <ResearchSketch index={item.index} />
                 <p>{item.description}</p>
               </article>
             ))
@@ -71,8 +68,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
     </section>
 
-    <section class="about-play" id="after-hours" aria-labelledby="play-title">
-      <div class="about-play__image" data-reveal="left">
+    <section class="about-play" id="after-hours" aria-labelledby="play-title" data-about-play>
+      <div class="about-play__stage">
+      <div class="about-play__image">
         <Image
           src={playPortrait}
           alt="带有戏剧化构图的角色插画"
@@ -81,7 +79,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           loading="lazy"
         />
       </div>
-      <div class="about-play__copy" data-reveal="right">
+      <div class="about-play__copy">
         <span>02 / AFTER HOURS</span>
         <h2 id="play-title">主线之外，<br />总有兔子洞</h2>
         <p>
@@ -91,11 +89,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           {profileConfig.curiosities.map((item) => <li>{item}</li>)}
         </ul>
       </div>
+      <span class="about-play__cue" aria-hidden="true">向下，跟着好奇心走走 ↓</span>
+      </div>
     </section>
 
-    <section class="about-contact" id="contact" aria-labelledby="contact-title">
+    <section class="about-contact" data-about-contact id="contact" aria-labelledby="contact-title">
       <div class="page-width">
-        <div data-reveal>
+        <div>
           <span>03 / CONTACT</span>
           <h2 id="contact-title">在其他地方<br>找到我</h2>
           <p class="about-contact__invitation">
@@ -103,7 +103,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             Feel free to reach out. (｡･ω･｡)ﾉ
           </p>
         </div>
-        <div class="about-contact__body" data-reveal data-reveal-delay="1">
+        <div class="about-contact__body">
           <p>
             代码、研究和偶尔的创作，散落在这些地方。
           </p>
@@ -147,10 +147,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   </main>
 
   <DirectedPointer />
-  <ScrollReveal />
+
 </BaseLayout>
 
 <script>
+  import { mountAboutStory } from "../../components/art/about-story";
+  mountAboutStory();
   const copyButton =
     document.querySelector<HTMLButtonElement>("[data-copy-email]");
   const copyFeedback = document.querySelector<HTMLElement>(
@@ -174,72 +176,67 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 </script>
 
 <style>
-  .about-page {
-    background: var(--color-bg);
+  .about-introduction-shell {
+    background: var(--paper-gold,var(--color-bg));
+    overflow: hidden;
   }
 
   .about-introduction {
     display: grid;
-    grid-template-columns: minmax(0,1.15fr) minmax(0,.85fr);
-    gap: clamp(40px,7vw,100px);
+    grid-template-columns: 1.15fr .85fr;
     align-items: center;
-    padding-block: 80px 100px;
+    gap: 100px;
+    padding-block: 64px 74px;
   }
 
   .about-introduction__eyebrow {
-    margin: 0 0 32px;
-    color: var(--color-rose);
-    font: .65rem var(--font-mono);
-    letter-spacing: .14em;
+    margin: 0 0 28px;
+    color: var(--color-gold);
+    font: .7rem var(--font-mono);
+    letter-spacing: .1em;
   }
 
   .about-introduction h1 {
     margin: 0;
-    font-family: var(--font-reading);
-    line-height: 1.25;
+    font: 400 1.8rem/1.3 var(--font-reading);
+  }
+
+  .about-introduction h1 > span, .about-introduction h1 > strong {
+    display: block;
     font-weight: 400;
   }
 
-  .about-introduction h1 span {
-    display: block;
-    font-size: clamp(1.8rem,3vw,3rem);
-    font-weight: 400;
-  }
-
-  .about-introduction h1 strong {
-    display: block;
-    margin-top: 16px;
-    font-size: clamp(2.4rem,4.1vw,3.6rem);
-    font-weight: 400;
-    letter-spacing: -.04em;
+  .about-introduction h1 > strong {
+    margin-top: 20px;
+    font-size: clamp(2.4rem,4vw,3.6rem);
+    letter-spacing: -.05em;
     overflow-wrap: anywhere;
   }
 
   .about-introduction__alias {
-    margin: 26px 0 0;
+    margin: 25px 0;
     font-size: .8rem;
     color: var(--color-muted);
   }
 
   .about-introduction__alias b {
-    font-weight: 500;
     color: var(--color-rose);
+    font-weight: 500;
   }
 
   .about-introduction__intro {
     max-width: 500px;
-    margin-top: 24px;
-    color: var(--color-muted);
-    font-size: .9rem;
+    font-size: 1rem;
     line-height: 1.95;
+    color: var(--color-muted);
   }
 
   .about-introduction__status {
     display: grid;
     gap: 12px;
-    padding-top: 28px;
-    margin-top: 30px;
-    border-top: 1px solid var(--color-line);
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid color-mix(in srgb,var(--color-gold) 28%,transparent);
     color: var(--color-muted);
     font: .76rem var(--font-mono);
   }
@@ -250,155 +247,139 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     gap: 12px;
   }
 
+  .about-introduction__status svg {
+    color: var(--color-gold);
+  }
+
   .about-introduction__copy > a {
     display: inline-flex;
     align-items: center;
-    gap: 28px;
+    gap: 30px;
+    margin-top: 26px;
     min-height: 46px;
-    margin-top: 28px;
     border-bottom: 1px solid var(--color-line);
-    font-size: .8rem;
     text-decoration: none;
+    font-size: .8rem;
   }
 
   .about-introduction__portrait {
     margin: 0;
-    padding-inline: 12px;
+    padding: 15px 15px 0;
+    border: 1px solid color-mix(in srgb,var(--color-gold) 22%,transparent);
+    background: color-mix(in srgb,var(--paper-white,var(--color-surface)) 60%,transparent);
+    transform: rotate(2deg);
   }
 
-  .about-introduction__portrait img {
+  .about-introduction__portrait :global(img) {
     width: 100%;
-    height: auto;
-    aspect-ratio: .74;
+    height: 490px;
     object-fit: cover;
-    border-radius: 999px 999px 0 0;
+    object-position: center 30%;
+    border-radius: 180px 180px 2px 2px;
   }
 
   .about-introduction__portrait figcaption {
-    margin-top: 20px;
-    text-align: right;
+    margin: 18px 0;
     color: var(--color-muted);
-    font-size: .68rem;
-    letter-spacing: .06em;
+    text-align: center;
+    font: .8rem var(--font-reading);
   }
 
-  @media (max-width:760px) {
-    .about-introduction {
-      grid-template-columns: 1fr;
-      padding-block: 52px 70px;
-      gap: 48px;
-    }
+  [data-about-intro][data-scene-ready] .about-introduction__copy {
+    transform: translateY(var(--intro-copy-y,0px));
+    opacity: var(--intro-opacity,1);
+  }
 
-    .about-introduction__portrait {
-      grid-row: 1;
-      width: 65%;
-      max-width: 360px;
-      margin-left: auto;
-      padding: 0;
-    }
-
-    .about-introduction__copy {
-      margin-top: -64px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .about-introduction__eyebrow {
-      max-width: 9ch;
-      margin-bottom: 22px;
-    }
-
-    .about-introduction h1 strong {
-      font-size: clamp(2rem,8.5vw,3.5rem);
-    }
-
-    .about-introduction__portrait figcaption {
-      display: none;
-    }
-
+  [data-about-intro][data-scene-ready] .about-introduction__portrait {
+    transform: translateX(var(--intro-image-x,0px)) rotate(var(--intro-image-angle,2deg)) scale(var(--intro-image-scale,1));
   }
 
   .about-research {
-    padding-block: clamp(82px, 11vw, 150px);
-    background: var(--paper-cyan, var(--color-bg));
+    position: relative;
+    background: var(--paper-cyan,var(--color-bg));
+    padding-block: 90px;
+  }
+
+  .about-research > .page-width {
+    display: grid;
+    grid-template-columns: .8fr 1.2fr;
+    align-items: start;
+    gap: 100px;
   }
 
   .about-research header {
-    display: grid;
-    margin-bottom: 68px;
-    grid-template-columns: minmax(0, 0.85fr) minmax(440px, 1.15fr);
-    gap: 12px 54px;
-    align-items: end;
+    position: sticky;
+    top: 110px;
+    padding-top: 35px;
   }
 
-  .about-research header > span {
-    grid-column: 1 / -1;
+  .about-research header span {
     color: var(--color-cyan);
-  }
-
-  .about-research h2, .about-play h2, .about-contact h2 {
-    margin: 0;
-    letter-spacing: 0;
+    font: .7rem var(--font-mono);
+    letter-spacing: .1em;
   }
 
   .about-research h2 {
-    font-family: var(--font-reading);
-    font-size: clamp(2.7rem, 4.5vw, 4.5rem);
-    font-weight: 500;
-    line-height: 1.06;
+    margin: 28px 0;
+    font: 400 var(--type-section-title,3rem)/1.3 var(--font-reading);
   }
 
   .about-research header > p {
-    max-width: 560px;
-    margin: 0;
+    max-width: 28ch;
     color: var(--color-muted);
-    line-height: 1.85;
+    font: 1.2rem/1.9 var(--font-reading);
   }
 
   .about-research__list {
-    border-top: 1px solid var(--color-line);
+    border-top: 1px solid color-mix(in srgb,var(--color-cyan) 35%,transparent);
   }
 
   .about-research__list article {
     display: grid;
-    min-height: 170px;
-    padding-block: 30px;
-    grid-template-columns: 80px minmax(260px, 0.75fr) minmax(360px, 1.25fr);
-    align-items: center;
-    gap: 28px;
-    border-bottom: 1px solid var(--color-line);
+    grid-template-columns: 44px 1fr;
+    gap: 20px;
+    padding: 48px 0;
+    border-bottom: 1px solid color-mix(in srgb,var(--color-cyan) 25%,transparent);
   }
 
   .about-research__list article > span {
-    color: var(--color-rose);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 850;
+    grid-row: 1/3;
+    padding-top: 5px;
+    color: var(--color-cyan);
+    font: italic 1.2rem var(--font-reading);
   }
 
   .about-research__list h3 {
     margin: 0;
-    font-size: clamp(1.35rem, 2vw, 1.9rem);
-    overflow-wrap: anywhere;
-    line-height: 1.4;
+    font: 400 1.9rem/1.4 var(--font-reading);
   }
 
   .about-research__list p {
-    max-width: 600px;
+    grid-column: 2;
     margin: 0;
     color: var(--color-muted);
-    line-height: 1.8;
+    font-size: .95rem;
+    line-height: 1.95;
+  }
+
+  [data-about-research][data-scene-ready] article {
+    opacity: var(--direction-opacity,1);
+    transform: translateX(var(--direction-x,0px));
   }
 
   .about-play {
+    position: relative;
+    background: #211d2d;
+    color: #f5edf5;
+  }
+
+  .about-play__stage {
     display: grid;
+    grid-template-columns: 1fr 1.05fr;
     min-height: 720px;
-    grid-template-columns: minmax(0, 1.05fr) minmax(420px, 0.95fr);
-    background: var(--color-bg);
   }
 
   .about-play__image {
-    min-height: 720px;
     overflow: hidden;
   }
 
@@ -406,459 +387,228 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: 54% center;
+    object-position: 20% center;
   }
 
   .about-play__copy {
-    display: flex;
-    max-width: 680px;
-    padding: clamp(64px, 8vw, 116px);
-    flex-direction: column;
-    justify-content: center;
+    align-self: center;
+    padding: 70px 80px;
   }
 
   .about-play__copy > span {
-    color: var(--color-rose);
+    display: block;
+    margin-bottom: 24px;
+    color: #dba9c7;
+    font: .7rem var(--font-mono);
+    letter-spacing: .1em;
   }
 
   .about-play h2 {
-    margin-top: 20px;
-    font-family: var(--font-reading);
-    font-size: clamp(2.6rem, 4.5vw, 4.5rem);
-    font-weight: 500;
-    line-height: 1.2;
+    margin: 0 0 28px;
+    font: 400 var(--type-section-title,3rem)/1.3 var(--font-reading);
   }
 
   .about-play__copy > p {
-    max-width: 530px;
-    margin: 30px 0 0;
-    color: var(--color-muted);
-    line-height: 1.9;
+    margin: 0;
+    color: #c6b9cd;
+    font-size: .95rem;
+    line-height: 1.95;
   }
 
   .about-play ul {
     display: grid;
-    padding: 0;
-    margin: 42px 0 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    border-top: 1px solid var(--color-line);
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
     list-style: none;
+    margin: 32px 0 0;
+    padding: 0;
   }
 
   .about-play li {
-    padding: 14px 4px;
-    border-bottom: 1px solid var(--color-line);
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
+    padding: 12px 14px;
+    border: 1px solid #b499bc47;
+    background: #e1c6e60a;
+    color: #e0d1e8;
+    font: .8125rem/1.6 var(--font-mono);
   }
 
-  .about-play li:nth-child(odd) {
-    border-right: 1px solid var(--color-line);
+  .about-play__cue {
+    display: none;
   }
 
-  .about-play li:nth-child(even) {
-    padding-left: 18px;
+  .about-play[data-scene-ready] {
+    height: 165svh;
+  }
+
+  [data-scene-ready] .about-play__stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    min-height: 650px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  [data-scene-ready] .about-play__image {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    clip-path: inset(0 var(--play-clip,0%) 0 0);
+  }
+
+  [data-scene-ready] .about-play__image :global(img) {
+    width: 100%;
+    height: 100%;
+    object-position: 20% center;
+    transform: translateX(var(--play-image-x,0px)) scale(var(--play-image-scale,1));
+  }
+
+  [data-scene-ready] .about-play__stage::after {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    content: "";
+    background: linear-gradient(90deg,transparent 20%,#211d2dcc 63%,#211d2df5);
+    opacity: var(--play-shade,1);
+  }
+
+  [data-scene-ready] .about-play__copy {
+    position: absolute;
+    left: 55%;
+    top: 20%;
+    width: 39%;
+    padding: 0;
+    transform: translateY(var(--play-copy-y,130px));
+  }
+
+  [data-scene-ready].about-play h2 {
+    transform: scale(var(--play-title-scale,1));
+    transform-origin: left center;
+  }
+
+  [data-scene-ready] .about-play__copy > p, [data-scene-ready].about-play ul {
+    opacity: var(--play-details,0);
+    transform: translateX(var(--play-details-x,60px));
+  }
+
+  [data-scene-ready] .about-play__cue {
+    display: block;
+    position: absolute;
+    bottom: 35px;
+    right: 6%;
+    color: #d3c3d7;
+    font-size: .7rem;
   }
 
   .about-contact {
-    padding: clamp(84px, 11vw, 150px) 0 34px;
-    background: var(--art-paper);
-    color: var(--color-ink);
+    background: var(--paper-gold,var(--art-paper));
+    padding: 90px 0 30px;
   }
 
-  .about-contact > div {
+  .about-contact > .page-width {
     display: grid;
-    grid-template-columns: minmax(360px, 0.9fr) minmax(420px, 1.1fr);
-    gap: clamp(58px, 9vw, 140px);
+    grid-template-columns: .9fr 1.1fr;
+    gap: 90px;
+    align-items: start;
   }
 
-  .about-contact [data-reveal] > span {
-    color: var(--color-rose);
+  .about-contact > div > div > span {
+    color: var(--color-gold);
+    font: .7rem var(--font-mono);
   }
 
   .about-contact h2 {
-    margin-top: 18px;
-    font-family: var(--font-reading);
-    font-size: clamp(3rem, 5vw, 5rem);
-    font-weight: 500;
-    line-height: 0.98;
-  }
-
-  .about-contact__body > p:first-child {
-    max-width: 560px;
-    margin: 12px 0 36px;
-    font-size: 1.05rem;
-    line-height: 1.85;
+    margin: 28px 0 35px;
+    font: 400 var(--type-section-title,3rem)/1.3 var(--font-reading);
   }
 
   .about-contact__invitation {
-    max-width: 340px;
-    margin-top: 36px;
-    margin-left: 10px;
     color: var(--color-muted);
-    font-size: 1.05rem;
-    line-height: 1.7;
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+
+  .about-contact__body > p {
+    margin: 0 0 30px;
+    font-size: 1rem;
+    line-height: 1.9;
   }
 
   .about-contact nav {
     display: grid;
-    border-top: 1px solid var(--color-line);
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
 
   .about-contact nav a, .about-contact nav button {
-    display: grid;
-    min-height: 66px;
-    padding: 12px 4px;
-    grid-template-columns: auto 1fr auto;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 14px;
-    border-bottom: 1px solid var(--color-line);
-    background: transparent;
-    color: inherit;
-    text-align: left;
+    min-width: 0;
+    min-height: 78px;
+    padding: 20px;
+    border: 1px solid color-mix(in srgb,var(--color-gold) 20%,transparent);
+    background: var(--paper-white,var(--color-surface));
+    font-size: .8rem;
     text-decoration: none;
     cursor: pointer;
   }
 
+  .about-contact nav svg:first-child {
+    color: var(--color-gold);
+  }
+
+  .about-contact nav span {
+    flex: 1;
+    overflow-wrap: anywhere;
+  }
+
   .about-contact nav a:hover, .about-contact nav button:hover {
-    padding-inline: 12px;
-    background: #17151a;
-    color: #fff;
+    border-color: var(--color-gold);
   }
 
   .about-contact__feedback {
-    min-height: 1.5em;
-    margin: 10px 0 0;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
+    min-height: 24px;
+    margin: 14px 0 0!important;
+    color: var(--color-muted);
+    font-size: .8rem!important;
   }
 
   .about-contact footer {
     display: flex;
     justify-content: space-between;
-    gap: 24px;
-    padding-top: 96px;
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
+    gap: 30px;
+    padding-top: 64px;
+    color: var(--color-muted);
+    font: .65rem var(--font-mono);
   }
 
-  @media (max-width: 980px) {
-    .about-research header, .about-play, .about-contact > div {
+  [data-about-contact][data-scene-ready] .about-contact__body {
+    transform: translateY(var(--contact-y,0px));
+    opacity: var(--contact-opacity,1);
+  }
+
+  @media (max-width:1023px) {
+    .about-introduction, .about-research > .page-width, .about-play__stage, .about-contact > .page-width {
       grid-template-columns: 1fr;
-    }
-
-    .about-research__list article {
-      grid-template-columns: 54px minmax(0, 0.8fr) minmax(0, 1.2fr);
-    }
-
-    .about-research h2 {
-      font-size: 3.2rem;
-    }
-
-    .about-research__list h3 {
-      font-size: 1.65rem;
-    }
-
-    .about-contact h2 {
-      font-size: 4.2rem;
-    }
-
-    .about-play h2 {
-      font-size: 4rem;
-    }
-
-    .about-play__image {
-      min-height: 560px;
-      aspect-ratio: 16 / 10;
-    }
-
-    .about-play__copy {
-      max-width: none;
-    }
-
-  }
-
-  @media (max-width: 620px) {
-    .about-research header {
-      margin-bottom: 42px;
-    }
-
-    .about-research h2 {
-      font-size: 2.6rem;
-    }
-
-    .about-research__list article {
-      padding-block: 24px;
-      grid-template-columns: 40px 1fr;
-      gap: 8px 14px;
-    }
-
-    .about-research__list article p {
-      grid-column: 2;
-    }
-
-    .about-research__list h3 {
-      font-size: 1.35rem;
-    }
-
-    .about-contact h2 {
-      font-size: 2.7rem;
-    }
-
-    .about-play h2 {
-      font-size: 2.8rem;
-    }
-
-    .about-play__image {
-      width: 100%;
-      height: 430px;
-      min-height: 0;
-      aspect-ratio: auto;
-    }
-
-    .about-play__copy {
-      padding: 54px var(--page-inline) 76px;
-    }
-
-    .about-contact > div {
-      gap: 54px;
-    }
-
-    .about-contact footer {
-      display: grid;
-      padding-top: 72px;
-    }
-
-  }
-  @media (min-width: 1024px) {
-    .about-introduction-shell {
-      background: var(--paper-gold);
-      border-bottom: 1px solid color-mix(in srgb, var(--color-gold) 24%, transparent);
-    }
-
-    .about-introduction {
-      padding-block: 64px 74px;
-      gap: 110px;
-    }
-
-    .about-introduction__eyebrow {
-      color: var(--color-gold);
-      font-size: .7rem;
-      margin-bottom: 28px;
-    }
-
-    .about-introduction h1 span {
-      font-size: 1.8rem;
-    }
-
-    .about-introduction h1 strong {
-      font-size: 3.5rem;
-      line-height: 1.2;
-      letter-spacing: -.05em;
-    }
-
-    .about-introduction__intro {
-      font-size: 1rem;
-      max-width: 500px;
-    }
-
-    .about-introduction__alias {
-      margin-top: 22px;
-    }
-
-    .about-introduction__status {
-      border-color: color-mix(in srgb, var(--color-gold) 28%, transparent);
-      padding-top: 22px;
-      margin-top: 28px;
-    }
-
-    .about-introduction__status svg {
-      color: var(--color-gold);
+      gap: 40px;
     }
 
     .about-introduction__portrait {
-      position: relative;
-      padding: 15px 15px 0;
-      border: 1px solid color-mix(in srgb, var(--color-gold) 22%, transparent);
-      background: color-mix(in srgb, var(--paper-white) 60%, transparent);
-      transform: rotate(2deg);
-    }
-
-    .about-introduction__portrait img {
-      height: 490px;
-      aspect-ratio: auto;
-      border-radius: 180px 180px 2px 2px;
-      object-position: center 30%;
-    }
-
-    .about-introduction__portrait figcaption {
-      margin: 18px 0;
-      text-align: center;
-      font-family: var(--font-reading);
-      font-size: .8rem;
-    }
-
-    .about-research {
-      padding-block: 88px 96px;
-      background: var(--paper-cyan);
+      max-width: 450px;
     }
 
     .about-research header {
-      grid-template-columns: 1fr 1fr;
-      gap: 70px;
-      align-items: end;
-      margin-bottom: 44px;
-    }
-
-    .about-research header span {
-      display: block;
-      color: var(--color-cyan);
-      font: .7rem var(--font-mono);
-      letter-spacing: .1em;
-      margin-bottom: 22px;
-    }
-
-    .about-research h2, .about-play h2, .about-contact h2 {
-      font-size: var(--type-section-title);
-      line-height: 1.3;
-    }
-
-    .about-research header > p {
-      margin: 0 0 4px;
-      font-size: 1.1rem;
-      line-height: 1.9;
-      max-width: 30ch;
-    }
-
-    .about-research__list {
-      display: grid;
-      grid-template-columns: repeat(3,minmax(0,1fr));
-      gap: 26px;
-      border: 0;
-    }
-
-    .about-research__list article {
-      display: flex;
-      flex-direction: column;
-      align-items: start;
-      padding: 30px;
-      border: 0;
-      border-top: 3px solid color-mix(in srgb,var(--color-cyan) 60%,transparent);
-      background: var(--paper-white);
-    }
-
-    .about-research__list article > span {
-      font: italic 2rem/1 var(--font-reading);
-      color: color-mix(in srgb,var(--color-cyan) 70%,transparent);
-      margin-bottom: 20px;
-    }
-
-    .about-research__list h3 {
-      min-height: 0;
-      margin: 0 0 16px;
-      font: 500 1.5rem/1.4 var(--font-reading);
-    }
-
-    .about-research__list p {
-      margin: 0;
-      font-size: .95rem;
-      line-height: 1.95;
-    }
-
-    .about-play {
-      background: #211d2d;
-      color: #f5edf5;
-      grid-template-columns: 1fr 1.05fr;
+      position: static;
     }
 
     .about-play__image {
-      min-height: 650px;
-    }
-
-    .about-play__image :global(img) {
-      object-position: 20% center;
+      height: 500px;
     }
 
     .about-play__copy {
-      padding: 70px 80px;
-    }
-
-    .about-play__copy > span {
-      display: block;
-      margin-bottom: 24px;
-      color: #dba9c7;
-      font: .7rem var(--font-mono);
-      letter-spacing: .1em;
-    }
-
-    .about-play h2 {
-      margin: 0 0 28px;
-    }
-
-    .about-play__copy > p {
-      font-size: .95rem;
-      line-height: 1.95;
-      color: #c6b9cd;
-    }
-
-    .about-play ul {
-      border-top: 0;
-      gap: 12px;
-      margin-top: 32px;
-    }
-
-    .about-play li {
-      border: 1px solid #b499bc47;
-      background: #e1c6e60a;
-      color: #e0d1e8;
-      padding: 12px 14px;
-      font-size: .75rem;
-    }
-
-    .about-play li:nth-child(odd), .about-play li:nth-child(even) {
-      border-right: 1px solid #b499bc47;
-      padding: 12px 14px;
-      font-size: .8125rem;
-      transform: none;
-    }
-
-    .about-contact {
-      padding-top: 90px;
-      background: var(--paper-gold);
-    }
-
-    .about-contact > div {
-      gap: 90px;
-      align-items: start;
-    }
-
-    .about-contact [data-reveal] > span {
-      color: var(--color-gold);
-      font-size: .7rem;
-    }
-
-    .about-contact nav {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .about-contact nav a, .about-contact nav button {
-      min-width: 0;
-      min-height: 78px;
-      padding: 20px;
-      border: 1px solid color-mix(in srgb,var(--color-gold) 20%,transparent);
-      background: var(--paper-white);
-      font-size: .8rem;
-    }
-
-    .about-contact nav a > svg:first-child, .about-contact nav button > svg:first-child {
-      color: var(--color-gold);
-    }
-
-    .about-contact nav a:hover, .about-contact nav button:hover {
-      border-color: var(--color-gold);
-      background: var(--paper-white);
+      padding: 50px var(--page-inline);
     }
 
   }
