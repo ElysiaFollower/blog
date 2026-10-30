@@ -1,3 +1,5 @@
+import { dampProgress } from "./art-motion";
+
 const smooth = (value: number) => {
   const t = Math.max(0, Math.min(1, value));
   return t * t * (3 - 2 * t);
@@ -13,12 +15,17 @@ export function mountVoyage(root: HTMLElement): void {
   const narrow = matchMedia("(max-width: 760px)");
   let visible = true;
   let frame = 0;
-  const paint = () => {
+  let progress = 0;
+  let lastTime = 0;
+  const paint = (time: number) => {
     frame = 0;
     if (!visible || !root.hasAttribute("data-enhanced"))
       return;
     const travel = root.offsetHeight - stage.offsetHeight;
-    const p = Math.max(0, Math.min(1, -root.getBoundingClientRect().top / Math.max(1, travel)));
+    const target = Math.max(0, Math.min(1, -root.getBoundingClientRect().top / Math.max(1, travel)));
+    progress = dampProgress(progress, target, lastTime ? Math.min(48, time - lastTime) : 16);
+    lastTime = time;
+    const p = progress;
     const opening = smooth((p - .08) / .84);
     const initial = narrow.matches ? [16, -12, 18, 56] : [13, 6, 15, 55];
     for (const [index, edge] of ["top", "right", "bottom", "left"].entries()) {
@@ -47,10 +54,13 @@ export function mountVoyage(root: HTMLElement): void {
     root.querySelectorAll<HTMLAnchorElement>(".voyage__copy a").forEach((link) => {
       link.inert = p >= .4;
     });
+    if (progress !== target) frame = requestAnimationFrame(paint);
   };
   const request = () => {
-    if (!frame && visible && !motion.matches)
+    if (!frame && visible && !motion.matches) {
+      lastTime = 0;
       frame = requestAnimationFrame(paint);
+    }
   };
   const configure = () => {
     root.toggleAttribute("data-enhanced", !motion.matches && !short.matches);

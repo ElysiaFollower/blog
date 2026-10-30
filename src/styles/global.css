@@ -165,3 +165,27 @@ button {
 :where(h1, h2, h3) { text-wrap: balance; }
 :where(p) { text-wrap: pretty; }
 :target { scroll-margin-top: 30px; }
+
+/* Page-scale typography and tinted papers belong to the desktop art direction. */
+@media (min-width: 1024px) {
+  :root {
+    --type-page-title: clamp(4rem, 5.2vw, 5.25rem);
+    --type-section-title: clamp(2.5rem, 3.3vw, 3.4rem);
+    --type-reading-title: clamp(2.25rem, 3.1vw, 3rem);
+    --paper-cyan: #e7efed;
+    --paper-rose: #f1e7ee;
+    --paper-gold: #f2ecdf;
+    --paper-white: #fffdfa;
+  }
+  :root[data-theme="dark"] {
+    --paper-cyan: #1e2b2d;
+    --paper-rose: #302433;
+    --paper-gold: #302b27;
+    --paper-white: #24232d;
+  }
+}
+
+@media (min-width: 1024px) {
+  .journal-page, .library-page, .reading-page, .friends-page { --nav-accent: var(--color-cyan); }
+  .about-page { --nav-accent: var(--color-gold); }
+}

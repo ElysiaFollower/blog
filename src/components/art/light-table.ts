@@ -1,154 +1,192 @@
-/** Five selected works share the gallery's stable links; the full collection stays in its browser. */
+import type { GalleryEntry } from "../../types/gallery";
+import { RailMotion } from "./art-motion";
+
+/** A window onto the same collection as /gallery/, with only nearby media mounted. */
 export function mountLightTable(root: HTMLElement): void {
   const stage = root.querySelector<HTMLElement>("[data-light-stage]");
-  const works = Array.from(root.querySelectorAll<HTMLAnchorElement>("[data-light-work]"));
+  const track = root.querySelector<HTMLElement>("[data-light-track]");
+  const template = root.querySelector<HTMLTemplateElement>("[data-light-template]");
   const previous = root.querySelector<HTMLButtonElement>("[data-light-prev]");
   const next = root.querySelector<HTMLButtonElement>("[data-light-next]");
   const status = root.querySelector<HTMLElement>("[data-light-position]");
-  if (!stage || !previous || !next || !status || !works.length)
-    return;
-  works.forEach((work) => {
-    if (work.dataset.galleryHref) work.href = work.dataset.galleryHref;
-  });
-  const motion = matchMedia("(prefers-reduced-motion: reduce)");
-  let current = Math.floor(works.length / 2);
+  const data = root.querySelector<HTMLScriptElement>("[data-light-data]");
+  if (!stage || !track || !template || !previous || !next || !status || !data) return;
+  const entries: GalleryEntry[] = JSON.parse(data.textContent ?? "[]");
+  if (!entries.length) return;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  const mounted = new Map<number, HTMLAnchorElement>();
+  let selected = Math.min(7, entries.length - 1);
   try {
-    const saved = Number(sessionStorage.getItem("selected-light"));
-    if (sessionStorage.getItem("selected-light") !== null && Number.isInteger(saved) && saved >= 0 && saved < works.length)
-      current = saved;
-  }
-  catch { /* Browsing remains available when storage is blocked. */ }
-  let position = current;
-  let center = 0;
-  let centers: number[] = [];
-  let gesture: {
-    id: number;
-    start: number;
-    last: number;
-    time: number;
-    velocity: number;
-    moved: boolean;
-  } | undefined;
+    const saved = sessionStorage.getItem("selected-light-work");
+    const index = entries.findIndex(item => item.id === saved);
+    if (index >= 0) selected = index;
+  } catch { /* The gallery remains usable without session storage. */ }
+  let motion: RailMotion;
+  let sizes: { width: number; height: number }[] = [];
+  let visible = false;
+  let frame = 0;
+  let lastTime = 0;
+  let gesture: { id: number; start: number; moved: boolean } | undefined;
   let suppressClick = false;
   let clickTimer = 0;
 
-  const paint = () => works.forEach((work, index) => {
-    const offset = index - position;
-    work.style.setProperty("--work-x", `${(centers[index] ?? 0) - center}px`);
-    work.style.setProperty("--offset", String(Math.max(-3, Math.min(3, offset))));
-    work.style.setProperty("--distance", String(Math.abs(offset)));
-    work.dataset.active = String(index === current);
-    work.tabIndex = index === current ? 0 : -1;
-    work.setAttribute("aria-current", String(index === current));
-    const title = work.querySelector("img")?.alt ?? "";
-    work.setAttribute("aria-label", `${index === current ? "在画廊查看" : "选择作品"}：${title}`);
-  });
-
-  const select = (index: number) => {
-    current = Math.max(0, Math.min(works.length - 1, index));
-    position = current;
-    center = centers[current] ?? 0;
-    paint();
-    previous.disabled = current === 0;
-    next.disabled = current === works.length - 1;
-    status.textContent = `${String(current + 1).padStart(2, "0")} / ${String(works.length).padStart(2, "0")} · ${works[current].querySelector("img")?.alt ?? ""}`;
-    try {
-      sessionStorage.setItem("selected-light", String(current));
-    }
-    catch { /* Returning falls back to the middle work. */ }
+  const announce = () => {
+    selected = motion.nearest;
+    status.textContent = `${String(selected + 1).padStart(3,"0")} / ${entries.length} · ${entries[selected].title ?? entries[selected].alt}`;
+    previous.disabled = selected === 0;
+    next.disabled = selected === entries.length - 1;
+    try { sessionStorage.setItem("selected-light-work", entries[selected].id); } catch { /* Storage is optional. */ }
   };
 
-  previous.addEventListener("click", () => select(current - 1));
-  next.addEventListener("click", () => select(current + 1));
+  const render = () => {
+    if (!visible) return;
+    const active = motion.nearest;
+    const range = stage.clientWidth / 2 + 450;
+    entries.forEach((entry, index) => {
+      const x = motion.centers[index] - motion.position;
+      const nearby = Math.abs(x) < range + sizes[index].width / 2;
+      let link = mounted.get(index);
+      if (!nearby) {
+        if (link?.contains(document.activeElement)) stage.focus({ preventScroll: true });
+        link?.remove();
+        mounted.delete(index);
+        return;
+      }
+      if (!link) {
+        link = template.content.firstElementChild!.cloneNode(true) as HTMLAnchorElement;
+        link.href = `/gallery/#work=${encodeURIComponent(entry.id)}`;
+        link.dataset.lightWork = entry.id;
+        const image = link.querySelector<HTMLImageElement>("img")!;
+        image.alt = entry.alt;
+        image.width = entry.width;
+        image.height = entry.height;
+        image.src = entry.kind === "video" ? (entry.poster ?? entry.src) : entry.src;
+        const caption = link.querySelectorAll("figcaption > span");
+        caption[0].textContent = String(index + 1).padStart(3,"0");
+        caption[1].textContent = entry.title ?? entry.alt;
+        if (entry.kind === "video") link.querySelector(".light-table__kind")!.textContent = "影像";
+        link.addEventListener("click", (event) => {
+          if (suppressClick) { event.preventDefault(); return; }
+          if (index !== motion.nearest || motion.moving) {
+            event.preventDefault();
+            select(index);
+          }
+        });
+        track.append(link);
+        mounted.set(index, link);
+      }
+      const distance = Math.min(4, Math.abs(x) / 380);
+      link.style.setProperty("--work-width", `${sizes[index].width}px`);
+      link.style.setProperty("--work-height", `${sizes[index].height}px`);
+      link.style.setProperty("--work-x", `${x}px`);
+      link.style.setProperty("--work-y", `${distance * 9 + (index % 3 - 1) * 12}px`);
+      link.style.setProperty("--work-z", `${-distance * 100}px`);
+      link.style.setProperty("--work-scale", String(1 - Math.min(.24, distance * .12)));
+      link.style.setProperty("--work-angle", `${Math.max(-22, Math.min(22, -x / 50))}deg`);
+      link.style.setProperty("--work-light", String(1 - Math.min(.28, distance * .08)));
+      link.dataset.active = String(index === active);
+      link.tabIndex = index === active ? 0 : -1;
+      link.setAttribute("aria-label", `${index === active ? "在画廊查看" : "选择作品"}：${entry.alt}`);
+      if (index === active) link.setAttribute("aria-current", "true");
+      else link.removeAttribute("aria-current");
+    });
+  };
+
+  const tick = (time: number) => {
+    frame = 0;
+    motion.step(lastTime ? Math.min(40, time - lastTime) : 16);
+    lastTime = time;
+    render();
+    if (motion.moving && visible) frame = requestAnimationFrame(tick);
+    else { lastTime = 0; announce(); }
+  };
+  const animate = () => {
+    if (reduced.matches) {
+      motion.position = motion.target;
+      motion.velocity = 0;
+      render();
+      announce();
+    } else if (!frame && visible) {
+      lastTime = 0;
+      frame = requestAnimationFrame(tick);
+    }
+  };
+  const select = (index: number) => {
+    motion.select(index);
+    animate();
+  };
+  const measure = () => {
+    const centers: number[] = [];
+    sizes = entries.map(entry => {
+      const ratio = entry.width / entry.height;
+      const height = Math.min(360, 440 / ratio);
+      return { width: height * ratio, height };
+    });
+    sizes.forEach((size, index) => {
+      centers.push(index === 0 ? 0 : centers[index - 1] + (sizes[index - 1].width + size.width) / 2 + 74);
+    });
+    motion = new RailMotion(centers, selected);
+    announce();
+    render();
+  };
+
+  previous.addEventListener("click", () => select(motion.nearest - 1));
+  next.addEventListener("click", () => select(motion.nearest + 1));
   stage.addEventListener("keydown", (event) => {
-    let target = current;
-    if (event.key === "ArrowLeft")
-      target--;
-    else if (event.key === "ArrowRight")
-      target++;
-    else if (event.key === "Home")
-      target = 0;
-    else if (event.key === "End")
-      target = works.length - 1;
-    else
-      return;
+    const index = motion.nearest;
+    const target = { ArrowLeft:index - 1, ArrowRight:index + 1, Home:0, End:entries.length - 1 }[event.key];
+    if (target === undefined) return;
     event.preventDefault();
     stage.focus({ preventScroll: true });
     select(target);
   });
-  works.forEach((work, index) => work.addEventListener("click", (event) => {
-    if (suppressClick) {
-      event.preventDefault();
-      return;
-    }
-    if (index !== current) {
-      event.preventDefault();
-      select(index);
-    }
-  }));
+  stage.addEventListener("dragstart", event => event.preventDefault());
   stage.addEventListener("pointerdown", (event) => {
-    if (!event.isPrimary || event.button !== 0)
-      return;
+    if (!event.isPrimary || event.button !== 0) return;
+    cancelAnimationFrame(frame);
+    frame = 0;
     window.clearTimeout(clickTimer);
     suppressClick = false;
-    gesture = { id: event.pointerId, start: event.clientX, last: event.clientX, time: event.timeStamp, velocity: 0, moved: false };
+    gesture = { id:event.pointerId, start:event.clientX, moved:false };
+    motion.begin(event.clientX, event.timeStamp);
   });
   stage.addEventListener("pointermove", (event) => {
-    if (!gesture || gesture.id !== event.pointerId)
-      return;
-    const distance = event.clientX - gesture.start;
-    if (!gesture.moved && Math.abs(distance) < 7)
-      return;
+    if (!gesture || event.pointerId !== gesture.id) return;
+    if (!gesture.moved && Math.abs(event.clientX - gesture.start) < 4) return;
     if (!gesture.moved) {
       stage.setPointerCapture(event.pointerId);
       root.classList.add("is-dragging");
+      gesture.moved = true;
     }
-    gesture.moved = true;
-    const elapsed = Math.max(1, event.timeStamp - gesture.time);
-    gesture.velocity = (event.clientX - gesture.last) / elapsed;
-    gesture.last = event.clientX;
-    gesture.time = event.timeStamp;
-    center = Math.max(-40, Math.min((centers.at(-1) ?? 0) + 40, (centers[current] ?? 0) - distance));
-    let left = 0;
-    while (left < centers.length - 2 && centers[left + 1] < center)
-      left++;
-    position = left + (center - centers[left]) / Math.max(1, centers[left + 1] - centers[left]);
-    paint();
+    motion.move(event.clientX, event.timeStamp);
+    render();
   });
   const release = (event: PointerEvent, cancelled = false) => {
-    if (!gesture || gesture.id !== event.pointerId)
-      return;
+    if (!gesture || gesture.id !== event.pointerId) return;
     const moved = gesture.moved;
-    const velocity = motion.matches || cancelled || event.timeStamp - gesture.time > 100 ? 0 : gesture.velocity;
     gesture = undefined;
     root.classList.remove("is-dragging");
-    if (stage.hasPointerCapture(event.pointerId))
-      stage.releasePointerCapture(event.pointerId);
+    motion.end(event.clientX, event.timeStamp, cancelled, reduced.matches);
+    if (stage.hasPointerCapture(event.pointerId)) stage.releasePointerCapture(event.pointerId);
     if (moved) {
       suppressClick = true;
       clickTimer = window.setTimeout(() => { suppressClick = false; }, 0);
-      select(cancelled ? current : Math.round(position - Math.max(-.7, Math.min(.7, velocity * .3))));
     }
+    render();
+    animate();
   };
-  stage.addEventListener("pointerup", (event) => release(event));
-  stage.addEventListener("pointercancel", (event) => release(event, true));
-  stage.addEventListener("lostpointercapture", (event) => release(event, true));
-
-  root.querySelector<HTMLElement>("[data-light-controls]")?.removeAttribute("hidden");
-  const hint = root.querySelector<HTMLElement>(".light-table__hint");
-  if (hint)
-    hint.textContent = "拖动浏览 · 点开看大图";
+  stage.addEventListener("pointerup", event => release(event));
+  stage.addEventListener("pointercancel", event => release(event, true));
+  stage.addEventListener("lostpointercapture", event => release(event, true));
+  reduced.addEventListener("change", animate);
+  root.querySelector("[data-light-controls]")?.removeAttribute("hidden");
+  root.querySelector("[data-light-hint]")!.textContent = "拖动浏览全部收藏 · 点击当前作品进入画廊";
   root.classList.add("is-ready");
-  const measure = () => {
-    const gap = stage.clientWidth < 760 ? 48 : 90;
-    centers = works.map((work, index) => index === 0 ? 0 : (works[index - 1].offsetWidth + work.offsetWidth) / 2 + gap);
-    for (let index = 1; index < centers.length; index++)
-      centers[index] += centers[index - 1];
-    select(current);
-  };
-  if (typeof ResizeObserver !== "undefined")
-    new ResizeObserver(measure).observe(stage);
-  else
-    window.addEventListener("resize", measure);
   measure();
+  new ResizeObserver(measure).observe(stage);
+  new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting;
+    if (visible) { render(); animate(); }
+    else { cancelAnimationFrame(frame); frame = 0; lastTime = 0; }
+  }, { rootMargin:"200px" }).observe(root);
 }

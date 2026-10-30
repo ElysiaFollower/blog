@@ -21,7 +21,7 @@ const linkCount = String(friendLinks.length);
   <main id="main-content">
     <header class="friends-introduction page-width">
       <div><p>BLOGROLL / {linkCount.padStart(2,"0")}</p><h1 id="friends-title">互联网上的<br /><span>邻居们。</span></h1></div>
-      <p>一些常去的小站，和认真写作的人。<br />路过时，不妨进去坐坐。</p>
+      <div class="friends-introduction__note"><span>{linkCount.padStart(2,"0")}</span><div><small>PERSONAL WEBSITES</small><p>一些常去的小站，<br />和认真写作的人。<br />路过时，不妨进去坐坐。</p></div></div>
     </header>
     <section id="received-signals" class="friends-signals">
       <div class="page-width">
@@ -252,6 +252,132 @@ const linkCount = String(friendLinks.length);
 
     .friends-signals__footer p {
       margin-top: 12px;
+    }
+
+  }
+  .friends-introduction__note { display: flex; align-items: center; gap: 26px; }
+  .friends-introduction__note > span { font: italic 5rem/1 var(--font-reading); color: var(--color-cyan); }
+  .friends-introduction__note small { font: .65rem var(--font-mono); color: var(--color-cyan); letter-spacing: .1em; }
+  .friends-introduction__note p { margin: 14px 0 0; color: var(--color-muted); font: 1rem/1.95 var(--font-reading); }
+  @media (min-width: 1024px) {
+    :global(.friends-page) {
+      background: var(--paper-cyan);
+    }
+
+    .friends-introduction {
+      grid-template-columns: 1.2fr 1fr;
+      gap: 140px;
+      padding-block: 68px 70px;
+      align-items: center;
+    }
+
+    .friends-introduction h1 {
+      font-size: var(--type-page-title);
+      line-height: 1.22;
+      letter-spacing: -.04em;
+    }
+
+    .friends-introduction h1 > span {
+      margin-left: 1em;
+      color: var(--color-cyan);
+    }
+
+    .friends-introduction > div > p {
+      color: var(--color-cyan);
+      font-size: .7rem;
+      letter-spacing: .1em;
+    }
+
+    .friends-introduction__note {
+      position: relative;
+      align-items: start;
+      gap: 28px;
+      padding: 34px;
+      background: var(--paper-white);
+      border: 1px solid color-mix(in srgb,var(--color-cyan) 20%,transparent);
+      transform: rotate(3deg);
+      box-shadow: 10px 12px 0 color-mix(in srgb,var(--color-cyan) 6%,transparent);
+    }
+
+    .friends-introduction__note::before {
+      content: "";
+      position: absolute;
+      width: 64px;
+      height: 18px;
+      background: color-mix(in srgb,var(--color-gold) 20%,transparent);
+      top: -8px;
+      left: 42%;
+      transform: rotate(-5deg);
+    }
+
+    .friends-introduction__note > span {
+      font-size: 4.5rem;
+    }
+
+    .friends-signals {
+      padding-block: 10px 70px;
+    }
+
+    .friends-list {
+      border-top: 0;
+    }
+
+    .friends-list > a {
+      grid-template-columns: 40px 130px 1fr 1.15fr 40px;
+      gap: 35px;
+      padding: 38px 42px;
+      background: var(--paper-white);
+      border: 1px solid color-mix(in srgb,var(--color-cyan) 25%,transparent);
+      border-left: 4px solid var(--color-cyan);
+      box-shadow: 0 8px 30px #29423a07;
+    }
+
+    .friends-list > a + a {
+      margin-top: 20px;
+    }
+
+    .friends-list > a:hover {
+      background: color-mix(in srgb,var(--paper-white) 85%,var(--paper-cyan));
+    }
+
+    .friends-list__index {
+      color: var(--color-cyan);
+      font-size: 1.3rem;
+    }
+
+    .friends-list__avatar {
+      border: 6px solid var(--paper-cyan);
+      outline: 1px solid color-mix(in srgb,var(--color-cyan) 25%,transparent);
+    }
+
+    .friends-list__identity h3 {
+      font-size: 2.9rem;
+      margin-top: 12px;
+    }
+
+    .friends-list__note p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+    }
+
+    .friends-list small {
+      font-size: .72rem;
+      color: var(--color-cyan);
+    }
+
+    .friends-list > a > svg {
+      color: var(--color-cyan);
+      transition: transform 250ms;
+    }
+
+    .friends-list > a:hover > svg {
+      transform: translate(4px,-4px);
+    }
+
+    .friends-signals__footer {
+      padding-top: 32px;
+      border: 0;
+      color: var(--color-cyan);
     }
 
   }

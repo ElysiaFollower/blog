@@ -6,15 +6,16 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import { getGalleryEntries } from "../../lib/gallery";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 const items = await getGalleryEntries();
+const videoCount = items.filter(item => item.kind === "video").length;
 ---
 <BaseLayout title="画廊" description="收藏那些曾让目光停留的瞬间" bodyClass="gallery-page">
   <SiteHeader variant="reading" />
   <main id="main-content">
-    <header class="gallery-header page-width">
+    <div class="gallery-introduction"><header class="gallery-header page-width">
       <p class="gallery-kicker">COLLECTION <span aria-hidden="true">/</span> {String(items.length).padStart(3, "0")}</p>
       <h1>画廊<span aria-hidden="true">.</span></h1>
-      <p class="gallery-description">收藏那些<br />曾让目光停留的瞬间。</p>
-    </header>
+      <div class="gallery-description"><p>收藏那些<br />曾让目光停留的瞬间。</p><span>{items.length - videoCount} 幅图像{videoCount > 0 && ` · ${videoCount} 段影像`}</span></div>
+    </header></div>
     <GalleryBrowse items={items} />
   </main>
   <GalleryLightbox />
@@ -89,4 +90,41 @@ h1 span {
   }
 
 }
+  .gallery-description > p { margin: 0; }
+  .gallery-description > span { display: block; margin-top: 16px; color: var(--color-rose); font: .7rem var(--font-mono); letter-spacing: .03em; }
+  @media (min-width:1024px) {
+    .gallery-introduction {
+      background: var(--paper-rose);
+      border-bottom: 1px solid color-mix(in srgb,var(--color-rose) 25%,transparent);
+    }
+
+    .gallery-header {
+      padding-block: 50px 40px;
+      border-bottom: 0;
+    }
+
+    .gallery-kicker {
+      font-size: .7rem;
+      color: var(--color-rose);
+    }
+
+    .gallery-header h1 {
+      font-size: var(--type-page-title);
+      font-weight: 400;
+      line-height: 1.05;
+    }
+
+    .gallery-description {
+      min-width: 250px;
+      padding: 0 0 0 28px;
+      border-left: 1px solid color-mix(in srgb,var(--color-rose) 30%,transparent);
+      font: 1rem/1.9 var(--font-reading);
+      letter-spacing: 0;
+    }
+
+    .gallery-description > span {
+      margin-top: 12px;
+    }
+
+  }
 </style>

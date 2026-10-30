@@ -134,6 +134,28 @@ const track = {
     font-size: 0.64rem;
   }
 
+  @media (min-width: 1024px) {
+    .music-dock__meta {
+      width: 0;
+      min-width: 0;
+      padding: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: width 220ms, padding 220ms, opacity 180ms;
+    }
+
+    .music-dock:hover .music-dock__meta,
+    .music-dock:focus-within .music-dock__meta {
+      width: 142px;
+      padding: 7px 13px;
+      opacity: 1;
+    }
+
+    .music-dock button {
+      border-right: 0;
+    }
+  }
+
   @media (max-width: 620px) {
     .music-dock {
       bottom: max(18px, env(safe-area-inset-bottom));

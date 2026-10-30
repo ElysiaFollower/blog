@@ -115,74 +115,76 @@ const nextPost =
           ))
         }
       </div>
-      <header class="post-header">
-        <nav
-          class="post-catalog-path"
-          aria-label="文章目录位置"
-          data-pagefind-ignore
-        >
-          {
-            catalogBreadcrumbs.map((entry, index) => (
-              <>
-                {index > 0 && <span aria-hidden="true">/</span>}
-                <a href={catalogHref(entry.path)}>{entry.label}</a>
-              </>
-            ))
-          }
-        </nav>
-        <div class="post-header__eyebrow" data-pagefind-ignore>
-          <span>{rootLabel}</span>
-          {data.draft && <span class="post-header__draft">Draft</span>}
-          <time
-            datetime={data.pubDate.toISOString()}
-            data-pagefind-meta="date[datetime]"
-            data-pagefind-sort="date[datetime]"
+      <div class="post-opening">
+        <header class="post-header">
+          <nav
+            class="post-catalog-path"
+            aria-label="文章目录位置"
+            data-pagefind-ignore
           >
-            {formattedDate}
-          </time>
-          <span>约 {readingMinutes} 分钟阅读</span>
-          {
-            data.updatedDate && (
-              <span>
-                更新于{" "}
-                <time datetime={data.updatedDate.toISOString()}>
-                  {formattedUpdatedDate}
-                </time>
-              </span>
-            )
-          }
-        </div>
-        <h1 data-pagefind-ignore>{data.title}</h1>
-        <p class="post-header__description" data-pagefind-meta="description">
-          {data.description}
-        </p>
-        <ul class="post-header__tags" aria-label="标签" data-pagefind-ignore>
-          {
-            data.tags.map((tag) => (
-              <li>
-                <a
-                  href={tagHref(tag)}
-                  data-pagefind-filter="tag"
-                >
-                  #{tag}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-        <code class="post-source-path" data-pagefind-ignore>{sourcePath}</code>
-      </header>
+            {
+              catalogBreadcrumbs.map((entry, index) => (
+                <>
+                  {index > 0 && <span aria-hidden="true">/</span>}
+                  <a href={catalogHref(entry.path)}>{entry.label}</a>
+                </>
+              ))
+            }
+          </nav>
+          <div class="post-header__eyebrow" data-pagefind-ignore>
+            <span>{rootLabel}</span>
+            {data.draft && <span class="post-header__draft">Draft</span>}
+            <time
+              datetime={data.pubDate.toISOString()}
+              data-pagefind-meta="date[datetime]"
+              data-pagefind-sort="date[datetime]"
+            >
+              {formattedDate}
+            </time>
+            <span>约 {readingMinutes} 分钟阅读</span>
+            {
+              data.updatedDate && (
+                <span>
+                  更新于{" "}
+                  <time datetime={data.updatedDate.toISOString()}>
+                    {formattedUpdatedDate}
+                  </time>
+                </span>
+              )
+            }
+          </div>
+          <h1 data-pagefind-ignore>{data.title}</h1>
+          <p class="post-header__description" data-pagefind-meta="description">
+            {data.description}
+          </p>
+          <ul class="post-header__tags" aria-label="标签" data-pagefind-ignore>
+            {
+              data.tags.map((tag) => (
+                <li>
+                  <a
+                    href={tagHref(tag)}
+                    data-pagefind-filter="tag"
+                  >
+                    #{tag}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+          <code class="post-source-path" data-pagefind-ignore>{sourcePath}</code>
+        </header>
 
-      <div class="post-cover" data-pagefind-ignore>
-        <Image
-          src={data.cover}
-          alt={data.coverAlt}
-          widths={[720, 960, 1280, 1600]}
-          sizes="(max-width: 650px) 100vw, 1120px"
-          loading="eager"
-          data-critical-image
-          style={`object-position: ${data.coverPosition}`}
-        />
+        <div class="post-cover" data-pagefind-ignore>
+          <Image
+            src={data.cover}
+            alt={data.coverAlt}
+            widths={[720, 960, 1280, 1600]}
+            sizes="(max-width: 650px) 100vw, 1120px"
+            loading="eager"
+            data-critical-image
+            style={`object-position: ${data.coverPosition}`}
+          />
+        </div>
       </div>
 
       <div class="reading-grid">

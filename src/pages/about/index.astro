@@ -12,6 +12,7 @@ import {
 } from "@lucide/astro";
 import aboutPortrait from "../../assets/demo/elysia-portrait.webp";
 import playPortrait from "../../assets/demo/sparkle-portrait.webp";
+import ResearchSketch from "../../components/art/ResearchSketch.astro";
 import DirectedPointer from "../../components/DirectedPointer.astro";
 import ScrollReveal from "../../components/ScrollReveal.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
@@ -28,7 +29,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <SiteHeader variant="reading" />
 
   <main id="main-content">
-    <section class="about-introduction page-width" aria-labelledby="about-title">
+    <div class="about-introduction-shell"><section class="about-introduction page-width" aria-labelledby="about-title">
       <div class="about-introduction__copy">
         <p class="about-introduction__eyebrow">ABOUT / 0017</p>
         <h1 id="about-title"><span>你好，我是</span><strong>{profileConfig.handle}</strong></h1>
@@ -44,13 +45,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <Image src={aboutPortrait} alt="花园茶会中的爱莉希雅" widths={[600,900,1200]} sizes="(max-width:760px) 80vw, 40vw" loading="eager" />
         <figcaption>研究之外，也认真玩耍。</figcaption>
       </figure>
-    </section>
+    </section></div>
 
     <section id="research" class="about-research">
       <div class="page-width">
         <header data-reveal>
-          <span>01 / RESEARCH DIRECTIONS</span>
-          <h2>关注的方向</h2>
+          <div><span>01 / RESEARCH DIRECTIONS</span><h2>关注的方向</h2></div>
           <p>
             我关心模型怎样听懂话语，也怎样理解说话的人。
           </p>
@@ -62,6 +62,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
               <article data-reveal>
                 <span>{item.index}</span>
                 <h3>{item.title}</h3>
+                <ResearchSketch index={item.index} />
                 <p>{item.description}</p>
               </article>
             ))
@@ -70,7 +71,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
     </section>
 
-    <section class="about-play" aria-labelledby="play-title">
+    <section class="about-play" id="after-hours" aria-labelledby="play-title">
       <div class="about-play__image" data-reveal="left">
         <Image
           src={playPortrait}
@@ -92,11 +93,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
     </section>
 
-    <section class="about-contact">
+    <section class="about-contact" id="contact" aria-labelledby="contact-title">
       <div class="page-width">
         <div data-reveal>
           <span>03 / CONTACT</span>
-          <h2>在其他地方<br>找到我</h2>
+          <h2 id="contact-title">在其他地方<br>找到我</h2>
           <p class="about-contact__invitation">
             如果有任何想法 <br>
             Feel free to reach out. (｡･ω･｡)ﾉ
@@ -208,7 +209,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   .about-introduction h1 strong {
     display: block;
     margin-top: 16px;
-    font-size: clamp(2.4rem,4.5vw,4.8rem);
+    font-size: clamp(2.4rem,4.1vw,3.6rem);
     font-weight: 400;
     letter-spacing: -.04em;
     overflow-wrap: anywhere;
@@ -319,7 +320,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-research {
     padding-block: clamp(82px, 11vw, 150px);
-    background: var(--color-bg);
+    background: var(--paper-cyan, var(--color-bg));
   }
 
   .about-research header {
@@ -626,6 +627,238 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     .about-contact footer {
       display: grid;
       padding-top: 72px;
+    }
+
+  }
+  @media (min-width: 1024px) {
+    .about-introduction-shell {
+      background: var(--paper-gold);
+      border-bottom: 1px solid color-mix(in srgb, var(--color-gold) 24%, transparent);
+    }
+
+    .about-introduction {
+      padding-block: 64px 74px;
+      gap: 110px;
+    }
+
+    .about-introduction__eyebrow {
+      color: var(--color-gold);
+      font-size: .7rem;
+      margin-bottom: 28px;
+    }
+
+    .about-introduction h1 span {
+      font-size: 1.8rem;
+    }
+
+    .about-introduction h1 strong {
+      font-size: 3.5rem;
+      line-height: 1.2;
+      letter-spacing: -.05em;
+    }
+
+    .about-introduction__intro {
+      font-size: 1rem;
+      max-width: 500px;
+    }
+
+    .about-introduction__alias {
+      margin-top: 22px;
+    }
+
+    .about-introduction__status {
+      border-color: color-mix(in srgb, var(--color-gold) 28%, transparent);
+      padding-top: 22px;
+      margin-top: 28px;
+    }
+
+    .about-introduction__status svg {
+      color: var(--color-gold);
+    }
+
+    .about-introduction__portrait {
+      position: relative;
+      padding: 15px 15px 0;
+      border: 1px solid color-mix(in srgb, var(--color-gold) 22%, transparent);
+      background: color-mix(in srgb, var(--paper-white) 60%, transparent);
+      transform: rotate(2deg);
+    }
+
+    .about-introduction__portrait img {
+      height: 490px;
+      aspect-ratio: auto;
+      border-radius: 180px 180px 2px 2px;
+      object-position: center 30%;
+    }
+
+    .about-introduction__portrait figcaption {
+      margin: 18px 0;
+      text-align: center;
+      font-family: var(--font-reading);
+      font-size: .8rem;
+    }
+
+    .about-research {
+      padding-block: 88px 96px;
+      background: var(--paper-cyan);
+    }
+
+    .about-research header {
+      grid-template-columns: 1fr 1fr;
+      gap: 70px;
+      align-items: end;
+      margin-bottom: 44px;
+    }
+
+    .about-research header span {
+      display: block;
+      color: var(--color-cyan);
+      font: .7rem var(--font-mono);
+      letter-spacing: .1em;
+      margin-bottom: 22px;
+    }
+
+    .about-research h2, .about-play h2, .about-contact h2 {
+      font-size: var(--type-section-title);
+      line-height: 1.3;
+    }
+
+    .about-research header > p {
+      margin: 0 0 4px;
+      font-size: 1.1rem;
+      line-height: 1.9;
+      max-width: 30ch;
+    }
+
+    .about-research__list {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 26px;
+      border: 0;
+    }
+
+    .about-research__list article {
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+      padding: 30px;
+      border: 0;
+      border-top: 3px solid color-mix(in srgb,var(--color-cyan) 60%,transparent);
+      background: var(--paper-white);
+    }
+
+    .about-research__list article > span {
+      font: italic 2rem/1 var(--font-reading);
+      color: color-mix(in srgb,var(--color-cyan) 70%,transparent);
+      margin-bottom: 20px;
+    }
+
+    .about-research__list h3 {
+      min-height: 0;
+      margin: 0 0 16px;
+      font: 500 1.5rem/1.4 var(--font-reading);
+    }
+
+    .about-research__list p {
+      margin: 0;
+      font-size: .95rem;
+      line-height: 1.95;
+    }
+
+    .about-play {
+      background: #211d2d;
+      color: #f5edf5;
+      grid-template-columns: 1fr 1.05fr;
+    }
+
+    .about-play__image {
+      min-height: 650px;
+    }
+
+    .about-play__image :global(img) {
+      object-position: 20% center;
+    }
+
+    .about-play__copy {
+      padding: 70px 80px;
+    }
+
+    .about-play__copy > span {
+      display: block;
+      margin-bottom: 24px;
+      color: #dba9c7;
+      font: .7rem var(--font-mono);
+      letter-spacing: .1em;
+    }
+
+    .about-play h2 {
+      margin: 0 0 28px;
+    }
+
+    .about-play__copy > p {
+      font-size: .95rem;
+      line-height: 1.95;
+      color: #c6b9cd;
+    }
+
+    .about-play ul {
+      border-top: 0;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .about-play li {
+      border: 1px solid #b499bc47;
+      background: #e1c6e60a;
+      color: #e0d1e8;
+      padding: 12px 14px;
+      font-size: .75rem;
+    }
+
+    .about-play li:nth-child(odd), .about-play li:nth-child(even) {
+      border-right: 1px solid #b499bc47;
+      padding: 12px 14px;
+      font-size: .8125rem;
+      transform: none;
+    }
+
+    .about-contact {
+      padding-top: 90px;
+      background: var(--paper-gold);
+    }
+
+    .about-contact > div {
+      gap: 90px;
+      align-items: start;
+    }
+
+    .about-contact [data-reveal] > span {
+      color: var(--color-gold);
+      font-size: .7rem;
+    }
+
+    .about-contact nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .about-contact nav a, .about-contact nav button {
+      min-width: 0;
+      min-height: 78px;
+      padding: 20px;
+      border: 1px solid color-mix(in srgb,var(--color-gold) 20%,transparent);
+      background: var(--paper-white);
+      font-size: .8rem;
+    }
+
+    .about-contact nav a > svg:first-child, .about-contact nav button > svg:first-child {
+      color: var(--color-gold);
+    }
+
+    .about-contact nav a:hover, .about-contact nav button:hover {
+      border-color: var(--color-gold);
+      background: var(--paper-white);
     }
 
   }

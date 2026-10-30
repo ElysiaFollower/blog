@@ -1,0 +1,41 @@
+---
+interface Props { index: string }
+const { index } = Astro.props;
+---
+<svg class="research-sketch" viewBox="0 0 320 100" fill="none" aria-hidden="true">
+  {index === "01" && <>
+    <path d="M10 32H55C65 32 65 10 75 10S85 54 95 54 105 20 115 20 125 43 135 43 145 32 155 32H300" />
+    <path class="research-sketch__second" d="M310 73H250C240 73 240 50 230 50S220 94 210 94 200 60 190 60 180 84 170 84 160 73 150 73H20" />
+    <path d="m291 25 9 7-9 7M29 66l-9 7 9 7" />
+    <circle cx="15" cy="32" r="4" /><circle cx="305" cy="73" r="4" />
+  </>}
+  {index === "02" && <>
+    <ellipse cx="128" cy="49" rx="77" ry="37" transform="rotate(-12 128 49)" />
+    <ellipse class="research-sketch__second" cx="195" cy="49" rx="77" ry="37" transform="rotate(12 195 49)" />
+    <path d="M86 49h28l8-12 10 25 10-18 8 5h35l8-13 10 26 10-19 9 6h21" />
+    <circle cx="28" cy="49" r="3" /><path d="M290 49h21" />
+  </>}
+  {index === "03" && <>
+    <path d="M18 76c41-66 82-66 123 0s82 18 123-47M18 52c41-42 82-42 123 0s82 42 123 0" opacity=".5" />
+    <path d="M78 73V24l35-9v48M78 35l35-9M233 60V20l30 10v13" />
+    <ellipse class="research-sketch__second" cx="69" cy="74" rx="10" ry="7" transform="rotate(-20 69 74)" />
+    <ellipse class="research-sketch__second" cx="104" cy="64" rx="10" ry="7" transform="rotate(-20 104 64)" />
+    <ellipse class="research-sketch__second" cx="224" cy="61" rx="10" ry="7" transform="rotate(-20 224 61)" />
+    <path d="M285 22v10M280 27h10" />
+  </>}
+</svg>
+<style>
+  .research-sketch {
+    width: 100%;
+    height: 100px;
+    margin: 4px 0 24px;
+    stroke: var(--color-cyan);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .research-sketch__second {
+    stroke: var(--color-rose);
+  }
+</style>

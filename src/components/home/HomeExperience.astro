@@ -1,7 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import { getCollection } from "astro:content";
-import { ArrowUpRight, ArrowDownRight } from "@lucide/astro";
+import { ArrowUpRight, ArrowDownRight, BookOpenText, Images, CircleUserRound } from "@lucide/astro";
 import portrait from "../../assets/demo/elysia-portrait.webp";
 import VoyageHero from "../art/VoyageHero.astro";
 import ApertureOpening from "../art/ApertureOpening.astro";
@@ -13,13 +13,17 @@ import DirectedPointer from "../DirectedPointer.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { siteConfig } from "../../config/site";
 import { profileConfig } from "../../config/profile";
-import { postHref, getCatalogBreadcrumbs } from "../../lib/posts";
+import { getGalleryEntries } from "../../lib/gallery";
+import { postHref, getCatalogBreadcrumbs, getContentRoot } from "../../lib/posts";
 import "../art/home.css";
 
-const posts = (await getCollection("posts", ({data}) => !data.draft))
-  .sort((a,b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()).slice(0,3);
+const allPosts = (await getCollection("posts", ({data}) => !data.draft))
+  .sort((a,b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const posts = allPosts.slice(0,3);
+const collection = await getGalleryEntries();
 const date = new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"2-digit",day:"2-digit"});
 const featured = posts[0];
+const headlineParts = featured?.data.title.split("：");
 const directory = (post: typeof featured) => getCatalogBreadcrumbs(post, false).map(item => item.label).join(" / ");
 ---
 <BaseLayout description={siteConfig.description} bodyClass="hybrid-page" directedPointer>
@@ -27,43 +31,59 @@ const directory = (post: typeof featured) => getCatalogBreadcrumbs(post, false).
   <main id="main-content">
     <VoyageHero />
     <section class="home-writing" id="recent-posts" aria-labelledby="writing-title">
+      <nav class="home-contents page-width" aria-label="首页章节">
+        <a href="#writing-title" data-tone="ink"><BookOpenText size={20} aria-hidden="true" /><span><small>01 / WRITING</small><strong>落笔成文</strong></span><em>{allPosts.length} 篇记录</em><ArrowDownRight size={18} aria-hidden="true" /></a>
+        <a href="#selected-light" data-tone="rose"><Images size={20} aria-hidden="true" /><span><small>02 / COLLECTION</small><strong>记忆的回廊</strong></span><em>{collection.length} 项收藏</em><ArrowDownRight size={18} aria-hidden="true" /></a>
+        <a href="#the-author" data-tone="gold"><CircleUserRound size={20} aria-hidden="true" /><span><small>03 / THE AUTHOR</small><strong>关于我</strong></span><em>研究，也玩耍</em><ArrowDownRight size={18} aria-hidden="true" /></a>
+      </nav>
       <div class="home-writing__inner page-width">
         <header class="home-chapter">
-          <p class="home-chapter__number">01 / WORDS</p>
-          <div><h2 id="writing-title">落笔成文<span>。</span></h2><p>研究中的思路，日常折腾的记录。<br />还有偶尔冒出来，想认真讲一讲的事。</p></div>
-          <a href="/posts/">全部文章 <ArrowUpRight size={18} aria-hidden="true" /></a>
+          <div><p class="home-chapter__number">01 / WORDS & IDEAS</p><h2 id="writing-title">新近落笔<span>。</span></h2></div>
+          <p>研究中的思路，日常折腾的记录。<br />还有偶尔冒出来，想认真讲一讲的事。</p>
+          <a href="/posts/">翻阅全部文章 <ArrowUpRight size={19} aria-hidden="true" /></a>
         </header>
         {featured && (
-          <article class="home-feature">
+          <article class="home-feature" data-content-root={getContentRoot(featured)}>
             <a class="home-feature__image" href={postHref(featured)} aria-label={`阅读：${featured.data.title}`}>
-              <Image src={featured.data.cover} alt={featured.data.coverAlt} widths={[600,900,1200]} sizes="(max-width:760px) 90vw, 55vw" loading="lazy" style={`object-position:${featured.data.coverPosition}`} />
-              <span aria-hidden="true">最近更新 <ArrowUpRight size={22} /></span>
+              <span class="home-feature__label">最新一篇 <i>01</i></span>
+              <Image src={featured.data.cover} alt={featured.data.coverAlt} widths={[600,900,1200]} sizes="(max-width:760px) 90vw, 44vw" loading="lazy" style={`object-position:${featured.data.coverPosition}`} />
+              <span class="home-feature__image-note" aria-hidden="true">NOTES FROM THE VOYAGE <ArrowUpRight size={22} /></span>
             </a>
             <div class="home-feature__copy">
               <p class="home-post-meta"><span>{directory(featured)}</span><time datetime={featured.data.pubDate.toISOString()}>{date.format(featured.data.pubDate)}</time></p>
-              <h3><a href={postHref(featured)}>{featured.data.title}</a></h3>
+              <h3><a href={postHref(featured)}>{headlineParts?.length > 1 ? <><span class="home-feature__topic">{headlineParts[0]}：</span><span class="home-feature__headline">{headlineParts.slice(1).join("：")}</span></> : featured.data.title}</a></h3>
               <p class="home-feature__description">{featured.data.description}</p>
-              <a class="home-text-link" href={postHref(featured)}>读这一篇 <ArrowUpRight size={18} aria-hidden="true" /></a>
+              <a class="home-text-link" href={postHref(featured)}>读这一篇 <ArrowUpRight size={19} aria-hidden="true" /></a>
+              <span class="home-feature__folio" aria-hidden="true">{featured.data.pubDate.getFullYear()}<span>航行手记</span></span>
             </div>
           </article>
         )}
         <div class="home-posts">
           {posts.slice(1).map((post,index) => (
-            <article class="home-post-row">
-              <span class="home-post-row__index">0{index + 2}</span>
-              <div class="home-post-row__copy"><p class="home-post-meta">{directory(post)}</p><h3><a href={postHref(post)}>{post.data.title}</a></h3><time datetime={post.data.pubDate.toISOString()}>{date.format(post.data.pubDate)}</time></div>
-              <a class="home-post-row__image" href={postHref(post)} aria-label={`阅读：${post.data.title}`}><Image src={post.data.cover} alt={post.data.coverAlt} widths={[240,400]} sizes="(max-width:620px) 90px, 180px" loading="lazy" /></a>
-              <a class="home-post-row__arrow" href={postHref(post)} aria-label={`阅读：${post.data.title}`}><ArrowUpRight size={22} aria-hidden="true" /></a>
+            <article class="home-post-row" data-content-root={getContentRoot(post)}>
+              <a class="home-post-row__image" href={postHref(post)} aria-label={`阅读：${post.data.title}`}><Image src={post.data.cover} alt={post.data.coverAlt} widths={[320,480]} sizes="180px" loading="lazy" style={`object-position:${post.data.coverPosition}`} /></a>
+              <div class="home-post-row__copy"><p class="home-post-meta"><span>{directory(post)}</span><span class="home-post-row__index">0{index + 2}</span></p><h3><a href={postHref(post)}>{post.data.title}</a></h3><time datetime={post.data.pubDate.toISOString()}>{date.format(post.data.pubDate)}</time></div>
+              <a class="home-post-row__arrow" href={postHref(post)} aria-label={`阅读：${post.data.title}`}><ArrowUpRight size={21} aria-hidden="true" /></a>
             </article>
           ))}
         </div>
-        <div class="home-writing__ending"><span>想找某个主题？</span><a href="/posts/catalog/">去知识目录翻翻 <ArrowDownRight size={17} aria-hidden="true" /></a></div>
+        <div class="home-writing__ending"><span>沿时间翻阅，或按主题寻找。</span><a href="/posts/catalog/">打开知识目录 <ArrowUpRight size={17} aria-hidden="true" /></a></div>
       </div>
     </section>
     <LightTable />
-    <section class="home-person page-width" aria-labelledby="person-title">
-      <div class="home-person__portrait"><Image src={portrait} alt="花园茶会中的爱莉希雅" widths={[360,600,800]} sizes="(max-width:620px) 55vw, 30vw" loading="lazy" /><span aria-hidden="true">A LITTLE CORNER OF THE INTERNET</span></div>
-      <div class="home-person__copy"><p class="home-chapter__number">03 / THE AUTHOR</p><h2 id="person-title">主线之外，<br />还有许多兔子洞。</h2><p>{profileConfig.introduction}。</p><p class="home-person__aside">一个相信童话的妄想家，也在认真理解这个世界。</p><a class="home-text-link" href="/about/">关于 {profileConfig.handle} <ArrowUpRight size={18} aria-hidden="true" /></a></div>
+    <section class="home-author" id="the-author" aria-labelledby="person-title">
+      <div class="home-person page-width">
+        <figure class="home-person__portrait"><span class="home-person__margin" aria-hidden="true">17 / A PERSONAL NOTE</span><Image src={portrait} alt="花园茶会中的爱莉希雅" widths={[480,720,1080]} sizes="38vw" loading="lazy" /><figcaption>研究之外，也认真玩耍。</figcaption></figure>
+        <div class="home-person__copy">
+          <p class="home-chapter__number">03 / ABOUT ME</p>
+          <h2 id="person-title">一个相信童话的<br /><em>妄想家。</em></h2>
+          <p class="home-person__identity">{profileConfig.handle}<span>也使用网名 {profileConfig.alias}</span></p>
+          <p>{profileConfig.introduction}。</p>
+          <div class="home-person__interests"><span>语音对话</span><span>情感交互</span><span>音频与音乐生成</span></div>
+          <p class="home-person__aside">主线之外，还有许多兔子洞。</p>
+          <a class="home-text-link" href="/about/">多认识我一点 <ArrowUpRight size={19} aria-hidden="true" /></a>
+        </div>
+      </div>
     </section>
   </main>
   <SiteFooter />
