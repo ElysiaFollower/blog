@@ -23,7 +23,7 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
         const qualifiedLead = lead.match(/^(.*?)([（(].*[）)])([：:])$/);
         return (<article class="writing-story__page" data-writing-page data-scene-content data-post-id={post.id}>
           <a class="writing-story__art" href={postHref(post)} aria-label={`阅读：${post.data.title}`}>
-            <Image src={post.data.cover} alt={post.data.coverAlt} widths={[720,1080,1440]} sizes="52vw" loading="lazy" style={`object-position:${post.data.coverPosition}`} />
+            <Image src={post.data.cover} alt={post.data.coverAlt} widths={[720,1080,1440]} sizes="(max-width: 760px) 100vw, 52vw" loading="lazy" style={`object-position:${post.data.coverPosition}`} />
             <span class="writing-story__sheet-number" aria-hidden="true">0{index+1}</span>
           </a>
           <div class="writing-story__paper">
@@ -346,5 +346,35 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
     background: currentColor;
     transform: scaleX(var(--index-progress,0));
     transform-origin: left;
+  }
+
+  @media (max-width: 1023px) {
+    .writing-story__paper { padding: 32px; }
+    .writing-story__heading { flex-wrap: wrap; gap: 20px; }
+  }
+
+  @media (max-width: 760px) {
+    .writing-story { padding-block: 44px; }
+    .writing-story__heading {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .writing-story__heading > div > p { margin-bottom: 14px; }
+    h2 { font-size: 2.25rem; }
+    .writing-story__heading > p {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      font-size: .85rem;
+    }
+    .writing-story__heading > a { gap: 10px; font-size: .75rem; }
+    .writing-story__page { grid-template-columns: minmax(0, 1fr); padding-block: 18px; }
+    .writing-story__art { height: clamp(220px, 62vw, 360px); }
+    .writing-story__paper { padding: 24px; }
+    h3 { margin-block: 20px 16px; font-size: 1.45rem; line-height: 1.55; }
+    h3 a > span + span { margin-top: 4px; }
+    .writing-story__description { font-size: .875rem; }
+    .writing-story__folio { gap: 12px; }
   }
 </style>
