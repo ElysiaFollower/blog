@@ -1,15 +1,16 @@
 # 任务状态快照
 
-分支 `dev-art`，本轮基线 `cc39a0b`。作者认可画廊开屏与 After Hours；现在明确要求
-体验平滑、共用进度与边界惯性，同时补齐首页末章、文章开场和 About 其余部分。
-PC 仍在设计阶段，其他媒体端继续暂缓。
+分支 `dev-art`。作者明确否定 `3c0be70` 的视觉与新滚动驱动；本轮以未提交 revert
+撤回该版本，在 `cc39a0b` 的保留项上重新设计。不可将被否定版本的数学测试称为体验改善。
+用户的重点仍是视觉编排；性能可以之后做。PC 先行，其他媒体端继续后置。
 
-实现：scroll-progress 保存页面级位置/速度，scroll-scene 统一监听、RAF、几何读取、
-进度与固定舞台进入/离开投影；voyage 已接入。About 方向行不再读取即时位置绕过进度。
-AuthorCoda、AboutPrologue、JournalOpening 独立为艺术组件；联系区改为链接纵列。
-保留画廊开屏、After Hours 的视觉关键状态与原有浏览/深链功能。
+当前实现：JournalBooks 恢复并重新编排最近三篇书册；AuthorPortrait 删除上轮的新增
+措辞和覆盖文字纸条；AboutPortraitStory 用同一幅留驻肖像串起身份与研究，内部画窗
+逐渐收拢，固定布局占位不随动画变化。After Hours、画廊开屏与首屏恢复基线。
+移除已废弃的 journal-entry 脚本，没有引入新依赖或新生成图。
 
-八项动效测试已通过（共享进度五项，既有拖拽三项）。已实际检查新的主要 PC 构图，
-并读取 After Hours 退出时的原生位置、舞台位置与画面状态。`pnpm verify` 已通过；本轮没有新增诊断提示，原有 friends 配置提示保留。
-截图：`/Users/ely/.codex/visualizations/2026/10/30/dev-art-continuity/`。
-开发预览 `http://localhost:4321/`。没有推送部署；不宣称完整帧率、触屏或其他媒体端验收。
+已在 Chrome 1470×970 检查真实开发预览（包括草稿顺序）与生产稿：书册中文断行、
+首页末章、About 起始/研究/衔接，并正反向滚动。画窗变化中章节高度和 sticky 占位保持
+固定。`pnpm verify` 通过，仅保留既有 friends 配置未使用导入提示。当前待作者评价 PC 稿。
+截图：`/Users/ely/.codex/visualizations/2026/10/30/dev-art-redesign/`。
+开发预览 `http://localhost:4321/`，未推送部署。完整性能、触屏和其他媒体端未验收。

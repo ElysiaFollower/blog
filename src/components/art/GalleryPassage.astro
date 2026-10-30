@@ -45,7 +45,7 @@ const display = [windows[0], windows[1], windows[2]].filter(Boolean);
       root.style.setProperty("--passage-middle-top", `${20 * (1 - p)}svh`);
       root.style.setProperty("--passage-copy-y", `${-p * 95}px`);
       root.style.setProperty("--passage-copy-opacity", String(1 - ease((p - .12) / .65)));
-    }, { pinned: true });
+    });
   });
 </script>
 <style>
@@ -192,8 +192,6 @@ const display = [windows[0], windows[1], windows[2]].filter(Boolean);
   [data-scene-ready] .gallery-passage__stage {
     position: sticky;
     top: 0;
-    translate: 0 var(--scene-offset,0px);
-    z-index: var(--scene-layer,auto);
     height: 100svh;
   }
 

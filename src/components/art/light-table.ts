@@ -31,7 +31,6 @@ export function mountLightTable(root: HTMLElement): void {
   let suppressClick = false;
   let clickTimer = 0;
   let entrance = 1;
-  let stageWidth = stage.clientWidth;
 
   const announce = () => {
     selected = motion.nearest;
@@ -44,7 +43,7 @@ export function mountLightTable(root: HTMLElement): void {
   const render = () => {
     if (!visible) return;
     const active = motion.nearest;
-    const range = stageWidth / 2 + 450;
+    const range = stage.clientWidth / 2 + 450;
     entries.forEach((entry, index) => {
       const x = motion.centers[index] - motion.position;
       const nearby = Math.abs(x) < range + sizes[index].width / 2;
@@ -125,7 +124,6 @@ export function mountLightTable(root: HTMLElement): void {
     animate();
   };
   const measure = () => {
-    stageWidth = stage.clientWidth;
     const centers: number[] = [];
     sizes = entries.map(entry => {
       const ratio = entry.width / entry.height;

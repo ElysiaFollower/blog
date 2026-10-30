@@ -1,0 +1,248 @@
+---
+import { Image } from "astro:assets";
+import { ArrowDownRight, GraduationCap, Microscope } from "@lucide/astro";
+import portrait from "../../assets/demo/elysia-portrait.webp";
+import { profileConfig } from "../../config/profile";
+const pause = profileConfig.introduction.indexOf("，");
+const introduction = pause < 0 ? [profileConfig.introduction] : [profileConfig.introduction.slice(0,pause+1),profileConfig.introduction.slice(pause+1)];
+---
+<section class="portrait-story" data-portrait-story aria-labelledby="about-title">
+  <div class="portrait-story__inner page-width">
+    <figure class="portrait-story__portrait">
+      <div class="portrait-story__image"><Image src={portrait} alt="花园茶会中的爱莉希雅" widths={[720,1080,1440]} sizes="43vw" loading="eager" /></div>
+      <figcaption>研究之外，也认真玩耍。</figcaption>
+    </figure>
+    <div class="portrait-story__words">
+      <header class="portrait-story__identity">
+        <p class="portrait-story__eyebrow">ABOUT / 0017</p>
+        <h1 id="about-title"><span>你好，我是</span>{profileConfig.handle}</h1>
+        <p class="portrait-story__alias">也使用网名 <b>{profileConfig.alias}</b></p>
+        <p class="portrait-story__introduction">{introduction.map((line,index) => <span>{line}{index === introduction.length-1 && "。"}</span>)}</p>
+        <div class="portrait-story__status" aria-label="当前状态"><span><GraduationCap size={18} aria-hidden="true" />{profileConfig.education}</span><span><Microscope size={18} aria-hidden="true" />{profileConfig.nextStage}</span></div>
+        <a href="#research">关注的方向 <ArrowDownRight size={21} aria-hidden="true" /></a>
+      </header>
+      <section class="portrait-story__research" id="research" aria-labelledby="research-title">
+        <header><p class="portrait-story__eyebrow">01 / RESEARCH DIRECTIONS</p><h2 id="research-title">关注的方向</h2></header>
+        {profileConfig.research.map(item => <article data-portrait-direction>
+          <span>{item.index}</span>
+          <div><h3>{item.title}</h3><p>{item.description}</p><i aria-hidden="true"></i></div>
+        </article>)}
+      </section>
+    </div>
+  </div>
+</section>
+<script>
+  import { mountPortraitStory } from "./about-portrait";
+  document.querySelectorAll<HTMLElement>("[data-portrait-story]").forEach(mountPortraitStory);
+</script>
+<style>
+  .portrait-story {
+    position: relative;
+    overflow: clip;
+    background: linear-gradient(180deg,var(--paper-gold) 0%,var(--paper-gold) 25%,var(--paper-cyan) 74%,var(--paper-cyan));
+  }
+
+  .portrait-story__inner {
+    display: grid;
+    grid-template-columns: 1fr 1.06fr;
+    align-items: start;
+    gap: 105px;
+    padding-block: 55px 95px;
+  }
+
+  /* Keep the sticky footprint fixed while the picture aperture changes size. */ .portrait-story__portrait {
+    position: sticky;
+    top: 96px;
+    height: calc(clamp(400px,calc(100svh - 470px),680px) + 45px);
+    margin: 0;
+  }
+
+  .portrait-story__image {
+    height: clamp(400px,calc(100svh - 210px - var(--portrait-cut,0px)),680px);
+    overflow: hidden;
+    border-radius: 230px 230px 3px 3px;
+  }
+
+  .portrait-story__image :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 32%;
+  }
+
+  .portrait-story__portrait figcaption {
+    padding: 23px 0 0;
+    color: var(--color-gold);
+    font: .9rem var(--font-reading);
+  }
+
+  .portrait-story__identity {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 680px;
+    padding: 32px 0 80px;
+  }
+
+  .portrait-story__eyebrow {
+    margin: 0 0 27px;
+    color: var(--color-gold);
+    font: .67rem var(--font-mono);
+    letter-spacing: .11em;
+  }
+
+  .portrait-story h1 {
+    margin: 0;
+    font: 400 clamp(2.3rem,3.55vw,3.6rem)/1.3 var(--font-reading);
+    letter-spacing: -.05em;
+  }
+
+  .portrait-story h1 > span {
+    display: block;
+    margin-bottom: 22px;
+    font-size: .53em;
+    letter-spacing: 0;
+  }
+
+  .portrait-story__alias {
+    margin: 29px 0;
+    color: var(--color-muted);
+    font: .78rem var(--font-ui);
+  }
+
+  .portrait-story__alias b {
+    color: var(--color-rose);
+    font-weight: 400;
+  }
+
+  .portrait-story__introduction {
+    margin: 0;
+    max-width: 460px;
+    color: var(--color-muted);
+    font: 1rem/1.95 var(--font-ui);
+    text-wrap: balance;
+  }
+
+  .portrait-story__introduction > span {
+    display: block;
+  }
+
+  .portrait-story__status {
+    display: grid;
+    gap: 14px;
+    padding-top: 29px;
+    margin-top: 32px;
+    border-top: 1px solid color-mix(in srgb,var(--color-gold) 28%,transparent);
+    font: .73rem var(--font-mono);
+    color: var(--color-muted);
+  }
+
+  .portrait-story__status span {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .portrait-story__status svg {
+    color: var(--color-gold);
+  }
+
+  .portrait-story__identity > a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 190px;
+    margin-top: 35px;
+    padding-top: 15px;
+    min-height: 44px;
+    border-top: 1px solid color-mix(in srgb,var(--color-gold) 30%,transparent);
+    color: var(--color-gold);
+    text-decoration: none;
+    font-size: .85rem;
+  }
+
+  .portrait-story__research {
+    padding-top: 55px;
+  }
+
+  .portrait-story__research header > p {
+    color: var(--color-cyan);
+  }
+
+  .portrait-story h2 {
+    margin: 0 0 30px;
+    font: 400 2.5rem/1.4 var(--font-reading);
+  }
+
+  .portrait-story__research article {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 18px;
+    padding: 45px 0;
+    border-top: 1px solid color-mix(in srgb,var(--color-cyan) 30%,transparent);
+  }
+
+  .portrait-story__research article > span {
+    color: var(--color-cyan);
+    font: italic 1.45rem var(--font-reading);
+    padding-top: 5px;
+  }
+
+  .portrait-story h3 {
+    margin: 0 0 20px;
+    font: 400 clamp(1.6rem,2vw,2rem)/1.4 var(--font-reading);
+  }
+
+  .portrait-story__research article p {
+    margin: 0;
+    color: var(--color-muted);
+    font: .95rem/1.95 var(--font-ui);
+  }
+
+  .portrait-story__research article i {
+    display: block;
+    width: 60px;
+    height: 2px;
+    margin-top: 28px;
+    background: var(--color-cyan);
+    transform-origin: left;
+    opacity: .55;
+  }
+
+  [data-scene-ready] .portrait-story__image {
+    border-radius: var(--portrait-radius,230px) var(--portrait-radius,230px) 3px 3px;
+  }
+
+  [data-scene-ready] .portrait-story__image :global(img) {
+    transform: scale(var(--portrait-scale,1));
+  }
+
+  [data-portrait-direction][data-scene-ready] > div {
+    transform: translateY(var(--direction-y,0px));
+  }
+
+  [data-portrait-direction][data-scene-ready] i {
+    transform: scaleX(var(--direction-line,1));
+  }
+
+  @media (max-width:1023px) {
+    .portrait-story__inner {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    .portrait-story__portrait {
+      position: relative;
+      top: auto;
+      height: auto;
+      max-width: 500px;
+    }
+
+    .portrait-story__identity {
+      min-height: 0;
+      padding-block: 30px;
+    }
+
+  }
+</style>

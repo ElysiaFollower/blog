@@ -3,8 +3,8 @@ import { ArrowDownRight, BookOpenText, Images, CircleUserRound } from "@lucide/a
 import VoyageHero from "../art/VoyageHero.astro";
 import ApertureOpening from "../art/ApertureOpening.astro";
 import LightTable from "../art/LightTable.astro";
+import AuthorPortrait from "../art/AuthorPortrait.astro";
 import WritingChapter from "../art/WritingChapter.astro";
-import AuthorCoda from "../art/AuthorCoda.astro";
 import MusicDock from "../MusicDock.astro";
 import SiteHeader from "../SiteHeader.astro";
 import SiteFooter from "../SiteFooter.astro";
@@ -32,7 +32,7 @@ const collection = await getGalleryEntries();
       <WritingChapter posts={posts} />
     </section>
     <LightTable />
-    <AuthorCoda />
+    <AuthorPortrait />
   </main>
   <SiteFooter />
   <DirectedPointer />

@@ -1,5 +1,11 @@
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
+/** Smooth the scene rather than intercepting wheel events or moving the document. */
+export function dampProgress(current: number, target: number, elapsed: number): number {
+  const next = target + (current - target) * Math.exp(-elapsed / 90);
+  return Math.abs(next - target) < .0002 ? target : next;
+}
+
 /** One position owns both direct manipulation and the interruptible settling animation. */
 export class RailMotion {
   position: number;

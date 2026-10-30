@@ -8,7 +8,7 @@ import {
   Mail,
   Tv,
 } from "@lucide/astro";
-import AboutPrologue from "../../components/art/AboutPrologue.astro";
+import AboutPortraitStory from "../../components/art/AboutPortraitStory.astro";
 import playPortrait from "../../assets/demo/sparkle-portrait.webp";
 import DirectedPointer from "../../components/DirectedPointer.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
@@ -25,31 +25,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <SiteHeader variant="reading" />
 
   <main id="main-content">
-    <AboutPrologue />
-
-    <section id="research" class="about-research" data-about-research>
-      <div class="page-width">
-        <header>
-          <div><span>01 / RESEARCH DIRECTIONS</span><h2>关注的<br />方向<span>。</span></h2></div>
-          <p>
-            我关心模型怎样听懂话语，<br />也怎样理解说话的人。
-          </p>
-          <div class="about-research__position" aria-hidden="true"><span data-direction-current>01</span><i></i><span>{String(profileConfig.research.length).padStart(2,"0")}</span></div>
-        </header>
-
-        <div class="about-research__list">
-          {
-            profileConfig.research.map((item) => (
-              <article data-direction data-direction-index={item.index}>
-                <span>{item.index}</span>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-              </article>
-            ))
-          }
-        </div>
-      </div>
-    </section>
+    <AboutPortraitStory />
 
     <section class="about-play" id="after-hours" aria-labelledby="play-title" data-about-play>
       <div class="about-play__stage">
@@ -93,17 +69,17 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           <nav aria-label="个人链接">
             <a href={profileConfig.links.github}>
               <GitFork aria-hidden="true" size={19} stroke-width={1.8} />
-              <span><b>GitHub</b><small>代码与项目</small></span>
+              <span>GitHub</span>
               <ArrowUpRight aria-hidden="true" size={17} stroke-width={1.8} />
             </a>
             <a href={profileConfig.links.academic} target="_blank" rel="noopener noreferrer">
               <GraduationCap aria-hidden="true" size={19} stroke-width={1.8} />
-              <span><b>Academic</b><small>论文与研究</small></span>
+              <span>Academic</span>
               <ArrowUpRight aria-hidden="true" size={17} stroke-width={1.8} />
             </a>
             <a href={profileConfig.links.bilibili} target="_blank" rel="noopener noreferrer">
               <Tv aria-hidden="true" size={19} stroke-width={1.8} />
-              <span><b>Bilibili</b><small>在画面与声音里</small></span>
+              <span>Bilibili</span>
               <ArrowUpRight aria-hidden="true" size={17} stroke-width={1.8} />
             </a>
             <button
@@ -114,7 +90,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
               title="复制联系邮箱"
             >
               <Mail aria-hidden="true" size={19} stroke-width={1.8} />
-              <span><b data-email-label>{profileConfig.links.email}</b><small>写封邮件</small></span>
+              <span data-email-label>{profileConfig.links.email}</span>
               <Copy aria-hidden="true" size={17} stroke-width={1.8} />
             </button>
           </nav>
@@ -124,7 +100,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
       <footer class="page-width">
         <span>PROMETHEUS © 2026</span>
-        <span>谢谢你看到这里。</span>
+        <span>END OF TRANSMISSION</span>
       </footer>
     </section>
   </main>
@@ -159,82 +135,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 </script>
 
 <style>
-  .about-research {
-    position: relative;
-    background: var(--paper-cyan,var(--color-bg));
-    padding-block: 90px;
-  }
-
-  .about-research > .page-width {
-    display: grid;
-    grid-template-columns: .76fr 1.24fr;
-    align-items: start;
-    gap: 100px;
-  }
-
-  .about-research header {
-    position: sticky;
-    top: 110px;
-    padding-top: 35px;
-  }
-
-  .about-research header > div > span {
-    color: var(--color-cyan);
-    font: .7rem var(--font-mono);
-    letter-spacing: .1em;
-  }
-
-  .about-research h2 {
-    margin: 28px 0;
-    font: 400 var(--type-section-title,3rem)/1.3 var(--font-reading);
-  }
-
-  .about-research header > p {
-    max-width: 28ch;
-    color: var(--color-muted);
-    font: 1.2rem/1.9 var(--font-reading);
-  }
-
-  .about-research__list {
-    border-top: 1px solid color-mix(in srgb,var(--color-cyan) 35%,transparent);
-  }
-
-  .about-research__list article {
-    display: grid;
-    grid-template-columns: 90px 1fr;
-    gap: 20px;
-    padding: 48px 0 48px 18px;
-    min-height: 240px;
-    position: relative;
-    border-bottom: 1px solid color-mix(in srgb,var(--color-cyan) 25%,transparent);
-  }
-
-  .about-research__list article > span {
-    grid-row: 1/3;
-    padding-top: 5px;
-    color: var(--color-cyan);
-    font: italic 3.8rem/1 var(--font-reading);
-    opacity: .5;
-  }
-
-  .about-research__list h3 {
-    margin: 0;
-    font: 400 1.9rem/1.4 var(--font-reading);
-  }
-
-  .about-research__list p {
-    grid-column: 2;
-    margin: 0;
-    color: var(--color-muted);
-    font-size: .95rem;
-    line-height: 1.95;
-  }
-
-  [data-direction][data-scene-ready] {
-    opacity: var(--direction-opacity,1);
-    transform: translateX(var(--direction-x,0px));
-  }
-
   .about-play {
     position: relative;
     background: #211d2d;
@@ -311,8 +211,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   [data-scene-ready] .about-play__stage {
     position: sticky;
     top: 0;
-    translate: 0 var(--scene-offset,0px);
-    z-index: var(--scene-layer,auto);
     height: 100svh;
     min-height: 650px;
     overflow: hidden;
@@ -406,8 +304,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
   .about-contact nav {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
   }
 
   .about-contact nav a, .about-contact nav button {
@@ -416,11 +314,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     justify-content: space-between;
     gap: 14px;
     min-width: 0;
-    min-height: 95px;
-    padding: 20px 4px;
-    border: 0;
-    border-bottom: 1px solid color-mix(in srgb,var(--color-gold) 28%,transparent);
-    background: transparent;
+    min-height: 78px;
+    padding: 20px;
+    border: 1px solid color-mix(in srgb,var(--color-gold) 20%,transparent);
+    background: var(--paper-white,var(--color-surface));
     font-size: .8rem;
     text-decoration: none;
     cursor: pointer;
@@ -460,105 +357,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     opacity: var(--contact-opacity,1);
   }
 
-  .about-research h2 {
-    font-size: clamp(3rem,4.5vw,4.5rem);
-    line-height: 1.4;
-  }
-
-  .about-research h2 > span {
-    color: var(--color-cyan);
-  }
-
-  .about-research__position {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-top: 45px;
-    max-width: 230px;
-    color: var(--color-cyan);
-    font: .8rem var(--font-mono);
-  }
-
-  .about-research__position i {
-    position: relative;
-    width: 100%;
-    height: 1px;
-    background: color-mix(in srgb,var(--color-cyan) 22%,transparent);
-  }
-
-  .about-research__position i::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: scaleX(var(--research-progress,0));
-    transform-origin: left;
-    background: var(--color-cyan);
-  }
-
-  .about-research__list article::before {
-    content: "";
-    position: absolute;
-    z-index: 0;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(90deg,color-mix(in srgb,var(--paper-white) 65%,transparent),transparent);
-    opacity: var(--direction-emphasis,0);
-  }
-
-  .about-research__list article > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  .about-contact {
-    position: relative;
-  }
-
-  .about-contact h2 {
-    font-size: clamp(3rem,4.3vw,4.2rem);
-    line-height: 1.4;
-  }
-
-  .about-contact nav {
-    border-top: 1px solid color-mix(in srgb,var(--color-gold) 28%,transparent);
-  }
-
-  .about-contact nav b {
-    font: 400 1.5rem var(--font-reading);
-  }
-
-  .about-contact nav small {
-    display: block;
-    margin-top: 8px;
-    font: .75rem var(--font-ui);
-    color: var(--color-muted);
-  }
-
-  .about-contact nav button {
-    text-align: left;
-  }
-
-  .about-contact nav button b {
-    font-size: 1.12rem;
-  }
-
-  .about-contact nav a:hover, .about-contact nav button:hover {
-    color: var(--color-gold);
-    background: color-mix(in srgb,var(--paper-white) 35%,transparent);
-  }
-
-  .about-contact__invitation {
-    max-width: 350px;
-  }
-
   @media (max-width:1023px) {
-    .about-research > .page-width, .about-play__stage, .about-contact > .page-width {
+    .about-play__stage, .about-contact > .page-width {
       grid-template-columns: 1fr;
       gap: 40px;
-    }
-
-    .about-research header {
-      position: static;
     }
 
     .about-play__image {

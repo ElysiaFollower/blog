@@ -38,5 +38,5 @@ export function mountWritingStory(root: HTMLElement): void {
       else link.removeAttribute("aria-current");
       link.style.setProperty("--index-progress", String(clamp01(cursor - index + 1)));
     });
-  }, { pinned: true });
+  });
 }

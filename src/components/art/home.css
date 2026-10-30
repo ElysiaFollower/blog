@@ -81,5 +81,8 @@
 }
 
 @media (max-width:1023px) {
-  .home-contents { display:none; }
+  .home-contents {
+    display: none;
+  }
+
 }
