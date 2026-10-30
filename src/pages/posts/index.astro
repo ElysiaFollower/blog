@@ -1,10 +1,10 @@
 ---
 import { Image } from "astro:assets";
 import {
-  ArrowDownRight,
   ArrowUpRight,
   ListTree,
 } from "@lucide/astro";
+import JournalOpening from "../../components/art/JournalOpening.astro";
 import ArticleSectionNav from "../../components/content/ArticleSectionNav.astro";
 import DirectedPointer from "../../components/DirectedPointer.astro";
 import ScrollReveal from "../../components/ScrollReveal.astro";
@@ -52,33 +52,7 @@ const directoryLabel = (post: (typeof posts)[number]) =>
   <main id="main-content">
     <ArticleSectionNav current="discover" />
 
-    <header class="journal-masthead" data-journal-entry>
-      <div class="journal-masthead__inner page-width">
-        <div class="journal-masthead__title">
-          <p>ESSAYS & NOTES · {String(posts.length)}</p>
-          <h1>文章</h1>
-        </div>
-        <div class="journal-masthead__copy">
-          <p>
-            记录研究、工程与日常见闻，<br>落笔成文，皆是老来回首的回忆<br />
-          </p>
-          {
-            posts.length > 0 && (
-              <a href="#journal-timeline">
-                从最新一篇读起
-                <ArrowDownRight
-                  aria-hidden="true"
-                  size={19}
-                  stroke-width={1.8}
-                />
-              </a>
-            )
-          }
-        </div>
-
-      </div>
-      <div class="journal-masthead__rule page-width" aria-hidden="true"><span></span></div>
-    </header>
+    <JournalOpening posts={posts} />
 
     {
       posts.length > 0 ? (
@@ -211,93 +185,16 @@ const directoryLabel = (post: (typeof posts)[number]) =>
   <ScrollReveal />
 </BaseLayout>
 
-<script>
-  import { mountJournalEntry } from "../../components/art/journal-entry";
-  document.querySelectorAll<HTMLElement>("[data-journal-entry]").forEach(mountJournalEntry);
-</script>
+
 <style>
   .journal-page {
     background: var(--color-bg);
   }
 
-  .journal-masthead {
-    background: radial-gradient(ellipse at 85% 0%, color-mix(in srgb, var(--color-rose) 8%, transparent), transparent 65%);
-    position: relative;
-    border-bottom: 1px solid var(--color-line);
-    overflow: hidden;
-  }
-
-  .journal-masthead__inner {
-    display: grid;
-    min-height: 340px;
-    padding-block: 76px 72px;
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.62fr);
-    align-items: end;
-    gap: 72px;
-  }
-
-  .journal-masthead__title p, .journal-timeline__header p, .journal-year > header p, .journal-catalog p, .journal-empty > p {
+  .journal-timeline__header p, .journal-year > header p, .journal-catalog p, .journal-empty > p {
     margin: 0;
     color: var(--color-rose);
-    font-family: var(--font-mono);
-    font-size: 0.66rem;
-    font-weight: 800;
-  }
-
-  .journal-masthead h1 {
-    margin: 16px 0 0;
-    font-family: var(--font-reading);
-    font-size: var(--type-page-title, clamp(4.5rem, 9vw, 7.5rem));
-    font-weight: 500;
-    line-height: 0.88;
-  }
-
-  .journal-masthead__copy {
-    padding: 8px 0 8px 34px;
-    border-left: 1px solid var(--color-line);
-  }
-
-  .journal-masthead__copy p {
-    margin: 0;
-    color: var(--color-muted);
-    font-family: var(--font-reading);
-    font-size: 1.05rem;
-    line-height: 1.9;
-  }
-
-  .journal-masthead__copy a {
-    display: inline-flex;
-    margin-top: 28px;
-    align-items: center;
-    gap: 9px;
-    color: var(--color-ink);
-    font-size: 0.78rem;
-    font-weight: 760;
-    text-decoration: none;
-  }
-
-  .journal-masthead__rule {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    display: flex;
-    height: 1px;
-  }
-
-  .journal-masthead__rule span:nth-child(1) {
-    width: 46px;
-    background: var(--color-cyan);
-  }
-
-  .journal-masthead__rule span:nth-child(2) {
-    width: 46px;
-    background: var(--color-rose);
-  }
-
-  .journal-masthead__rule span:nth-child(3) {
-    width: 38px;
-    background: var(--color-gold);
+    font: 800 .66rem var(--font-mono);
   }
 
   .journal-timeline {
@@ -550,28 +447,6 @@ const directoryLabel = (post: (typeof posts)[number]) =>
   }
 
   @media (max-width: 760px) {
-    .journal-masthead__inner {
-      min-height: 300px;
-      padding-block: 34px 36px;
-      grid-template-columns: 1fr;
-      align-content: end;
-      gap: 24px;
-    }
-
-    .journal-masthead__copy {
-      padding: 22px 0 0;
-      border-top: 1px solid var(--color-line);
-      border-left: 0;
-    }
-
-    .journal-masthead__copy p {
-      font-size: 0.94rem;
-    }
-
-    .journal-masthead__copy a {
-      margin-top: 18px;
-    }
-
     .journal-timeline {
       padding-block: 48px 84px;
     }
@@ -648,46 +523,6 @@ const directoryLabel = (post: (typeof posts)[number]) =>
   }
 
   @media (min-width: 1024px) {
-    .journal-masthead {
-      background: transparent;
-      border-color: color-mix(in srgb,var(--color-cyan) 25%,transparent);
-    }
-
-    .journal-masthead__inner {
-      min-height: 360px;
-      padding-block: 56px 50px;
-      grid-template-columns: 1fr 1.1fr;
-      gap: 60px;
-    }
-
-    .journal-masthead__title p {
-      color: var(--color-cyan);
-      font-size: .7rem;
-      letter-spacing: .1em;
-      font-weight: 400;
-    }
-
-    .journal-masthead h1 {
-      font-weight: 400;
-      line-height: 1.1;
-    }
-
-    .journal-masthead__copy {
-      border-color: color-mix(in srgb,var(--color-cyan) 30%,transparent);
-      padding-left: 28px;
-    }
-
-    .journal-masthead__copy p {
-      font-size: 1rem;
-      line-height: 1.95;
-    }
-
-    .journal-masthead__copy a {
-      color: var(--color-cyan);
-      font-size: .85rem;
-      font-weight: 400;
-    }
-
     .journal-timeline {
       padding-top: 64px;
     }
@@ -802,56 +637,6 @@ const directoryLabel = (post: (typeof posts)[number]) =>
   }
 
   @media (min-width:1024px) {
-    .journal-masthead {
-      overflow: visible;
-      border-bottom: 0;
-      isolation: isolate;
-    }
-
-    .journal-masthead::before {
-      content: "";
-      position: absolute;
-      z-index: -1;
-      inset: 0;
-      background: linear-gradient(180deg,var(--color-bg),var(--paper-cyan) 32%,var(--color-bg));
-      opacity: var(--journal-wash,1);
-    }
-
-    .journal-masthead__inner {
-      padding-block: 64px 55px;
-      align-items: center;
-    }
-
-    .journal-masthead h1 {
-      font-size: clamp(5rem,7vw,7rem);
-      transform-origin: left center;
-    }
-
-    [data-scene-ready] .journal-masthead__title {
-      transform: translateY(var(--journal-title-y,0px)) scale(var(--journal-title-scale,1));
-      transform-origin: left center;
-    }
-
-    [data-scene-ready] .journal-masthead__copy {
-      transform: translateY(var(--journal-copy-y,0px));
-    }
-
-    .journal-masthead__copy {
-      padding: 0 0 0 40px;
-    }
-
-    .journal-masthead__rule {
-      height: 1px;
-    }
-
-    .journal-masthead__rule span:nth-child(1) {
-      width: 100%;
-      background: var(--color-cyan);
-      transform: scaleX(var(--journal-line,.3));
-      transform-origin: left;
-      opacity: .4;
-    }
-
     .journal-timeline {
       padding-top: 42px;
     }

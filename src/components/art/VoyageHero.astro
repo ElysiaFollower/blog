@@ -45,13 +45,15 @@ import heroNight from "../../assets/demo/hero-night.webp";
     background: var(--color-bg);
   }
 
-  .voyage[data-enhanced] {
+  .voyage[data-scene-ready] {
     height: 190svh;
   }
 
   .voyage__stage {
     position: sticky;
     top: 0;
+    translate: 0 var(--scene-offset,0px);
+    z-index: var(--scene-layer,auto);
     height: 100svh;
     min-height: 700px;
     overflow: hidden;
@@ -319,7 +321,7 @@ import heroNight from "../../assets/demo/hero-night.webp";
       --image-inset: 0vw;
     }
 
-    .voyage[data-enhanced] {
+    .voyage[data-scene-ready] {
       height: 165svh;
     }
 
@@ -384,7 +386,7 @@ import heroNight from "../../assets/demo/hero-night.webp";
   }
 
   @media (prefers-reduced-motion:reduce) {
-    .voyage[data-enhanced] {
+    .voyage[data-scene-ready] {
       height: auto;
     }
 

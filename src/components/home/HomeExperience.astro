@@ -1,18 +1,16 @@
 ---
-import { Image } from "astro:assets";
-import { ArrowUpRight, ArrowDownRight, BookOpenText, Images, CircleUserRound } from "@lucide/astro";
-import portrait from "../../assets/demo/elysia-portrait.webp";
+import { ArrowDownRight, BookOpenText, Images, CircleUserRound } from "@lucide/astro";
 import VoyageHero from "../art/VoyageHero.astro";
 import ApertureOpening from "../art/ApertureOpening.astro";
 import LightTable from "../art/LightTable.astro";
 import WritingChapter from "../art/WritingChapter.astro";
+import AuthorCoda from "../art/AuthorCoda.astro";
 import MusicDock from "../MusicDock.astro";
 import SiteHeader from "../SiteHeader.astro";
 import SiteFooter from "../SiteFooter.astro";
 import DirectedPointer from "../DirectedPointer.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { siteConfig } from "../../config/site";
-import { profileConfig } from "../../config/profile";
 import { getGalleryEntries } from "../../lib/gallery";
 import { getVisiblePosts } from "../../lib/posts";
 import "../art/home.css";
@@ -34,20 +32,7 @@ const collection = await getGalleryEntries();
       <WritingChapter posts={posts} />
     </section>
     <LightTable />
-    <section class="home-author" id="the-author" aria-labelledby="person-title">
-      <div class="home-person page-width">
-        <figure class="home-person__portrait"><span class="home-person__margin" aria-hidden="true">17 / A PERSONAL NOTE</span><Image src={portrait} alt="花园茶会中的爱莉希雅" widths={[480,720,1080]} sizes="38vw" loading="lazy" /><figcaption>研究之外，也认真玩耍。</figcaption></figure>
-        <div class="home-person__copy">
-          <p class="home-chapter__number">03 / ABOUT ME</p>
-          <h2 id="person-title">一个相信童话的<br /><em>妄想家。</em></h2>
-          <p class="home-person__identity">{profileConfig.handle}<span>也使用网名 {profileConfig.alias}</span></p>
-          <p>{profileConfig.introduction}。</p>
-          <div class="home-person__interests"><span>语音对话</span><span>情感交互</span><span>音频与音乐生成</span></div>
-          <p class="home-person__aside">主线之外，还有许多兔子洞。</p>
-          <a class="home-text-link" href="/about/">多认识我一点 <ArrowUpRight size={19} aria-hidden="true" /></a>
-        </div>
-      </div>
-    </section>
+    <AuthorCoda />
   </main>
   <SiteFooter />
   <DirectedPointer />

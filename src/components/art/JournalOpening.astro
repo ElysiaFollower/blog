@@ -1,0 +1,216 @@
+---
+import { Image } from "astro:assets";
+import { ArrowDownRight, ArrowUpRight } from "@lucide/astro";
+import { postHref, getCatalogBreadcrumbs, type PublishedPost } from "../../lib/posts";
+interface Props { posts: PublishedPost[] }
+const { posts } = Astro.props;
+const latest = posts[0];
+const date = new Intl.DateTimeFormat("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
+---
+<header class="journal-opening" data-journal-entry>
+  <div class="page-width">
+    <div class="journal-opening__eyebrow"><span>ESSAYS & NOTES</span><span>{String(posts.length).padStart(2,"0")} 篇记录 / 持续落笔中</span></div>
+    <div class="journal-opening__spread">
+      <div class="journal-opening__title">
+        <h1>文章<span>。</span></h1>
+        <p>记录研究、工程与日常见闻，<br />落笔成文，皆是老来回首的回忆。</p>
+        <a href="#journal-timeline">沿时间翻阅 <ArrowDownRight size={20} aria-hidden="true" /></a>
+      </div>
+      {latest && <article class="journal-opening__latest">
+        <a class="journal-opening__cover" href={postHref(latest)} aria-label={`阅读《${latest.data.title}》`}><Image src={latest.data.cover} alt={latest.data.coverAlt} widths={[480,720,960]} sizes="23vw" loading="eager" style={`object-position:${latest.data.coverPosition}`} /></a>
+        <div class="journal-opening__paper">
+          <p class="journal-opening__latest-label">最新一页 <span aria-hidden="true">↗</span></p>
+          <p class="journal-opening__meta"><time datetime={latest.data.pubDate.toISOString()}>{date.format(latest.data.pubDate)}</time>{latest.data.draft && <span>草稿预览</span>}</p>
+          <h2><a href={postHref(latest)}>{latest.data.title}</a></h2>
+          <p class="journal-opening__path">{getCatalogBreadcrumbs(latest,false).map(item=>item.label).join(" / ")}</p>
+          <a class="journal-opening__read" href={postHref(latest)}>打开这一篇 <ArrowUpRight size={18} aria-hidden="true" /></a>
+        </div>
+      </article>}
+    </div>
+    <div class="journal-opening__horizon" aria-hidden="true"><span>{posts.at(-1)?.data.pubDate.getFullYear()}</span><i></i><span>{latest?.data.pubDate.getFullYear()}</span></div>
+  </div>
+</header>
+<script>
+  import { mountJournalEntry } from "./journal-entry";
+  document.querySelectorAll<HTMLElement>("[data-journal-entry]").forEach(mountJournalEntry);
+</script>
+<style>
+  .journal-opening {
+    position: relative;
+    isolation: isolate;
+    background: var(--paper-cyan);
+    overflow: hidden;
+  }
+
+  .journal-opening::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: radial-gradient(ellipse at 15% 30%,var(--paper-white),transparent 60%);
+    opacity: var(--journal-wash,1);
+  }
+
+  .journal-opening > .page-width {
+    padding-block: 27px 24px;
+  }
+
+  .journal-opening__eyebrow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    color: var(--color-cyan);
+    font: .66rem var(--font-mono);
+    letter-spacing: .1em;
+    padding-bottom: 22px;
+    border-bottom: 1px solid color-mix(in srgb,var(--color-cyan) 25%,transparent);
+  }
+
+  .journal-opening__spread {
+    display: grid;
+    grid-template-columns: .82fr 1.4fr;
+    gap: 70px;
+    align-items: center;
+    padding-block: 42px 48px;
+  }
+
+  .journal-opening h1 {
+    margin: 0 0 32px;
+    font: 400 clamp(5rem,8.4vw,8rem)/1.1 var(--font-reading);
+    letter-spacing: -.05em;
+  }
+
+  .journal-opening h1 span {
+    color: var(--color-cyan);
+    font-size: .65em;
+  }
+
+  .journal-opening__title > p {
+    margin: 0;
+    color: var(--color-muted);
+    font: 1rem/1.95 var(--font-reading);
+  }
+
+  .journal-opening__title > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 40px;
+    min-height: 44px;
+    margin-top: 24px;
+    color: var(--color-cyan);
+    text-decoration: none;
+    font-size: .85rem;
+  }
+
+  .journal-opening__latest {
+    display: grid;
+    grid-template-columns: .92fr 1fr;
+    align-items: center;
+  }
+
+  .journal-opening__cover {
+    display: block;
+    height: 330px;
+    overflow: hidden;
+    box-shadow: 0 12px 25px #25403915;
+  }
+
+  .journal-opening__cover :global(img) {
+    width: 100%;
+    height: 120%;
+    object-fit: cover;
+    transform: translateY(var(--journal-image-y,-20px));
+  }
+
+  .journal-opening__paper {
+    position: relative;
+    margin: 22px 0 0 -32px;
+    padding: 28px 28px 25px;
+    background: var(--paper-white);
+    border-top: 2px solid var(--color-cyan);
+    box-shadow: 0 10px 30px #23483b0d;
+  }
+
+  .journal-opening__latest-label {
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-cyan);
+    margin: 0 0 28px;
+    font: .9rem var(--font-reading);
+  }
+
+  .journal-opening__meta {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 0;
+    color: var(--color-muted);
+    font: .65rem var(--font-mono);
+  }
+
+  .journal-opening h2 {
+    margin: 16px 0 20px;
+    font: 400 clamp(1.25rem,1.65vw,1.65rem)/1.65 var(--font-reading);
+    text-wrap: pretty;
+  }
+
+  .journal-opening h2 a {
+    text-decoration: none;
+  }
+
+  .journal-opening__path {
+    margin: 0;
+    color: var(--color-cyan);
+    font: .65rem/1.7 var(--font-mono);
+  }
+
+  .journal-opening__read {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid var(--color-line);
+    padding-top: 16px;
+    margin-top: 22px;
+    min-height: 44px;
+    text-decoration: none;
+    font-size: .75rem;
+  }
+
+  .journal-opening__horizon {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: var(--color-cyan);
+    font: italic .85rem var(--font-reading);
+  }
+
+  .journal-opening__horizon i {
+    flex: 1;
+    height: 1px;
+    background: color-mix(in srgb,var(--color-cyan) 40%,transparent);
+    transform: scaleX(var(--journal-line,1));
+    transform-origin: left;
+  }
+
+  [data-scene-ready] .journal-opening__title {
+    transform: translateY(var(--journal-title-y,0px));
+  }
+
+  [data-scene-ready] .journal-opening__paper {
+    transform: translateY(var(--journal-copy-y,0px));
+  }
+
+  @media (max-width:1023px) {
+    .journal-opening__spread {
+      grid-template-columns: 1fr;
+      gap: 35px;
+    }
+
+    .journal-opening__latest {
+      max-width: 650px;
+    }
+
+  }
+</style>

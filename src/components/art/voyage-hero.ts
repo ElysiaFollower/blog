@@ -1,30 +1,26 @@
-import { dampProgress } from "./art-motion";
+import { scrollScene, pinnedProgress } from "./scroll-scene";
 
 const smooth = (value: number) => {
   const t = Math.max(0, Math.min(1, value));
   return t * t * (3 - 2 * t);
 };
-/** The picture window opens into its own image; all states derive from native scroll position. */
+/** The picture window shares the page clock with every chapter that follows it. */
 export function mountVoyage(root: HTMLElement): void {
   const stage = root.querySelector<HTMLElement>(".voyage__stage");
-  if (!stage)
-    return;
+  if (!stage) return;
   const shadow = root.querySelector<SVGPathElement>("[data-window-shadow]");
-  const motion = matchMedia("(prefers-reduced-motion: reduce)");
-  const short = matchMedia("(max-height: 600px)");
+  let width = stage.clientWidth;
+  let height = stage.clientHeight;
+  new ResizeObserver(([entry]) => { width = entry.contentRect.width; height = entry.contentRect.height; }).observe(stage);
   const narrow = matchMedia("(max-width: 760px)");
-  let visible = true;
-  let frame = 0;
-  let progress = 0;
-  let lastTime = 0;
-  const paint = (time: number) => {
-    frame = 0;
-    if (!visible || !root.hasAttribute("data-enhanced"))
+  scrollScene(root, pinnedProgress, progress => {
+    const enabled = root.hasAttribute("data-scene-ready");
+    if (!enabled) {
+      stage.removeAttribute("style");
+      root.removeAttribute("data-progressed");
+      root.querySelectorAll<HTMLAnchorElement>("a").forEach(link => { link.inert = false; });
       return;
-    const travel = root.offsetHeight - stage.offsetHeight;
-    const target = Math.max(0, Math.min(1, -root.getBoundingClientRect().top / Math.max(1, travel)));
-    progress = dampProgress(progress, target, lastTime ? Math.min(48, time - lastTime) : 16);
-    lastTime = time;
+    }
     const p = progress;
     const opening = smooth((p - .08) / .84);
     const initial = narrow.matches ? [16, -12, 18, 56] : [13, 6, 15, 55];
@@ -34,8 +30,6 @@ export function mountVoyage(root: HTMLElement): void {
     stage.style.setProperty("--window-radius", `${(narrow.matches ? 160 : 280) * (1 - opening)}px`);
     stage.style.setProperty("--image-scale", String(1.06 - opening * .06));
     stage.style.setProperty("--image-shift-progress", String(1 - opening));
-    const width = stage.clientWidth;
-    const height = stage.clientHeight;
     const left = width * initial[3] / 100 * (1 - opening);
     const right = width * (1 - initial[1] / 100 * (1 - opening));
     const top = height * initial[0] / 100 * (1 - opening);
@@ -54,31 +48,5 @@ export function mountVoyage(root: HTMLElement): void {
     root.querySelectorAll<HTMLAnchorElement>(".voyage__copy a").forEach((link) => {
       link.inert = p >= .4;
     });
-    if (progress !== target) frame = requestAnimationFrame(paint);
-  };
-  const request = () => {
-    if (!frame && visible && !motion.matches) {
-      lastTime = 0;
-      frame = requestAnimationFrame(paint);
-    }
-  };
-  const configure = () => {
-    root.toggleAttribute("data-enhanced", !motion.matches && !short.matches);
-    if (motion.matches || short.matches) {
-      stage.removeAttribute("style");
-      root.removeAttribute("data-progressed");
-      root.querySelectorAll<HTMLAnchorElement>("a").forEach((link) => { link.inert = false; });
-    }
-    else
-      request();
-  };
-  if ("IntersectionObserver" in window) {
-    new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; request(); }).observe(root);
-  }
-  window.addEventListener("scroll", request, { passive: true });
-  window.addEventListener("resize", request, { passive: true });
-  window.addEventListener("pageshow", request);
-  motion.addEventListener("change", configure);
-  short.addEventListener("change", configure);
-  configure();
+  }, { pinned: true, media: "(min-height: 700px)" });
 }

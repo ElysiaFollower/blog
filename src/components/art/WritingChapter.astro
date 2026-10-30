@@ -224,6 +224,8 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
   [data-scene-ready] .writing-story__stage {
     position: sticky;
     top: 0;
+    translate: 0 var(--scene-offset,0px);
+    z-index: var(--scene-layer,auto);
     display: flex;
     flex-direction: column;
     height: 100svh;
