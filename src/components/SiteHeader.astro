@@ -11,7 +11,7 @@ import { siteConfig } from "../config/site";
 import ThemeToggle from "./ThemeToggle.astro";
 
 interface Props {
-  variant?: "overlay" | "reading" | "graphic";
+  variant?: "overlay" | "reading" | "graphic" | "scene";
 }
 
 const { variant = "reading" } = Astro.props;
@@ -75,6 +75,12 @@ const icons = {
     inset: 0 0 auto;
     color: #fff;
     text-shadow: 0 1px 18px rgb(0 0 0 / 38%);
+  }
+
+  .site-header[data-variant="scene"] {
+    position: absolute;
+    inset: 0 0 auto;
+    color: var(--color-ink);
   }
 
   .site-header[data-variant="graphic"] {

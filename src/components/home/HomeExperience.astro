@@ -1,224 +1,73 @@
 ---
 import { Image } from "astro:assets";
 import { getCollection } from "astro:content";
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  BookOpenText,
-  CircleUserRound,
-  Images,
-  Radio,
-  Star,
-} from "@lucide/astro";
-import heroDay from "../../assets/demo/hero-day.webp";
-import heroNight from "../../assets/demo/hero-night.webp";
-import ArticleCard from "../ArticleCard.astro";
-import DirectedPointer from "../DirectedPointer.astro";
-import MusicDock from "../MusicDock.astro";
+import { ArrowUpRight, ArrowDownRight } from "@lucide/astro";
+import portrait from "../../assets/demo/elysia-portrait.webp";
+import VoyageHero from "../art/VoyageHero.astro";
 import ApertureOpening from "../art/ApertureOpening.astro";
 import LightTable from "../art/LightTable.astro";
-import ArtDirection from "../art/ArtDirection.astro";
-import "../art/home.css";
-import QuoteLoop from "../QuoteLoop.astro";
-import ScrollReveal from "../ScrollReveal.astro";
+import MusicDock from "../MusicDock.astro";
 import SiteHeader from "../SiteHeader.astro";
+import SiteFooter from "../SiteFooter.astro";
+import DirectedPointer from "../DirectedPointer.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { siteConfig } from "../../config/site";
+import { profileConfig } from "../../config/profile";
+import { postHref, getCatalogBreadcrumbs } from "../../lib/posts";
+import "../art/home.css";
 
-import {siteConfig} from "../../config/site.ts";
-
-const posts = (await getCollection("posts", ({ data }) => !data.draft))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
-
-
-const channels = [
-  {
-    index: "01",
-    label: "WRITING",
-    title: "航行日志",
-    description: "零散随笔、日常折腾，留下天马行空的诳语",
-    href: "/posts/",
-    icon: BookOpenText,
-    accent: "cyan",
-  },
-  {
-    index: "02",
-    label: "GALLERY",
-    title: "珍藏画册",
-    description: "喜欢的角色、动人的笔触，拾掇邂逅的点滴光影",
-    href: "/gallery/",
-    icon: Images,
-    accent: "rose",
-  },
-  {
-    index: "03",
-    label: "ABOUT ME",
-    title: "关于我",
-    description: "一个相信童话的妄想家",
-    href: "/about/",
-    icon: CircleUserRound,
-    accent: "gold",
-  },
-] as const;
+const posts = (await getCollection("posts", ({data}) => !data.draft))
+  .sort((a,b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()).slice(0,3);
+const date = new Intl.DateTimeFormat("zh-CN", {year:"numeric",month:"2-digit",day:"2-digit"});
+const featured = posts[0];
+const directory = (post: typeof featured) => getCatalogBreadcrumbs(post, false).map(item => item.label).join(" / ");
 ---
-
-<BaseLayout
-  description={siteConfig.description}
-  bodyClass="hybrid-page"
-  directedPointer
->
-  <SiteHeader variant="overlay" />
+<BaseLayout description={siteConfig.description} bodyClass="hybrid-page" directedPointer>
+  <SiteHeader variant="scene" />
   <main id="main-content">
-    <section class="hybrid-hero" aria-labelledby="hybrid-title" data-art-scene>
-      <div class="hybrid-hero__art" aria-hidden="true">
-        <Image
-          class="hybrid-hero__day"
-          src={heroDay}
-          alt=""
-          widths={[960, 1440, 1920, 2560]}
-          sizes="100vw"
-          loading="eager"
-          fetchpriority="high"
-          data-hero-theme="light"
-        />
-        <Image
-          class="hybrid-hero__night"
-          src={heroNight}
-          alt=""
-          widths={[960, 1440, 1942]}
-          sizes="100vw"
-          loading="eager"
-          fetchpriority="high"
-          data-hero-theme="dark"
-        />
-      </div>
-      <div class="hybrid-hero__shade" aria-hidden="true"></div>
-      <div class="hybrid-hero__orbit" aria-hidden="true"><span>017 / A PERSONAL UNIVERSE</span></div>
-
-      <div class="hybrid-hero__rail" aria-hidden="true">
-        <span>TECH</span>
-        <span>MEDIA</span>
-        <span>MEMORY</span>
-      </div>
-
-      <div class="hybrid-hero__content page-width">
-        <div class="hybrid-hero__copy">
-          <div class="hybrid-hero__signal">
-            <Radio aria-hidden="true" size={17} stroke-width={1.8} />
-            <span>LOG 0017</span>
-          </div>
-          <h1 id="hybrid-title">
-            <span>17号的</span>
-            <span>航行日志</span>
-          </h1>
-          <p class="hybrid-hero__intro">
-            漫步星海，收拢记忆回响
-          </p>
-          <a class="hybrid-hero__action" href="/posts/">
-            <span>翻阅航行记录</span>
-            <ArrowDownRight aria-hidden="true" size={20} stroke-width={2} />
-          </a>
-        </div>
-
-        <div class="hybrid-hero__quote">
-          <Star aria-hidden="true" size={16} fill="currentColor" />
-          <QuoteLoop prefix="ARCHIVE" />
-        </div>
-      </div>
-
-      <div class="hybrid-hero__footer">
-        <a href="#recent-posts">向下翻阅 ↓</a>
-        <span>UTC+8</span>
-      </div>
-    </section>
-
-    <section class="hybrid-feed" id="recent-posts">
-      <div class="hybrid-feed__inner page-width">
-        <header class="hybrid-feed__header" data-reveal>
-          <div>
-            <span class="hybrid-feed__tag">02 / RECENT POSTS</span>
-            <h2 class="hybrid-feed__title">新近落笔</h2>
-          </div>
-          <a href="/posts/" class="hybrid-feed__more">
-            <span>查看更多</span>
-            <ArrowUpRight class="hybrid-feed__more-icon" aria-hidden="true" size={15} stroke-width={2} />
-          </a>
+    <VoyageHero />
+    <section class="home-writing" id="recent-posts" aria-labelledby="writing-title">
+      <div class="home-writing__inner page-width">
+        <header class="home-chapter">
+          <p class="home-chapter__number">01 / WORDS</p>
+          <div><h2 id="writing-title">落笔成文<span>。</span></h2><p>研究中的思路，日常折腾的记录。<br />还有偶尔冒出来，想认真讲一讲的事。</p></div>
+          <a href="/posts/">全部文章 <ArrowUpRight size={18} aria-hidden="true" /></a>
         </header>
-
-        <div class="hybrid-feed__layout" data-reveal data-reveal-delay="1">
-          <ArticleCard post={posts[0]} eager />
-          <div class="hybrid-feed__stack">
-            {
-              posts.slice(1).map((post) => (
-                <ArticleCard post={post} variant="compact" />
-              ))
-            }
-          </div>
+        {featured && (
+          <article class="home-feature">
+            <a class="home-feature__image" href={postHref(featured)} aria-label={`阅读：${featured.data.title}`}>
+              <Image src={featured.data.cover} alt={featured.data.coverAlt} widths={[600,900,1200]} sizes="(max-width:760px) 90vw, 55vw" loading="lazy" style={`object-position:${featured.data.coverPosition}`} />
+              <span aria-hidden="true">最近更新 <ArrowUpRight size={22} /></span>
+            </a>
+            <div class="home-feature__copy">
+              <p class="home-post-meta"><span>{directory(featured)}</span><time datetime={featured.data.pubDate.toISOString()}>{date.format(featured.data.pubDate)}</time></p>
+              <h3><a href={postHref(featured)}>{featured.data.title}</a></h3>
+              <p class="home-feature__description">{featured.data.description}</p>
+              <a class="home-text-link" href={postHref(featured)}>读这一篇 <ArrowUpRight size={18} aria-hidden="true" /></a>
+            </div>
+          </article>
+        )}
+        <div class="home-posts">
+          {posts.slice(1).map((post,index) => (
+            <article class="home-post-row">
+              <span class="home-post-row__index">0{index + 2}</span>
+              <div class="home-post-row__copy"><p class="home-post-meta">{directory(post)}</p><h3><a href={postHref(post)}>{post.data.title}</a></h3><time datetime={post.data.pubDate.toISOString()}>{date.format(post.data.pubDate)}</time></div>
+              <a class="home-post-row__image" href={postHref(post)} aria-label={`阅读：${post.data.title}`}><Image src={post.data.cover} alt={post.data.coverAlt} widths={[240,400]} sizes="(max-width:620px) 90px, 180px" loading="lazy" /></a>
+              <a class="home-post-row__arrow" href={postHref(post)} aria-label={`阅读：${post.data.title}`}><ArrowUpRight size={22} aria-hidden="true" /></a>
+            </article>
+          ))}
         </div>
+        <div class="home-writing__ending"><span>想找某个主题？</span><a href="/posts/catalog/">去知识目录翻翻 <ArrowDownRight size={17} aria-hidden="true" /></a></div>
       </div>
     </section>
-
-    <section class="hybrid-channels" aria-labelledby="channels-title">
-      <div class="page-width">
-        <header class="hybrid-channels__header" data-reveal>
-          <span>03 / CHANNEL INDEX</span>
-          <h2 id="channels-title">
-            <span>星光落处</span><br />皆可漫游
-          </h2>
-          <p>
-            写下的、喜欢的，还有正在琢磨的。随意逛逛。
-          </p>
-        </header>
-
-        <nav class="hybrid-channels__list" aria-label="内容频道">
-          {
-            channels.map((channel, index) => {
-              const Icon = channel.icon;
-              return (
-                <a
-                  href={channel.href}
-                  data-accent={channel.accent}
-                  data-reveal
-                  data-reveal-delay={String(Math.min(index, 2))}
-                >
-                  <span class="hybrid-channels__index">{channel.index}</span>
-                  <span class="hybrid-channels__icon">
-                    <Icon aria-hidden="true" size={22} stroke-width={1.6} />
-                  </span>
-                  <span class="hybrid-channels__copy">
-                    <small>{channel.label}</small>
-                    <strong>{channel.title}</strong>
-                  </span>
-                  <span class="hybrid-channels__description">
-                    {channel.description}
-                  </span>
-                  <ArrowUpRight
-                    class="hybrid-channels__arrow"
-                    aria-hidden="true"
-                    size={24}
-                    stroke-width={1.7}
-                  />
-                </a>
-              );
-            })
-          }
-        </nav>
-      </div>
-    </section>
-
     <LightTable />
+    <section class="home-person page-width" aria-labelledby="person-title">
+      <div class="home-person__portrait"><Image src={portrait} alt="花园茶会中的爱莉希雅" widths={[360,600,800]} sizes="(max-width:620px) 55vw, 30vw" loading="lazy" /><span aria-hidden="true">A LITTLE CORNER OF THE INTERNET</span></div>
+      <div class="home-person__copy"><p class="home-chapter__number">03 / THE AUTHOR</p><h2 id="person-title">主线之外，<br />还有许多兔子洞。</h2><p>{profileConfig.introduction}。</p><p class="home-person__aside">一个相信童话的妄想家，也在认真理解这个世界。</p><a class="home-text-link" href="/about/">关于 {profileConfig.handle} <ArrowUpRight size={18} aria-hidden="true" /></a></div>
+    </section>
   </main>
-
-  <footer class="hybrid-footer">
-    <div class="page-width">
-      <strong>17号的航行日志</strong>
-      <span>PROMETHEUS © 2026</span>
-    </div>
-  </footer>
-
+  <SiteFooter />
   <DirectedPointer />
   <MusicDock />
-  <ScrollReveal />
   <ApertureOpening />
-  <ArtDirection />
 </BaseLayout>

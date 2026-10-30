@@ -17,16 +17,16 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
 ---
 
 <section class="light-table" id="selected-light" aria-labelledby="light-table-title" data-light-table>
-  <div class="light-table__heading page-width" data-reveal>
-    <div><p class="art-kicker">04 / SELECTED LIGHT</p><h2 id="light-table-title">记忆的回廊</h2></div>
-    <p>有些瞬间，<br />总想再看一眼。</p>
+  <div class="light-table__heading page-width">
+    <div><p class="art-kicker">02 / IMAGES</p><h2 id="light-table-title">记忆的<br /><em>回廊。</em></h2></div>
+    <p>光影停在画面里，<br />旧日的心绪也有了归处。</p>
     <a href="/gallery/">浏览全部收藏 <ArrowUpRight size={18} aria-hidden="true" /></a>
   </div>
   <div class="light-table__stage" data-light-stage role="region" aria-roledescription="轮播" aria-label="五幅精选收藏" tabindex="0">
-    <div class="light-table__horizon" aria-hidden="true"></div>
+    <div class="light-table__pool" aria-hidden="true"></div>
     <div class="light-table__track">
       {selection.map(({image, entry}, index) => (
-        <a class="light-table__work" data-light-work href={entry.src} data-gallery-href={`/gallery/#work=${encodeURIComponent(entry.id)}`} aria-label={`查看原图：${entry.title ?? entry.alt}`}>
+        <a class="light-table__work" style={`--work-ratio:${image.width / image.height}`} data-light-work href={entry.src} data-gallery-href={`/gallery/#work=${encodeURIComponent(entry.id)}`} aria-label={`查看原图：${entry.title ?? entry.alt}`}>
           <figure>
             <Image src={image} alt={entry.alt} widths={[420, 680, 900]} sizes="(max-width: 620px) 70vw, 360px" loading="lazy" draggable="false" />
             <figcaption><span>{String(index + 1).padStart(2,"0")}</span><span>{entry.title ?? entry.alt}</span><ArrowUpRight size={15} aria-hidden="true" /></figcaption>
@@ -54,7 +54,7 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
   .light-table {
     position: relative;
     overflow: hidden;
-    padding: 110px 0 40px;
+    padding: 120px 0 46px;
     background: var(--art-night);
     color: var(--art-chalk);
     isolation: isolate;
@@ -65,106 +65,115 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
     z-index: -1;
     inset: 0;
     content: "";
-    background: radial-gradient(ellipse at 50% 60%,#74608035,transparent 65%);
+    background: radial-gradient(ellipse at 60% 56%,#66516d29,transparent 65%);
   }
 
   .light-table__heading {
     display: grid;
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: 1.2fr 1fr auto;
     align-items: end;
-    gap: 32px;
+    gap: 40px;
   }
 
   .art-kicker {
-    margin: 0 0 16px;
-    color: #c5a8c6;
-    font: .65rem var(--font-mono);
-    letter-spacing: .13em;
+    margin: 0 0 26px;
+    color: #bfb0c7;
+    font: .6rem var(--font-mono);
+    letter-spacing: .14em;
   }
 
   h2 {
     margin: 0;
-    font: 500 clamp(2.5rem,4.5vw,4.5rem)/1.2 var(--font-reading);
+    font: 400 clamp(3.1rem,6vw,5.8rem)/1.12 var(--font-reading);
+    letter-spacing: -.04em;
+  }
+
+  h2 em {
+    font-style: normal;
+    margin-left: 1em;
+    color: #dec4d8;
   }
 
   .light-table__heading > p {
-    margin: 0;
-    color: #c8bfce;
-    line-height: 1.9;
-    justify-self: center;
-    font-family: var(--font-reading);
+    margin: 0 0 6px;
+    color: #c1b7c8;
+    font: .9rem/2 var(--font-reading);
   }
 
   .light-table__heading > a {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 18px;
+    min-height: 44px;
+    border-bottom: 1px solid #e6d8e34d;
     padding-bottom: 8px;
-    border-bottom: 1px solid #c8bfce70;
+    margin-bottom: 8px;
+    font-size: .875rem;
     text-decoration: none;
-    font-size: .8rem;
   }
 
   .light-table__stage {
+    --work-height: 380px;
     position: relative;
-    margin-block: 42px 16px;
+    margin-block: 40px 12px;
     padding: 24px var(--page-inline);
   }
 
   .light-table__track {
     display: flex;
-    gap: 24px;
+    gap: 50px;
     overflow: auto;
     align-items: center;
+    padding: 20px 0;
   }
 
   .light-table__work {
     display: block;
-    flex: 0 0 300px;
+    width: clamp(150px,calc(var(--work-height) * var(--work-ratio)),560px);
+    flex-shrink: 0;
     color: inherit;
     text-decoration: none;
   }
 
   figure {
     margin: 0;
-    padding: 14px;
-    background: #eee7eb;
-    color: #302836;
-    box-shadow: 0 20px 44px #0004;
   }
 
   figure img {
     width: 100%;
     height: auto;
-    max-height: 360px;
+    max-height: var(--work-height);
     object-fit: contain;
-    background: #e6dfe6;
+    background: transparent;
+    box-shadow: 0 25px 65px #0006;
     user-select: none;
+    border: 1px solid #ffffff20;
   }
 
   figcaption {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 15px 0 2px;
-    font-size: .7rem;
+    gap: 12px;
+    padding-top: 18px;
+    color: #bfb4c5;
+    font-size: .75rem;
   }
 
-  figcaption span:first-child {
-    color: #7e627e;
-    font-family: var(--font-mono);
+  figcaption > span:first-child {
+    font: .6rem var(--font-mono);
+    color: #e7c5d9;
   }
 
-  figcaption span:nth-child(2) {
+  figcaption > span:nth-child(2) {
     flex: 1;
-    overflow: hidden;
     white-space: nowrap;
+    overflow: hidden;
     text-overflow: ellipsis;
   }
 
   .is-ready .light-table__stage {
-    height: 540px;
-    perspective: 1200px;
+    height: 570px;
+    perspective: 1600px;
     touch-action: pan-y;
     cursor: grab;
   }
@@ -180,15 +189,13 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: clamp(260px,26vw,350px);
-    transform: translate(-50%,-50%) translateX(calc(var(--offset) * 78%)) translateZ(calc(var(--distance) * -120px)) rotateY(calc(var(--offset) * -13deg)) rotateZ(calc(var(--offset) * 3deg));
-    filter: brightness(calc(1 - var(--distance) * .1));
-    z-index: calc(10 - var(--distance));
+    transform: translate(-50%,-50%) translateX(var(--work-x)) translateZ(calc(var(--distance) * -100px)) rotateY(calc(var(--offset) * -8deg));
+    filter: brightness(calc(1 - var(--distance) * .12));
     transition: transform 650ms var(--ease-art),filter 500ms;
   }
 
-  .is-ready .light-table__work[data-active="true"] figure {
-    box-shadow: 0 30px 65px #0006,0 0 50px #d5afd212;
+  .is-ready .light-table__work[data-active="true"] figcaption {
+    color: #eee4f0;
   }
 
   .is-dragging .light-table__work {
@@ -199,35 +206,35 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
     cursor: grabbing;
   }
 
-  .light-table__horizon {
+  .light-table__pool {
     display: none;
     position: absolute;
-    width: 130%;
-    height: 200px;
-    bottom: 0;
-    left: -15%;
-    border: 1px solid #cbb5d12b;
+    width: min(75vw,900px);
+    height: 90px;
+    bottom: 15px;
+    left: 50%;
+    translate: -50% 0;
     border-radius: 50%;
-    transform: rotate(-8deg);
+    background: radial-gradient(ellipse,#d9bddb14,transparent 68%);
     pointer-events: none;
   }
 
-  .is-ready .light-table__horizon {
+  .is-ready .light-table__pool {
     display: block;
   }
 
   .light-table__footer {
     display: flex;
     align-items: center;
-    gap: 24px;
-    border-top: 1px solid #c8bfce33;
-    padding-top: 22px;
+    gap: 28px;
+    padding-top: 24px;
+    border-top: 1px solid #c1b7c833;
   }
 
   .light-table__footer p {
     margin: 0;
-    font: .7rem var(--font-mono);
-    color: #c8bfce;
+    color: #bfb4c5;
+    font: .78rem/1.8 var(--font-mono);
   }
 
   .light-table__position {
@@ -236,15 +243,15 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
 
   .light-table__controls:not([hidden]) {
     display: flex;
-    gap: 10px;
+    gap: 12px;
   }
 
   button {
-    display: grid;
     width: 46px;
     height: 46px;
+    display: grid;
     place-items: center;
-    border: 1px solid #c8bfce66;
+    border: 1px solid #c1b7c85c;
     border-radius: 50%;
     background: transparent;
     color: inherit;
@@ -253,8 +260,8 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
   }
 
   button: hover {
-    background: #e1c4d8;
-    color: #292334;
+    background: #dec4d8;
+    color: #241c2b;
   }
 
   button: disabled {
@@ -262,30 +269,39 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
     cursor: default;
   }
 
-  @media(max-width:760px) {
+  @media (max-width:760px) {
     .light-table {
-      padding-top: 72px;
+      padding-top: 80px;
     }
 
     .light-table__heading {
       grid-template-columns: 1fr auto;
-      gap: 22px;
+      gap: 26px;
     }
 
     .light-table__heading > p {
       display: none;
     }
 
+    h2 {
+      font-size: clamp(2.7rem,10vw,4.5rem);
+    }
+
+    .light-table__heading > a {
+      font-size: .8rem;
+      gap: 8px;
+    }
+
+    .light-table__stage {
+      --work-height: 330px;
+    }
+
+    .light-table__work {
+      max-width: 75vw;
+    }
+
     .is-ready .light-table__stage {
-      height: 460px;
-    }
-
-    .is-ready .light-table__work {
-      width: min(70vw,300px);
-    }
-
-    figure img {
-      max-height: 310px;
+      height: 470px;
     }
 
     .light-table__hint {
@@ -297,13 +313,9 @@ const selection = [kiana, spring, bloom, moment, journey].map((image) => {
       margin-right: auto!important;
     }
 
-    .light-table__heading > a {
-      font-size: .7rem;
-    }
-
   }
 
-  @media(prefers-reduced-motion:reduce) {
+  @media (prefers-reduced-motion:reduce) {
     .is-ready .light-table__work {
       transition: none;
     }
