@@ -1,4 +1,5 @@
 ---
+import { writingPageProgress } from "./writing-path";
 import { Image } from "astro:assets";
 import { ArrowUpRight, ArrowDown } from "@lucide/astro";
 import { postHref, getCatalogBreadcrumbs, type PublishedPost } from "../../lib/posts";
@@ -7,8 +8,9 @@ const { posts } = Astro.props;
 const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit", day:"2-digit" });
 ---
 <div class="writing-story" data-writing-story style={`--story-count:${Math.max(1,posts.length)}`}>
-  {posts.map((_,index) => <span class="writing-story__stop" id={`writing-step-${index + 1}`} style={`--step:${index}`} aria-hidden="true"></span>)}
-  <div class="writing-story__stage page-width">
+  {posts.map((_,index) => <span class="writing-story__stop" id={`writing-step-${index + 1}`} style={`--step-progress:${writingPageProgress(index,posts.length)}`} aria-hidden="true"></span>)}
+  <div class="writing-story__stage">
+  <div class="writing-story__frame page-width">
     <header class="writing-story__heading">
       <div><p>01 / WRITING</p><h2 id="writing-title">新近落笔<span>。</span></h2></div>
       <p>沿着时间，翻开最近几页。</p>
@@ -39,6 +41,7 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
       <nav aria-label="新近文章页码">{posts.map((post,index) => <a href={`#writing-step-${index+1}`} data-writing-index aria-label={`第${index+1}篇：${post.data.title}`}>{String(index+1).padStart(2,"0")}<i></i></a>)}</nav>
       <a href="/posts/catalog/">按主题找文章 <ArrowUpRight size={16} aria-hidden="true" /></a>
     </footer>
+  </div>
   </div>
 </div>
 <script>
@@ -212,23 +215,49 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
     letter-spacing: .08em;
   }
 
-  .writing-story__footer, .writing-story__stop {
+  .writing-story__footer {
     display: none;
+  }
+
+  .writing-story__stop {
+    position: absolute;
+    top: 0;
+    scroll-margin-top: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
   }
 
   .writing-story[data-scene-ready] {
     height: calc(100svh + (var(--story-count) - 1) * 65svh);
     padding: 0;
+    isolation: isolate;
+  }
+
+  .writing-story[data-scene-ready]::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: auto 0 0;
+    height: var(--writing-bridge,0px);
+    background: #211c2d;
+    border-radius: 24px 24px 0 0;
   }
 
   [data-scene-ready] .writing-story__stage {
     position: sticky;
     top: 0;
-    display: flex;
-    flex-direction: column;
     height: 100svh;
     min-height: 650px;
+  }
+
+  [data-scene-ready] .writing-story__frame {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     padding-block: 44px 26px;
+    transform: translateY(var(--writing-y,0px)) scale(var(--writing-scale,1));
+    transform-origin: center;
   }
 
   [data-scene-ready] .writing-story__heading {
@@ -240,6 +269,7 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
     flex: 1;
     min-height: 0;
     perspective: 1800px;
+    overflow: clip;
   }
 
   [data-scene-ready] .writing-story__page {
@@ -247,7 +277,7 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
     inset: 0;
     padding: 14px 0 20px;
     opacity: var(--page-opacity,0);
-    transform: translate3d(var(--page-x,0px),var(--page-y,0px),var(--page-z,0px)) rotateY(var(--page-angle,0deg));
+    transform: translate3d(var(--page-x,0px),0,var(--page-z,0px)) rotateY(var(--page-angle,0deg));
     pointer-events: none;
   }
 
@@ -258,8 +288,7 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
   [data-scene-ready] .writing-story__art {
     height: clamp(380px,58svh,570px);
     width: 105%;
-    transform: rotate(var(--art-tilt,0deg)) scale(var(--art-scale,1));
-    clip-path: inset(var(--art-clip,0%) 0 0 0 round 5px);
+    border-radius: 5px;
     box-shadow: 0 18px 44px #24382e18;
   }
 
@@ -269,27 +298,17 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
 
   [data-scene-ready] .writing-story__paper {
     margin-left: 20px;
-    transform: translateY(var(--paper-y,0px));
     border-left: 3px solid color-mix(in srgb,var(--writing-ink) 30%,transparent);
   }
 
-  [data-scene-ready] .writing-story__paper > * {
-    opacity: var(--paper-ink,1);
-  }
-
   [data-scene-ready] .writing-story__stop {
-    display: block;
-    position: absolute;
-    top: calc(var(--step) * 65svh);
-    width: 1px;
-    height: 1px;
-    pointer-events: none;
+    top: calc(var(--step-progress) * (100% - 100svh));
   }
 
   [data-scene-ready] .writing-story__footer {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     gap: 36px;
     min-height: 44px;
     color: var(--writing-ink);
@@ -301,6 +320,10 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
     align-items: center;
     gap: 12px;
     text-decoration: none;
+  }
+
+  .writing-story__footer > a {
+    justify-self: end;
   }
 
   .writing-story__footer nav {

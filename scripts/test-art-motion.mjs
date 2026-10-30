@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { dampProgress, RailMotion } from '../src/components/art/art-motion.ts';
+import { writingPose, writingPageProgress, WRITING_ENTRY, WRITING_EXIT } from '../src/components/art/writing-path.ts';
 
 test('a wheel-sized step is spread over frames and settles without an endless loop', () => {
   let value = dampProgress(0, .3, 16);
@@ -57,4 +58,42 @@ test('a held release has no stale flick, boundaries and cancellation stay finite
   for (let i = 0; i < 90; i++) rail.step(16);
   assert.ok(Number.isFinite(rail.position));
   assert.ok(rail.position >= 0 && rail.position <= 600);
+});
+
+
+test('every scroll pixel has a visible writing response, including the former pauses', () => {
+  const travel=1300;
+  for(let pixel=0;pixel<travel;pixel++) {
+    const a=writingPose(pixel/travel,3,travel);
+    const b=writingPose((pixel+1)/travel,3,travel);
+    const movement=Math.abs(b.cursor-a.cursor)*1200+Math.abs(b.y-a.y);
+    assert.ok(movement>.5,`no response at ${pixel}`);
+    assert.ok(b.cursor>a.cursor,`horizontal reversal at ${pixel}`);
+  }
+});
+
+test('writing entry and release meet native vertical movement without a velocity jump', () => {
+  const travel=1300;
+  const worldY=s=>{
+    const stage=s<0 ? -s : s>travel ? travel-s : 0;
+    return stage+writingPose(s/travel,3,travel).y;
+  };
+  const derivative=(a,b)=>(worldY(b)-worldY(a))/(b-a);
+  for(const point of [0,WRITING_ENTRY*travel,(1-WRITING_EXIT)*travel,travel]) {
+    assert.ok(Math.abs(derivative(point-.05,point)-derivative(point,point+.05))<.002);
+  }
+  assert.ok(Math.abs(derivative(-.05,0)+1)<.001);
+  assert.ok(Math.abs(derivative(travel,travel+.05)+1)<.001);
+});
+
+test('writing anchors land on each page and reverse traversal retraces the same poses', () => {
+  for(let count=1;count<=5;count++) {
+    for(let i=0;i<count;i++) {
+      const p=writingPageProgress(i,count);
+      assert.ok(Math.abs(writingPose(p,count,1300).cursor-i)<1e-7);
+    }
+  }
+  const forward=Array.from({length:101},(_,i)=>writingPose(i/100,3,1300));
+  const backward=Array.from({length:101},(_,i)=>writingPose((100-i)/100,3,1300)).reverse();
+  assert.deepEqual(backward,forward);
 });

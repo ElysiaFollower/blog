@@ -1,0 +1,180 @@
+---
+import { Image } from "astro:assets";
+import { ArrowDownRight } from "@lucide/astro";
+import type { PublishedPost } from "../../lib/posts";
+interface Props { posts: PublishedPost[] }
+const { posts } = Astro.props;
+const recent=posts.slice(0,3);
+const date=new Intl.DateTimeFormat("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit"});
+---
+<header class="journal-fan">
+  <div class="journal-fan__inner page-width">
+    <div class="journal-fan__introduction">
+      <p class="journal-fan__eyebrow">ESSAYS & NOTES · {posts.length}</p>
+      <h1>文章<span>。</span></h1>
+      <p class="journal-fan__description">记录研究、工程与日常见闻，<br />落笔成文，皆是老来回首的回忆。</p>
+      <a href="#journal-timeline">沿时间翻阅 <ArrowDownRight size={21} aria-hidden="true" /></a>
+    </div>
+    <div class="journal-fan__art" aria-hidden="true">
+      {recent.map((post,index) => <div class="journal-fan__paper" style={`--paper-angle:${[-22,-3,14][index]}deg;z-index:${recent.length-index}`}>
+        <strong>{post.data.title}</strong>
+        <time datetime={post.data.pubDate.toISOString()}>{date.format(post.data.pubDate)}</time>
+        <div class="journal-fan__image"><Image src={post.data.cover} alt="" widths={[480,720]} sizes="240px" loading="eager" style={`object-position:${post.data.coverPosition}`} /></div>
+        <p>{post.data.description}</p>
+        <span>{String(index+1).padStart(2,"0")}</span>
+      </div>)}
+    </div>
+  </div>
+</header>
+<style>
+  .journal-fan {
+    overflow: hidden;
+    background: linear-gradient(180deg,var(--color-bg),var(--paper-cyan) 62%,var(--color-bg));
+  }
+
+  .journal-fan__inner {
+    display: grid;
+    grid-template-columns: .75fr 1.45fr;
+    gap: 36px;
+    align-items: center;
+    min-height: 530px;
+    max-width: 1120px;
+    padding-block: 20px 28px;
+  }
+
+  .journal-fan__eyebrow {
+    margin: 0 0 26px;
+    color: var(--color-cyan);
+    font: .68rem var(--font-mono);
+    letter-spacing: .1em;
+  }
+
+  .journal-fan h1 {
+    margin: 0 0 27px;
+    font: 400 clamp(4.7rem,7vw,7rem)/1.05 var(--font-reading);
+    letter-spacing: -.06em;
+    white-space: nowrap;
+  }
+
+  .journal-fan h1 > span {
+    color: var(--color-cyan);
+    font-size: .5em;
+  }
+
+  .journal-fan__description {
+    margin: 0;
+    color: var(--color-muted);
+    font: .9rem/1.95 var(--font-reading);
+  }
+
+  .journal-fan__introduction > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 32px;
+    min-height: 44px;
+    margin-top: 28px;
+    color: var(--color-cyan);
+    text-decoration: none;
+    font-size: .8rem;
+  }
+
+  .journal-fan__art {
+    position: relative;
+    height: 520px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Every sheet rotates around the same lower corner;
+  the stack is one decorative object. */ .journal-fan__paper {
+    position: absolute;
+    left: 40%;
+    bottom: 70px;
+    width: clamp(200px,19vw,260px);
+    aspect-ratio: 1 / 1.414;
+    padding: 21px 20px;
+    transform-origin: 0 100%;
+    transform: rotate(var(--paper-angle));
+    background: var(--paper-white);
+    border: 1px solid color-mix(in srgb,var(--color-cyan) 17%,var(--paper-white));
+    box-shadow: 1px 3px 3px #26483a12,9px 16px 25px #26483a1c;
+    animation: paper-fan-open 900ms cubic-bezier(.2,.75,.2,1) both;
+  }
+
+  .journal-fan__paper > strong {
+    display: block;
+    font: 500 13px/1.55 var(--font-reading);
+    min-height: 42px;
+    max-height: 61px;
+    overflow: hidden;
+    text-wrap: balance;
+  }
+
+  .journal-fan__paper > time {
+    display: block;
+    margin: 9px 0 16px;
+    color: var(--color-muted);
+    font: 7px var(--font-mono);
+  }
+
+  .journal-fan__image {
+    height: 115px;
+    overflow: hidden;
+    background: var(--paper-cyan);
+  }
+
+  .journal-fan__image :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .journal-fan__paper > p {
+    margin: 17px 0 0;
+    color: var(--color-muted);
+    font: 8px/1.8 var(--font-reading);
+  }
+
+  .journal-fan__paper > span {
+    position: absolute;
+    right: 20px;
+    bottom: 18px;
+    color: var(--color-cyan);
+    font: 7px var(--font-mono);
+  }
+
+  @keyframes paper-fan-open {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(var(--paper-angle));
+    }
+
+  }
+
+  @media (max-width:1023px) {
+    .journal-fan__inner {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .journal-fan__art {
+      height: 440px;
+    }
+
+    .journal-fan__paper {
+      bottom: 60px;
+      left: 36%;
+    }
+
+  }
+
+  @media (prefers-reduced-motion:reduce) {
+    .journal-fan__paper {
+      animation: none;
+    }
+
+  }
+</style>
