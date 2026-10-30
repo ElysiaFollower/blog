@@ -10,7 +10,6 @@ export function scrollScene(
   root: HTMLElement,
   position: (rect: DOMRect, viewport: number) => number,
   draw: (progress: number) => void,
-  options: { smoothing?: boolean } = {},
 ): void {
   const desktop = matchMedia("(min-width: 1024px) and (min-height: 650px)");
   const reduce = matchMedia("(prefers-reduced-motion: reduce)");
@@ -24,9 +23,7 @@ export function scrollScene(
     frame = 0;
     if (!enabled || !visible) return;
     const goal = target();
-    value = options.smoothing === false
-      ? goal
-      : dampProgress(value, goal, previous ? Math.min(48, time - previous) : 16);
+    value = dampProgress(value, goal, previous ? Math.min(48, time - previous) : 16);
     previous = time;
     draw(value);
     if (value !== goal) frame = requestAnimationFrame(paint);

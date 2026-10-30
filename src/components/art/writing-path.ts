@@ -1,49 +1,23 @@
-export const WRITING_ENTRY = 0.12;
-export const WRITING_EXIT = 0.22;
-const area = 1 - (WRITING_ENTRY + WRITING_EXIT) / 2;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
-const smooth = (value: number) => {
+const ease = (value: number) => {
   const t = clamp(value);
   return t * t * (3 - 2 * t);
 };
-// Integrating the speed curve keeps position and velocity continuous at native sticky boundaries.
-const integral = (t: number) => t ** 3 - 0.5 * t ** 4;
 
-/** The horizontal and vertical components trade speed; neither introduces a waiting interval. */
-export function writingPose(progress: number, count: number, travel: number) {
-  const p = clamp(progress);
-  let horizontal: number;
-  let y = 0;
-  let scale = 1;
-  if (p < WRITING_ENTRY) {
-    const u = p / WRITING_ENTRY;
-    horizontal = WRITING_ENTRY * integral(u) / area;
-    y = travel * WRITING_ENTRY * (0.5 - u + integral(u));
-    scale = 0.97 + 0.03 * smooth(u);
-  } else if (p > 1 - WRITING_EXIT) {
-    const u = (p - 1 + WRITING_EXIT) / WRITING_EXIT;
-    horizontal = 1 - WRITING_EXIT * integral(1 - u) / area;
-    y = -travel * WRITING_EXIT * integral(u);
-    scale = 1 - 0.025 * smooth(u);
-  } else {
-    horizontal = (p - WRITING_ENTRY / 2) / area;
-  }
+/** Framing continues on both sides of the pinned scene, while the spreads turn in place. */
+export function writingPose(scroll: number, count: number, travel: number, viewport: number) {
+  const arrival = 1 - ease((scroll / viewport + 0.6) / 0.75);
+  const departure = ease(((scroll - travel) / viewport + 0.25) / 0.8);
   return {
-    cursor: horizontal * Math.max(0, count - 1),
-    y,
-    scale,
-    bridge: travel * WRITING_EXIT / 2,
+    arrival,
+    departure,
+    cursor: clamp(scroll / Math.max(1, travel)) * Math.max(0, count - 1),
+    x: arrival * 120 - departure * 180,
+    y: arrival * 55 - departure * 80,
+    angle: arrival * 4 - departure * 6,
+    scale: 1 - arrival * 0.1 - departure * 0.08,
   };
 }
 
-export function writingPageProgress(index: number, count: number): number {
-  if (count < 2) return 0;
-  const destination = Math.max(0, Math.min(count - 1, index));
-  let left = 0, right = 1;
-  for (let i = 0; i < 30; i++) {
-    const middle = (left + right) / 2;
-    if (writingPose(middle, count, 1).cursor < destination) left = middle;
-    else right = middle;
-  }
-  return (left + right) / 2;
-}
+export const writingPageProgress = (index: number, count: number) =>
+  count < 2 ? 0 : clamp(index / (count - 1));

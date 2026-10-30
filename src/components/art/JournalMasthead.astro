@@ -1,0 +1,161 @@
+---
+import { Image } from "astro:assets";
+import { ArrowDownRight } from "@lucide/astro";
+import type { PublishedPost } from "../../lib/posts";
+
+interface Props { posts: PublishedPost[] }
+const { posts } = Astro.props;
+const placements = [
+  { left: "21%", top: "12px", angle: "-7deg", layer: 3 },
+  { left: "49%", top: "36px", angle: "11deg", layer: 1 },
+  { left: "-1%", top: "36px", angle: "-15deg", layer: 2 },
+];
+---
+<header class="journal-masthead">
+  <div class="journal-masthead__inner page-width">
+    <div class="journal-masthead__title">
+      <p>ESSAYS & NOTES <span>/{String(posts.length).padStart(2,"0")}</span></p>
+      <h1>文章<span>。</span></h1>
+    </div>
+    <div class="journal-masthead__copy">
+      <p>记录研究、工程与日常见闻，<br />落笔成文，皆是老来回首的回忆。</p>
+      <a href="#journal-timeline">沿时间翻阅 <ArrowDownRight size={18} aria-hidden="true" /></a>
+    </div>
+    <div class="journal-masthead__covers" aria-hidden="true">
+      {posts.slice(0,3).map((post,index) => {
+        const pose = placements[index];
+        return <div class="journal-masthead__cover" style={`--card-left:${pose.left};--card-top:${pose.top};--card-angle:${pose.angle};--card-layer:${pose.layer};--card-delay:${(2-index)*70}ms`}>
+          <Image src={post.data.cover} alt="" widths={[360,540,720]} sizes="(min-width: 1024px) 20vw, 40vw" loading="eager" style={`object-position:${post.data.coverPosition}`} />
+        </div>;
+      })}
+    </div>
+  </div>
+</header>
+<style>
+  .journal-masthead {
+    overflow: clip;
+  }
+
+  .journal-masthead__inner {
+    display: grid;
+    grid-template-columns: .72fr 1fr 1.58fr;
+    gap: 44px;
+    align-items: center;
+    padding-block: 22px 30px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .journal-masthead__title > p {
+    margin: 0 0 23px;
+    color: var(--color-cyan);
+    font: .64rem var(--font-mono);
+    letter-spacing: .08em;
+    white-space: nowrap;
+  }
+
+  .journal-masthead__title > p > span {
+    margin-left: 12px;
+    color: var(--color-muted);
+  }
+
+  h1 {
+    margin: 0;
+    font: 400 clamp(4.8rem,7.4vw,6.5rem)/1.05 var(--font-reading);
+    letter-spacing: -.065em;
+    white-space: nowrap;
+  }
+
+  h1 > span {
+    color: var(--color-rose);
+    font-size: .48em;
+  }
+
+  .journal-masthead__copy {
+    padding-left: 28px;
+    border-left: 1px solid var(--color-line);
+  }
+
+  .journal-masthead__copy > p {
+    margin: 0;
+    color: var(--color-muted);
+    font: .9rem/2 var(--font-reading);
+    white-space: nowrap;
+  }
+
+  .journal-masthead__copy > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 28px;
+    min-height: 44px;
+    margin-top: 18px;
+    color: var(--color-cyan);
+    font-size: .77rem;
+    text-decoration: none;
+  }
+
+  .journal-masthead__covers {
+    position: relative;
+    height: 260px;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .journal-masthead__cover {
+    position: absolute;
+    z-index: var(--card-layer);
+    left: var(--card-left);
+    top: var(--card-top);
+    width: 50%;
+    aspect-ratio: 1.4;
+    padding: 5px;
+    background: var(--paper-white);
+    border: 1px solid color-mix(in srgb,var(--color-ink) 9%,transparent);
+    box-shadow: 0 2px 3px #182d2317,0 12px 19px -7px #182d233d;
+    transform: rotate(var(--card-angle));
+    animation: cover-settle 850ms cubic-bezier(.2,.7,.2,1) var(--card-delay) both;
+  }
+
+  .journal-masthead__cover :global(img) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @keyframes cover-settle {
+    from {
+      opacity: 0;
+      transform: translateY(20px) rotate(0deg);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) rotate(var(--card-angle));
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .journal-masthead__inner {
+      grid-template-columns: 1fr 1fr;
+      gap: 26px;
+    }
+    .journal-masthead__copy {
+      grid-column: 1;
+      padding-left: 0;
+      border: 0;
+    }
+    .journal-masthead__copy > p {
+      white-space: normal;
+    }
+    .journal-masthead__covers {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      height: 230px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .journal-masthead__cover {
+      animation: none;
+    }
+  }
+</style>

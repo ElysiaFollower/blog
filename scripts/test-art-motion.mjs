@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { dampProgress, RailMotion } from '../src/components/art/art-motion.ts';
-import { writingPose, writingPageProgress, WRITING_ENTRY, WRITING_EXIT } from '../src/components/art/writing-path.ts';
+import { writingPose, writingPageProgress } from '../src/components/art/writing-path.ts';
 
 test('a wheel-sized step is spread over frames and settles without an endless loop', () => {
   let value = dampProgress(0, .3, 16);
@@ -61,39 +61,38 @@ test('a held release has no stale flick, boundaries and cancellation stay finite
 });
 
 
-test('every scroll pixel has a visible writing response, including the former pauses', () => {
-  const travel=1300;
-  for(let pixel=0;pixel<travel;pixel++) {
-    const a=writingPose(pixel/travel,3,travel);
-    const b=writingPose((pixel+1)/travel,3,travel);
-    const movement=Math.abs(b.cursor-a.cursor)*1200+Math.abs(b.y-a.y);
-    assert.ok(movement>.5,`no response at ${pixel}`);
-    assert.ok(b.cursor>a.cursor,`horizontal reversal at ${pixel}`);
+test('writing advances throughout each page instead of inserting inactive scroll zones', () => {
+  const travel = 1300;
+  for (let pixel = 0; pixel < travel; pixel++) {
+    const a = writingPose(pixel, 3, travel, 970);
+    const b = writingPose(pixel + 1, 3, travel, 970);
+    assert.ok(b.cursor > a.cursor, `no page response at ${pixel}`);
   }
 });
 
-test('writing entry and release meet native vertical movement without a velocity jump', () => {
-  const travel=1300;
-  const worldY=s=>{
-    const stage=s<0 ? -s : s>travel ? travel-s : 0;
-    return stage+writingPose(s/travel,3,travel).y;
-  };
-  const derivative=(a,b)=>(worldY(b)-worldY(a))/(b-a);
-  for(const point of [0,WRITING_ENTRY*travel,(1-WRITING_EXIT)*travel,travel]) {
-    assert.ok(Math.abs(derivative(point-.05,point)-derivative(point,point+.05))<.002);
-  }
-  assert.ok(Math.abs(derivative(-.05,0)+1)<.001);
-  assert.ok(Math.abs(derivative(travel,travel+.05)+1)<.001);
-});
-
-test('writing anchors land on each page and reverse traversal retraces the same poses', () => {
-  for(let count=1;count<=5;count++) {
-    for(let i=0;i<count;i++) {
-      const p=writingPageProgress(i,count);
-      assert.ok(Math.abs(writingPose(p,count,1300).cursor-i)<1e-7);
+test('writing framing remains active on both sides of pin entry and release', () => {
+  const travel = 1300, viewport = 970;
+  for (const boundary of [0, travel]) {
+    for (const scroll of [boundary - 80, boundary, boundary + 80]) {
+      const a = writingPose(scroll, 3, travel, viewport);
+      const b = writingPose(scroll + 1, 3, travel, viewport);
+      assert.ok(Math.abs(b.x - a.x) > 0.01);
+      assert.ok(Math.abs(b.scale - a.scale) > 0.00001);
     }
   }
-  const forward=Array.from({length:101},(_,i)=>writingPose(i/100,3,1300));
-  const backward=Array.from({length:101},(_,i)=>writingPose((100-i)/100,3,1300)).reverse();
-  assert.deepEqual(backward,forward);
+});
+
+test('writing anchors select complete spreads and edge cases stay bounded', () => {
+  for (let count = 1; count <= 5; count++) {
+    for (let index = 0; index < count; index++) {
+      const scroll = writingPageProgress(index, count) * 1300;
+      assert.ok(Math.abs(writingPose(scroll, count, 1300, 970).cursor - index) < 1e-7);
+    }
+    for (const scroll of [-1000, 0, 500, 1300, 2500]) {
+      const pose = writingPose(scroll, count, 1300, 970);
+      assert.ok(Object.values(pose).every(Number.isFinite));
+      assert.ok(pose.cursor >= 0 && pose.cursor <= count - 1);
+      assert.ok(pose.scale > 0 && pose.scale <= 1);
+    }
+  }
 });
