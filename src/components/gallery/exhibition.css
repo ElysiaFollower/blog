@@ -39,7 +39,6 @@
 .exhibition__eyebrow { margin: 0 0 13px; font: .57rem var(--font-mono); letter-spacing: .17em; display: flex; align-items: center; gap: 10px; color: var(--ex-muted); }
 .exhibition__eyebrow > span { width: 5px; height: 5px; border-radius: 50%; background: var(--ex-rose); box-shadow: 0 0 10px var(--ex-rose); }
 .exhibition__heading h2 { margin: 0; font: 400 clamp(32px, 3.7vw, 58px)/1.3 var(--font-reading); letter-spacing: .08em; }
-.exhibition__heading h2 > span { color: var(--ex-rose); }
 .exhibition__intro { margin: 12px 0 0; color: var(--ex-muted); font: .75rem var(--font-reading); letter-spacing: .15em; }
 .exhibition button { cursor: pointer; }
 .exhibition__leave { pointer-events: auto; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 0 0 16px; background: none; border: none; font-size: .72rem; color: var(--ex-muted); }

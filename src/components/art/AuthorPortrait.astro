@@ -10,14 +10,13 @@ const introduction = pause < 0 ? [profileConfig.introduction] : [profileConfig.i
   <div class="author-portrait__inner page-width">
     <figure>
       <Image src={portrait} alt="花园茶会中的爱莉希雅" widths={[600,900,1200]} sizes="40vw" loading="lazy" />
-      <figcaption>研究之外，也认真玩耍。</figcaption>
+      <figcaption>享受生活 🌟 热爱游戏</figcaption>
     </figure>
     <div class="author-portrait__copy">
       <p class="author-portrait__eyebrow">03 / ABOUT ME</p>
-      <h2 id="person-title">一个相信童话的<br /><em>妄想家。</em></h2>
+      <h2 id="person-title">一个相信童话的<br /><em>妄想家</em></h2>
       <p class="author-portrait__name">{profileConfig.handle}<span>也使用网名 {profileConfig.alias}</span></p>
       <p class="author-portrait__introduction">{introduction.map((line,index) => <span>{line}{index === introduction.length-1 && "。"}</span>)}</p>
-      <p class="author-portrait__aside">主线之外，还有许多兔子洞。</p>
       <a href="/about/">多认识我一点 <ArrowUpRight size={22} aria-hidden="true" /></a>
     </div>
   </div>
@@ -108,12 +107,6 @@ const introduction = pause < 0 ? [profileConfig.introduction] : [profileConfig.i
 
   .author-portrait__introduction > span {
     display: block;
-  }
-
-  .author-portrait__aside {
-    margin: 24px 0 0;
-    color: var(--author-ink);
-    font: 1rem/1.9 var(--font-reading);
   }
 
   .author-portrait__copy > a {

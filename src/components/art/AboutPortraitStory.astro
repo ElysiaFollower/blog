@@ -10,7 +10,7 @@ const introduction = pause < 0 ? [profileConfig.introduction] : [profileConfig.i
   <div class="portrait-story__inner page-width">
     <figure class="portrait-story__portrait">
       <div class="portrait-story__image"><Image src={portrait} alt="花园茶会中的爱莉希雅" widths={[720,1080,1440]} sizes="43vw" loading="eager" /></div>
-      <figcaption>研究之外，也认真玩耍。</figcaption>
+      <figcaption>享受生活 🌟 热爱游戏</figcaption>
     </figure>
     <div class="portrait-story__words">
       <header class="portrait-story__identity">
@@ -19,10 +19,10 @@ const introduction = pause < 0 ? [profileConfig.introduction] : [profileConfig.i
         <p class="portrait-story__alias">也使用网名 <b>{profileConfig.alias}</b></p>
         <p class="portrait-story__introduction">{introduction.map((line,index) => <span>{line}{index === introduction.length-1 && "。"}</span>)}</p>
         <div class="portrait-story__status" aria-label="当前状态"><span><GraduationCap size={18} aria-hidden="true" />{profileConfig.education}</span><span><Microscope size={18} aria-hidden="true" />{profileConfig.nextStage}</span></div>
-        <a href="#research">关注的方向 <ArrowDownRight size={21} aria-hidden="true" /></a>
+        <a href="#research">目前关注的方向 <ArrowDownRight size={21} aria-hidden="true" /></a>
       </header>
       <section class="portrait-story__research" id="research" aria-labelledby="research-title">
-        <header><p class="portrait-story__eyebrow">01 / RESEARCH DIRECTIONS</p><h2 id="research-title">关注的方向</h2></header>
+        <header><p class="portrait-story__eyebrow">01 / RESEARCH DIRECTIONS</p><h2 id="research-title">目前关注的方向</h2></header>
         {profileConfig.research.map(item => <article data-portrait-direction>
           <span>{item.index}</span>
           <div><h3>{item.title}</h3><p>{item.description}</p><i aria-hidden="true"></i></div>

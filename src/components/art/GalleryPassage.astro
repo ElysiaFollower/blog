@@ -21,8 +21,8 @@ const display = [windows[0], windows[1], windows[2]].filter(Boolean);
       </fieldset>
     <div class="gallery-passage__copy page-width">
       <p>COLLECTION / {String(items.length).padStart(3,"0")}</p>
-      <h1>画廊<span>。</span></h1>
-      <p>收藏那些，曾让目光停留的瞬间。</p>
+      <h1>画廊</h1>
+      <p>收藏那些，曾让目光停留的瞬间</p>
     </div>
     <a class="gallery-passage__continue" data-scene-content href="#gallery-collection"><span data-gallery-entry-label>向下，随目光漫游</span> <ArrowDown size={17} aria-hidden="true" /></a>
     <span class="gallery-passage__side-note" aria-hidden="true">A WALK THROUGH THE COLLECTION</span>
@@ -156,11 +156,6 @@ const display = [windows[0], windows[1], windows[2]].filter(Boolean);
     font: 400 clamp(5rem,8vw,8rem)/1.15 var(--font-reading);
     letter-spacing: .08em;
     text-indent: .08em;
-  }
-
-  h1 > span {
-    font-size: .55em;
-    color: #efd4e4;
   }
 
   .gallery-passage__copy > p:nth-child(3) {

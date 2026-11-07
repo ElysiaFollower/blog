@@ -15,8 +15,8 @@ const payload = JSON.stringify(collection).replace(/</g, "\\u003c");
   <header class="light-table__heading page-width">
     <div class="light-table__title">
       <p class="art-kicker"><span>02</span> / COLLECTION</p>
-      <h2 id="light-table-title">记忆的回廊<span>。</span></h2>
-      <p class="light-table__intro">收藏那些，<br />曾让目光停留的瞬间。</p>
+      <h2 id="light-table-title">记忆的回廊</h2>
+      <p class="light-table__intro">收藏那些，<br />曾让目光停留的瞬间</p>
     </div>
     <div class="light-table__index">
       <p><strong>{collection.length}</strong><span>项收藏<br />与画廊同步</span></p>
@@ -108,10 +108,6 @@ const payload = JSON.stringify(collection).replace(/</g, "\\u003c");
     margin: 0;
     font: 400 clamp(2.8rem,4vw,4rem)/1.2 var(--font-reading);
     letter-spacing: -.04em;
-  }
-
-  h2 > span {
-    color: #e2abc7;
   }
 
   .light-table__intro {
