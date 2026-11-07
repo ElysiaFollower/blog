@@ -82,8 +82,8 @@ const structuredData =
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     {noIndex && <meta name="robots" content="noindex, nofollow" />}
-    <meta name="theme-color" content="#fafafd" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#17151a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f5f2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#171621" media="(prefers-color-scheme: dark)" />
     {!noIndex && <link rel="canonical" href={canonicalUrl} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap-index.xml" />
@@ -155,14 +155,15 @@ const structuredData =
     <script is:inline>
       (() => {
         document.documentElement.classList.add("js");
-        if (sessionStorage.getItem("opening-seen")) {
-          document.documentElement.classList.add("opening-seen");
-        }
-        const stored = localStorage.getItem("theme");
+        let stored;
+        try {
+          if (sessionStorage.getItem("opening-seen")) document.documentElement.classList.add("opening-seen");
+          stored = localStorage.getItem("theme");
+        } catch { /* The system theme still works without storage access. */ }
         const preferred = matchMedia("(prefers-color-scheme: dark)").matches
           ? "dark"
           : "light";
-        document.documentElement.dataset.theme = stored || preferred;
+        document.documentElement.dataset.theme = stored === "light" || stored === "dark" ? stored : preferred;
       })();
     </script>
   </head>

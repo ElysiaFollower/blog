@@ -2,78 +2,6 @@
 import "photoswipe/style.css";
 ---
 
-<script>
-  import PhotoSwipeLightbox from "photoswipe/lightbox";
-
-  const reduceMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)",
-  ).matches;
-
-  const lightbox = new PhotoSwipeLightbox({
-    gallery: "[data-gallery-grid]",
-    children: "[data-gallery-item]",
-    pswpModule: () => import("photoswipe"),
-    mainClass: "gallery-viewer",
-    bgOpacity: 1,
-    initialZoomLevel: "fit",
-    secondaryZoomLevel: 1,
-    maxZoomLevel: (zoomLevel) => Math.max(2, zoomLevel.fit * 5),
-    wheelToZoom: true,
-    allowPanToNext: false,
-    pinchToClose: false,
-    closeOnVerticalDrag: false,
-    imageClickAction: "zoom",
-    tapAction: "toggle-controls",
-    doubleTapAction: "zoom",
-    bgClickAction: "close",
-    showAnimationDuration: reduceMotion ? false : 260,
-    hideAnimationDuration: reduceMotion ? false : 220,
-    zoomAnimationDuration: reduceMotion ? false : 240,
-    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-    preload: [1, 2],
-    counter: false,
-    errorMsg: "图片加载失败",
-    closeTitle: "关闭",
-    zoomTitle: "切换缩放",
-    arrowPrevTitle: "上一张",
-    arrowNextTitle: "下一张",
-    paddingFn: (viewportSize) => {
-      if (viewportSize.x <= 620) {
-        return { top: 58, bottom: 70, left: 10, right: 10 };
-      }
-      return { top: 68, bottom: 72, left: 76, right: 76 };
-    },
-  });
-
-  lightbox.on("uiRegister", () => {
-    const viewer = lightbox.pswp;
-    if (!viewer?.ui) return;
-
-    viewer.ui.registerElement({
-      name: "gallery-caption",
-      appendTo: "root",
-      onInit: (element, pswp) => {
-        const title = document.createElement("span");
-        const position = document.createElement("small");
-        element.append(title, position);
-
-        const render = () => {
-          const item = pswp.currSlide?.data;
-          const source = item?.element as HTMLElement | undefined;
-          title.textContent = source?.dataset.caption ?? "";
-          position.textContent = `${String(pswp.currIndex + 1).padStart(2, "0")} / ${String(pswp.getNumItems()).padStart(2, "0")}`;
-        };
-
-        pswp.on("change", render);
-        render();
-      },
-    });
-
-  });
-
-  lightbox.init();
-</script>
-
 <style is:global>
   .gallery-viewer {
     --pswp-bg: #0c0a0d;
@@ -82,6 +10,11 @@ import "photoswipe/style.css";
     --pswp-placeholder-bg: #171419;
     --pswp-root-z-index: 1000;
     font-family: var(--font-sans);
+    touch-action: pan-y;
+  }
+
+  .gallery-viewer .pswp__scroll-wrap {
+    touch-action: none;
   }
 
   .gallery-viewer .pswp__icn-shadow {
@@ -89,22 +22,10 @@ import "photoswipe/style.css";
   }
 
   .gallery-viewer .pswp__top-bar {
-    height: 62px;
-    padding: 8px 12px;
-  }
-
-  .gallery-viewer .pswp__top-bar > * {
-    opacity: 0.84;
-    transition:
-      color 160ms ease,
-      opacity 160ms ease,
-      transform 160ms ease;
-  }
-
-  .gallery-viewer .pswp__top-bar > *:hover,
-  .gallery-viewer .pswp__top-bar > *:focus-visible {
-    color: #ff8fb4;
-    opacity: 1;
+    height: 64px;
+    align-items: center;
+    padding: 8px max(12px, env(safe-area-inset-right)) 8px
+      max(12px, env(safe-area-inset-left));
   }
 
   .gallery-viewer .pswp__button {
@@ -113,29 +34,100 @@ import "photoswipe/style.css";
   }
 
   .gallery-viewer .pswp__button--zoom {
+    margin-left: 6px;
+  }
+
+  .gallery-viewer .pswp__preloader {
+    width: 32px;
+    flex: none;
+  }
+
+  .gallery-viewer .pswp__preloader .pswp__icn {
+    left: 0;
+  }
+
+  .gallery-viewer .gallery-viewer__position {
+    margin: 0 16px;
+    color: #bdb2ba;
+    font-family: var(--font-mono);
+    font-size: 0.69rem;
+    letter-spacing: 0.08em;
+  }
+
+  .gallery-viewer .gallery-viewer__original {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    padding-inline: 14px;
+    color: #d4c8d1;
+    font-size: 0.76rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .gallery-viewer .gallery-viewer__copy {
+    display: inline-flex;
+    width: auto;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
     margin-left: auto;
+    padding-inline: 12px;
+    color: #d4c8d1;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+
+  .gallery-viewer__copy-icon {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  .gallery-viewer .pswp__gallery-feedback {
+    position: absolute;
+    top: 76px;
+    left: 50%;
+    z-index: 20;
+    max-width: calc(100% - 40px);
+    padding: 9px 16px;
+    transform: translateX(-50%);
+    border: 1px solid rgb(255 177 203 / 25%);
+    border-radius: 6px;
+    background: #211a20;
+    color: #f4e6ed;
+    font-size: 0.76rem;
+    text-align: center;
+  }
+
+  .gallery-viewer .pswp__gallery-feedback:empty {
+    display: none;
+  }
+
+  .gallery-viewer :is(button, a, summary):focus-visible {
+    outline: 2px solid #ffb1cb;
+    outline-offset: 3px;
+  }
+
+  .gallery-viewer :is(.pswp__button, .gallery-viewer__original):hover {
+    color: #ffb1cb;
   }
 
   .gallery-viewer .pswp__button--arrow {
     width: 48px;
     height: 48px;
     margin-top: -24px;
-    border: 1px solid rgb(255 255 255 / 28%);
+    border: 1px solid rgb(255 255 255 / 22%);
     border-radius: 50%;
-    background: rgb(18 15 19 / 82%);
-    opacity: 0.72;
-    transition:
-      border-color 160ms ease,
-      color 160ms ease,
-      opacity 160ms ease,
-      transform 160ms ease;
+    background: rgb(18 15 19 / 80%);
+    opacity: 0.8;
   }
 
-  .gallery-viewer .pswp__button--arrow:hover,
-  .gallery-viewer .pswp__button--arrow:focus-visible {
-    border-color: #ff8fb4;
-    color: #ff8fb4;
-    opacity: 1;
+  .gallery-viewer .pswp__button--arrow:hover {
+    border-color: #ffb1cb;
   }
 
   .gallery-viewer .pswp__button--arrow--prev {
@@ -163,60 +155,160 @@ import "photoswipe/style.css";
 
   .gallery-viewer .pswp__gallery-caption {
     position: absolute;
-    right: clamp(22px, 5vw, 78px);
-    bottom: 22px;
-    left: clamp(22px, 5vw, 78px);
+    right: max(80px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    left: max(80px, env(safe-area-inset-left));
     z-index: 10;
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    color: #ddd5da;
-    font-size: 0.78rem;
-    line-height: 1.4;
-    pointer-events: none;
+    width: min(640px, calc(100% - 160px));
+    margin-inline: auto;
+    color: #e0d7dd;
+    font-size: 0.8rem;
+    line-height: 1.6;
   }
 
-  .gallery-viewer .pswp__gallery-caption span {
+  .gallery-viewer__details {
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: rgb(12 10 13 / 88%);
+  }
+
+  .gallery-viewer__details[open] {
+    border-color: rgb(255 255 255 / 16%);
+    box-shadow: 0 12px 50px rgb(0 0 0 / 20%);
+  }
+
+  .gallery-viewer__details summary {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 14px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .gallery-viewer__details summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .gallery-viewer__caption-title {
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .gallery-viewer .pswp__gallery-caption small {
+  .gallery-viewer__caption-toggle {
     flex: none;
-    color: #a49aa0;
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
+    margin-left: auto;
+    color: #b5a8b1;
+    font-size: 0.69rem;
+    white-space: nowrap;
+  }
+
+  .gallery-viewer__caption-toggle::after {
+    content: " +";
+    color: #ffb1cb;
+  }
+
+  .gallery-viewer__details[open] .gallery-viewer__caption-toggle::after {
+    content: " −";
+  }
+
+  .gallery-viewer__caption-body {
+    max-height: min(32vh, 260px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 4px 16px 18px;
+    scrollbar-width: thin;
+    scrollbar-color: #76626f transparent;
+    touch-action: pan-y;
+    overflow-wrap: anywhere;
+  }
+
+  .gallery-viewer__caption-body h2 {
+    margin: 0 0 8px;
+    color: #f7f2f5;
+    font-family: var(--font-reading);
+    font-size: 1.05rem;
+    font-weight: 500;
+    line-height: 1.65;
+  }
+
+  .gallery-viewer__caption-body p {
+    margin: 0;
+    color: #bdb2ba;
+    white-space: pre-wrap;
+  }
+
+  .gallery-viewer__caption-body:focus-visible {
+    outline: 1px solid #ffb1cb;
+    outline-offset: -4px;
+  }
+
+  .gallery-viewer .pswp__error-msg {
+    max-width: min(80vw, 400px);
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  .gallery-viewer__video video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    object-fit: contain;
   }
 
   @media (max-width: 620px) {
     .gallery-viewer .pswp__top-bar {
-      height: 54px;
-      padding: 4px 5px;
+      height: 58px;
+      padding-block: 4px;
+    }
+
+    .gallery-viewer .gallery-viewer__position {
+      margin-inline: 4px;
+      font-size: 0.62rem;
+    }
+
+    .gallery-viewer .gallery-viewer__original {
+      padding-inline: 9px;
+      font-size: 0.7rem;
+    }
+
+    .gallery-viewer .gallery-viewer__copy {
+      width: 42px;
+      padding: 0;
+    }
+
+    .gallery-viewer__copy-label {
+      display: none;
     }
 
     .gallery-viewer .pswp__button--arrow {
       top: auto;
-      bottom: 11px;
+      bottom: max(14px, env(safe-area-inset-bottom));
+      display: block;
       width: 42px;
       height: 42px;
       margin: 0;
     }
 
+    .gallery-viewer.pswp--one-slide .pswp__button--arrow {
+      display: none;
+    }
+
     .gallery-viewer .pswp__button--arrow--prev {
-      left: 10px;
+      left: max(10px, env(safe-area-inset-left));
     }
 
     .gallery-viewer .pswp__button--arrow--next {
-      right: 10px;
+      right: max(10px, env(safe-area-inset-right));
     }
 
     .gallery-viewer .pswp__button--arrow .pswp__icn {
       top: 5px;
-      width: 30px;
-      height: 30px;
     }
 
     .gallery-viewer .pswp__button--arrow--prev .pswp__icn {
@@ -228,20 +320,24 @@ import "photoswipe/style.css";
     }
 
     .gallery-viewer .pswp__gallery-caption {
-      right: 62px;
-      bottom: 15px;
-      left: 62px;
-      display: grid;
-      justify-items: center;
-      gap: 1px;
-      font-size: 0.7rem;
-      text-align: center;
+      right: 60px;
+      bottom: max(14px, env(safe-area-inset-bottom));
+      left: 60px;
+      width: auto;
+      font-size: 0.75rem;
     }
 
-    .gallery-viewer .pswp__gallery-caption span {
-      max-width: 100%;
+    .gallery-viewer__details summary {
+      gap: 8px;
+      padding-inline: 8px;
     }
 
+    .gallery-viewer__details[open] {
+      position: relative;
+      width: calc(100vw - 24px);
+      margin-left: calc(12px - 60px);
+      margin-bottom: 52px;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -32,6 +32,9 @@ jobs:
       - name: Check
         run: pnpm check
 
+      - name: Test gallery behavior
+        run: pnpm test:gallery
+
       - name: Build
         run: pnpm build
 

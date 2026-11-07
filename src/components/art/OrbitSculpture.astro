@@ -1,0 +1,48 @@
+---
+interface Props { id: string; class?: string }
+const { id, class: className } = Astro.props;
+---
+
+<div class:list={["orbit-sculpture", className]} aria-hidden="true">
+  <svg viewBox="0 0 640 640" fill="none">
+    <defs>
+      <radialGradient id={`${id}-body`} cx=".28" cy=".2" r=".85">
+        <stop stop-color="#fff5e9" />
+        <stop offset=".32" stop-color="#e7b9d6" />
+        <stop offset=".65" stop-color="#9186ba" />
+        <stop offset="1" stop-color="#29263e" />
+      </radialGradient>
+      <linearGradient id={`${id}-ring`} x1="70" y1="140" x2="560" y2="470" gradientUnits="userSpaceOnUse">
+        <stop stop-color="#b9e5df" stop-opacity=".15" />
+        <stop offset=".38" stop-color="#faf5e8" />
+        <stop offset=".64" stop-color="#e6acc9" />
+        <stop offset="1" stop-color="#aaa1d3" stop-opacity=".2" />
+      </linearGradient>
+    </defs>
+    <circle cx="320" cy="320" r="282" stroke="currentColor" stroke-opacity=".14" />
+    <circle cx="320" cy="320" r="238" stroke="currentColor" stroke-opacity=".17" stroke-dasharray="1 13" />
+    <path d="M320 22v30M320 588v30M22 320h30M588 320h30" stroke="currentColor" stroke-opacity=".5" />
+    <ellipse cx="320" cy="320" rx="279" ry="94" transform="rotate(-32 320 320)" stroke={`url(#${id}-ring)`} stroke-width="2" />
+    <circle cx="320" cy="320" r="146" fill={`url(#${id}-body)`} />
+    <path d="M83 468c25 44 152 19 283-57s217-174 191-218" stroke={`url(#${id}-ring)`} stroke-width="5" />
+    <ellipse cx="320" cy="320" rx="260" ry="188" transform="rotate(45 320 320)" stroke={`url(#${id}-ring)`} stroke-width=".7" />
+    <circle cx="108" cy="449" r="8" fill="#e7b9d6" />
+    <circle cx="529" cy="132" r="3" fill="currentColor" />
+    <path d="M510 484v22m-11-11h22" stroke="currentColor" />
+  </svg>
+</div>
+
+<style>
+  .orbit-sculpture {
+    width: 100%;
+    aspect-ratio: 1;
+    color: var(--color-ink);
+    pointer-events: none;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+</style>

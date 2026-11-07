@@ -2,17 +2,25 @@
 
 :root {
   color-scheme: light;
-  --color-bg: #fafafd;
-  --color-surface: #ffffff;
-  --color-surface-soft: #f1f0f4;
-  --color-ink: #202027;
-  --color-muted: #686771;
-  --color-line: #dedde4;
-  --color-rose: #df4d7d;
-  --color-rose-bright: #ff709f;
-  --color-cyan: #267f88;
+  --color-bg: #f7f5f2;
+  --color-surface: #fffdfa;
+  --color-surface-soft: #eeeaee;
+  --color-ink: #302d38;
+  --color-muted: #726c79;
+  --color-line: #ddd6df;
+  --color-rose: #a84e78;
+  --color-rose-bright: #eeb2cf;
+  --color-cyan: #477e83;
   --color-gold: #c78b20;
   --color-focus: #1578a0;
+  --art-paper: #efebef;
+  --art-night: #1b1928;
+  --art-chalk: #f1eaf2;
+  --paper-cyan: #e7efed;
+  --paper-rose: #f1e7ee;
+  --paper-gold: #f2ecdf;
+  --paper-white: #fffdfa;
+  --ease-art: cubic-bezier(.22, 1, .36, 1);
   --shadow-soft: 0 14px 45px rgb(32 32 39 / 9%);
   --font-ui:
     Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -29,17 +37,23 @@
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-bg: #141214;
-  --color-surface: #1d1a1d;
-  --color-surface-soft: #282328;
+  --color-bg: #171621;
+  --color-surface: #211f2d;
+  --color-surface-soft: #2c293a;
   --color-ink: #f4edf1;
   --color-muted: #b7abb2;
-  --color-line: #403740;
-  --color-rose: #ff78a5;
-  --color-rose-bright: #ff95b7;
+  --color-line: #423b51;
+  --color-rose: #e4b0cd;
+  --color-rose-bright: #f0c1d9;
   --color-cyan: #72ccd0;
   --color-gold: #edbd5d;
   --color-focus: #84dbe0;
+  --art-paper: #1d1b2a;
+  --art-night: #12111d;
+  --paper-cyan: #1e2b2d;
+  --paper-rose: #302433;
+  --paper-gold: #302b27;
+  --paper-white: #24232d;
   --shadow-soft: 0 20px 55px rgb(0 0 0 / 26%);
 }
 
@@ -154,4 +168,22 @@ button {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+:where(h1, h2, h3) { text-wrap: balance; }
+:where(p) { text-wrap: pretty; }
+:target { scroll-margin-top: 30px; }
+
+/* Scale page typography with available space; the art palette is shared at every size. */
+@media (min-width: 1024px) {
+  :root {
+    --type-page-title: clamp(4rem, 5.2vw, 5.25rem);
+    --type-section-title: clamp(2.5rem, 3.3vw, 3.4rem);
+    --type-reading-title: clamp(2.25rem, 3.1vw, 3rem);
+  }
+}
+
+@media (min-width: 1024px) {
+  .journal-page, .library-page, .reading-page, .friends-page { --nav-accent: var(--color-cyan); }
+  .about-page { --nav-accent: var(--color-gold); }
 }

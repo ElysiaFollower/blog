@@ -1,0 +1,51 @@
+---
+import { ArrowLeft, ArrowRight, ArrowUpRight, Grid2x2, MoveHorizontal, Play, Pause } from "@lucide/astro";
+import "./exhibition.css";
+---
+<section class="exhibition" data-exhibition hidden aria-labelledby="exhibition-title">
+  <div class="exhibition__atmosphere" aria-hidden="true">
+    <div class="exhibition__light exhibition__light--rose"></div>
+    <div class="exhibition__light exhibition__light--blue"></div>
+    <div class="exhibition__oculus"></div>
+    <div class="exhibition__horizon"></div>
+    <div class="exhibition__floor"><i></i><i></i><i></i></div>
+    <span class="exhibition__watermark">LUMIÈRE</span>
+  </div>
+  <header class="exhibition__heading">
+    <div>
+      <p class="exhibition__eyebrow"><span></span> THE COLLECTION, IN ORBIT</p>
+      <h2 id="exhibition-title">光的回廊</h2>
+      <p class="exhibition__intro">让目光，在此停留</p>
+    </div>
+    <button class="exhibition__leave" data-exhibition-browse><Grid2x2 size={15} /> 返回浏览 <ArrowUpRight size={15} /></button>
+  </header>
+  <div class="exhibition__stage" data-exhibition-stage tabindex="0" role="region" aria-label="悬浮展厅，使用左右方向键选择作品，回车查看" aria-describedby="exhibition-hint">
+    <div class="exhibition__orbit" data-exhibition-orbit></div>
+  </div>
+  <div class="exhibition__caption">
+    <span class="exhibition__work-number" data-exhibition-number>001</span>
+    <div><span class="exhibition__caption-label">此刻，目光所及</span><h3 data-exhibition-title></h3></div>
+    <button class="exhibition__open" data-exhibition-open aria-label="放大查看当前作品"><ArrowUpRight size={24} /></button>
+  </div>
+  <footer class="exhibition__navigation">
+    <p id="exhibition-hint"><MoveHorizontal size={18} /><span>拖动探索 <b>·</b> 点击放大</span></p>
+    <div class="exhibition__transport">
+      <button data-exhibition-prev aria-label="上一件作品"><ArrowLeft size={20} /></button>
+      <span data-exhibition-count aria-live="polite" aria-atomic="true"></span>
+      <button data-exhibition-next aria-label="下一件作品"><ArrowRight size={20} /></button>
+    </div>
+    <div class="exhibition__wander-controls">
+      <button class="exhibition__wander" data-exhibition-wander type="button" aria-label="自动漫游" aria-pressed="false" title="缓缓旋转；拖动可接管">
+        <span class="exhibition__wander-icon" aria-hidden="true"><Play class="exhibition__play" size={15} /><Pause class="exhibition__pause" size={15} /></span>
+        <span>自动漫游</span>
+        <span class="exhibition__wander-state" data-exhibition-wander-state aria-hidden="true">开启</span>
+      </button>
+      <label class="exhibition__speed" for="exhibition-speed">
+        <span>速度</span><output data-exhibition-speed-value for="exhibition-speed" aria-hidden="true">1×</output>
+        <input id="exhibition-speed" data-exhibition-speed type="range" min="0.25" max="3" step="0.25" value="1" aria-label="漫游速度" />
+      </label>
+    </div>
+  </footer>
+  <div class="exhibition__progress"><span data-exhibition-progress></span><input data-exhibition-scrub type="range" min="1" max="1" value="1" aria-label="选择展览作品" /></div>
+  <p class="exhibition__status" data-exhibition-status role="status"></p>
+</section>

@@ -11,7 +11,7 @@ import { siteConfig } from "../config/site";
 import ThemeToggle from "./ThemeToggle.astro";
 
 interface Props {
-  variant?: "overlay" | "reading" | "graphic";
+  variant?: "overlay" | "reading" | "graphic" | "scene";
 }
 
 const { variant = "reading" } = Astro.props;
@@ -77,6 +77,12 @@ const icons = {
     text-shadow: 0 1px 18px rgb(0 0 0 / 38%);
   }
 
+  .site-header[data-variant="scene"] {
+    position: absolute;
+    inset: 0 0 auto;
+    color: var(--color-ink);
+  }
+
   .site-header[data-variant="graphic"] {
     color: #151419;
   }
@@ -90,7 +96,7 @@ const icons = {
   .site-header__inner {
     display: grid;
     width: min(calc(100% - (2 * var(--page-inline))), var(--content-wide));
-    min-height: 72px;
+    min-height: 86px;
     margin-inline: auto;
     grid-template-columns: minmax(max-content, 1fr) auto minmax(42px, 1fr);
     align-items: center;
@@ -115,7 +121,7 @@ const icons = {
   .site-nav {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
   }
 
   .site-nav__link {
@@ -123,10 +129,11 @@ const icons = {
     min-height: 42px;
     align-items: center;
     gap: 7px;
-    padding: 8px 12px;
+    padding: 8px 14px;
+    border-radius: 30px;
     color: inherit;
     font-size: 0.88rem;
-    font-weight: 650;
+    font-weight: 500;
     text-decoration: none;
     transition:
       color 160ms ease,
@@ -139,7 +146,12 @@ const icons = {
   }
 
   .site-nav__link.is-active {
-    color: var(--color-rose-bright);
+    color: var(--nav-accent, var(--color-rose));
+  }
+
+  .site-header[data-variant="overlay"] .site-nav__link.is-active {
+    color: #ffe3f2;
+    background: #fff2;
   }
 
   .site-header[data-variant="graphic"] .site-nav__link.is-active {

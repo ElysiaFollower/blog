@@ -1,0 +1,412 @@
+---
+import { Image } from "astro:assets";
+import room from "../../assets/art/voyage-atrium.webp";
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "@lucide/astro";
+import { getGalleryEntries } from "../../lib/gallery";
+
+const collection = await getGalleryEntries();
+const images = collection.filter(item => item.kind === "image").length;
+const videos = collection.length - images;
+const payload = JSON.stringify(collection).replace(/</g, "\\u003c");
+---
+
+<section class="light-table" id="selected-light" aria-labelledby="light-table-title" data-light-table>
+  <div class="light-table__room" aria-hidden="true"><Image src={room} alt="" width={1672} loading="lazy" /></div>
+  <header class="light-table__heading page-width">
+    <div class="light-table__title">
+      <p class="art-kicker"><span>02</span> / COLLECTION</p>
+      <h2 id="light-table-title">记忆的回廊</h2>
+      <p class="light-table__intro">收藏那些，<br />曾让目光停留的瞬间</p>
+    </div>
+    <div class="light-table__index">
+      <p><strong>{collection.length}</strong><span>项收藏<br />与画廊同步</span></p>
+      <span>{images} 幅图像 {videos > 0 && <><i>·</i> {videos} 段影像</>}</span>
+      <a href="/gallery/">步入完整画廊 <ArrowUpRight size={20} aria-hidden="true" /></a>
+    </div>
+  </header>
+  <div class="light-table__stage" data-light-stage role="region" aria-roledescription="轮播" aria-label={`${collection.length}项收藏，拖动或用方向键浏览`} tabindex="0">
+    <div class="light-table__horizon" aria-hidden="true"></div>
+    <div class="light-table__track" data-light-track></div>
+    <div class="light-table__floor" aria-hidden="true"></div>
+  </div>
+  <noscript>
+    <div class="light-table__fallback page-width">
+      {collection.slice(0,12).map(entry => <a href={entry.src}><img src={entry.kind === "video" ? entry.poster : entry.src} width={entry.width} height={entry.height} alt={entry.alt} loading="lazy" /><span>{entry.title ?? entry.alt}</span></a>)}
+    </div>
+  </noscript>
+  <footer class="light-table__footer page-width">
+    <div class="light-table__caption"><p data-light-position aria-live="polite" aria-atomic="true">收藏预览</p><span data-light-hint>可在画廊浏览全部收藏</span></div>
+    <div class="light-table__controls" hidden data-light-controls>
+      <button type="button" data-light-prev aria-label="上一项收藏"><ArrowLeft size={20} aria-hidden="true" /></button>
+      <span aria-hidden="true">DRAG TO WANDER</span>
+      <button type="button" data-light-next aria-label="下一项收藏"><ArrowRight size={20} aria-hidden="true" /></button>
+    </div>
+  </footer>
+  <template data-light-template>
+    <a class="light-table__work" draggable="false"><figure><div class="light-table__picture"><img alt="" draggable="false" decoding="async" /><span class="light-table__kind"></span></div><figcaption><span></span><span></span><ArrowUpRight size={15} aria-hidden="true" /></figcaption></figure></a>
+  </template>
+  <script is:inline type="application/json" data-light-data set:html={payload} />
+</section>
+<script>
+  import { mountLightTable } from "./light-table";
+  document.querySelectorAll<HTMLElement>("[data-light-table]").forEach(mountLightTable);
+</script>
+<style>
+  .light-table {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: #211c2d;
+    color: #f3edf3;
+    padding: 48px 0 34px;
+  }
+
+  .light-table__room {
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    overflow: hidden;
+    opacity: .14;
+    pointer-events: none;
+  }
+
+  .light-table__room :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 70%;
+    filter: saturate(.4);
+  }
+
+  .light-table::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: radial-gradient(ellipse at 80% 0%, #ae708b28, transparent 55%), radial-gradient(ellipse at 15% 75%, #577e8830, transparent 55%);
+  }
+
+  .light-table__heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 60px;
+  }
+
+  .art-kicker {
+    margin: 0 0 25px;
+    color: #c6b5c7;
+    font: .7rem var(--font-mono);
+    letter-spacing: .13em;
+  }
+
+  .art-kicker > span {
+    color: #e6b8cd;
+  }
+
+  h2 {
+    margin: 0;
+    font: 400 clamp(2.8rem,4vw,4rem)/1.2 var(--font-reading);
+    letter-spacing: -.04em;
+  }
+
+  .light-table__intro {
+    margin: 23px 0 0;
+    font: 1rem/1.9 var(--font-reading);
+    color: #c9bdce;
+  }
+
+  .light-table__index {
+    min-width: 260px;
+    padding-bottom: 4px;
+  }
+
+  .light-table__index > p {
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .light-table__index strong {
+    font: 400 5.5rem/1 var(--font-reading);
+    letter-spacing: -.06em;
+    color: #ead2e1;
+  }
+
+  .light-table__index p > span {
+    padding-left: 22px;
+    border-left: 1px solid #b695b85c;
+    color: #c5b9ce;
+    font-size: .78rem;
+    line-height: 1.8;
+  }
+
+  .light-table__index > span {
+    color: #b9aabd;
+    font-size: .75rem;
+  }
+
+  .light-table__index i {
+    padding-inline: 12px;
+    font-style: normal;
+  }
+
+  .light-table__index a {
+    display: flex;
+    justify-content: space-between;
+    gap: 32px;
+    align-items: center;
+    margin-top: 26px;
+    padding-block: 14px;
+    border-bottom: 1px solid #b695b85c;
+    text-decoration: none;
+    font-size: .9rem;
+  }
+
+  .light-table__index a svg {
+    transition: transform 200ms;
+  }
+
+  .light-table__index a:hover svg {
+    transform: translate(4px,-4px);
+  }
+
+  .light-table__stage {
+    display: none;
+    position: relative;
+    height: 480px;
+    margin-block: 28px 12px;
+    perspective: 1100px;
+    touch-action: pan-y;
+    cursor: grab;
+  }
+
+  .is-ready .light-table__stage {
+    display: block;
+  }
+
+  .is-dragging .light-table__stage {
+    cursor: grabbing;
+  }
+
+  .light-table__track {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+  }
+
+  .light-table__track :global(.light-table__work) {
+    position: absolute;
+    top: 48%;
+    left: 50%;
+    width: var(--work-width);
+    color: inherit;
+    text-decoration: none;
+    transform: translate(-50%,-50%) translate3d(var(--work-x), var(--work-y), var(--work-z)) rotateY(var(--work-angle)) scale(var(--work-scale));
+    filter: brightness(var(--work-light));
+    opacity: var(--work-opacity,1);
+    user-select: none;
+  }
+
+  :global(.light-table__work) figure {
+    margin: 0;
+  }
+
+  :global(.light-table__picture) {
+    position: relative;
+    box-shadow: 0 22px 42px #08061170;
+    border: 1px solid #f5dcf326;
+    background: #342b40;
+  }
+
+  :global(.light-table__picture) img {
+    width: 100%;
+    height: var(--work-height);
+    object-fit: contain;
+    pointer-events: none;
+  }
+
+  :global(.light-table__kind) {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-size: .7rem;
+    background: #19131cd9;
+  }
+
+  :global(.light-table__kind:empty) {
+    display: none;
+  }
+
+  :global(.light-table__work) figcaption {
+    display: flex;
+    gap: 13px;
+    align-items: center;
+    padding-top: 17px;
+    font-size: .75rem;
+    color: #b9acbf;
+  }
+
+  :global(.light-table__work) figcaption > span:first-child {
+    color: #d4a8c3;
+    font: .65rem var(--font-mono);
+  }
+
+  :global(.light-table__work) figcaption > span:nth-child(2) {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :global(.light-table__work[data-active="true"]) .light-table__picture {
+    outline: 1px solid #e4b6d277;
+    box-shadow: 0 26px 70px #0806118c;
+  }
+  :global(.light-table__work[data-active="true"]) figcaption {
+    color: #f2e7f3;
+  }
+
+  .light-table__horizon {
+    position: absolute;
+    top: 45%;
+    left: -30%;
+    width: 160%;
+    height: 60%;
+    border-top: 1px solid #d9c2d410;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 0%, #c1a6cb0d, transparent 65%);
+  }
+
+  .light-table__floor {
+    position: absolute;
+    z-index: -1;
+    left: 15%;
+    right: 15%;
+    bottom: 0;
+    height: 100px;
+    background: radial-gradient(ellipse, #987caa18, transparent 65%);
+    pointer-events: none;
+  }
+
+  .light-table__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    padding-top: 25px;
+    border-top: 1px solid #ae92b13d;
+  }
+
+  .light-table__caption p {
+    margin: 0 0 8px;
+    font-size: .85rem;
+    color: #e7d9e9;
+  }
+
+  .light-table__caption > span {
+    color: #b6a6bf;
+    font-size: .75rem;
+  }
+
+  .light-table__controls:not([hidden]) {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+
+  .light-table__controls > span {
+    color: #b6a6bf;
+    font: .6rem var(--font-mono);
+    letter-spacing: .12em;
+  }
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid #b594b65e;
+    border-radius: 50%;
+    background: transparent;
+    color: #f2e6f3;
+    cursor: pointer;
+    transition: background 200ms;
+  }
+
+  button: hover {
+    background: #d5b1cb26;
+  }
+
+  button: disabled {
+    opacity: .3;
+    cursor: default;
+  }
+
+  .light-table__fallback {
+    display: flex;
+    gap: 32px;
+    overflow-x: auto;
+    padding-block: 48px;
+  }
+
+  .light-table__fallback a {
+    flex: 0 0 220px;
+    font-size: .75rem;
+    text-decoration: none;
+  }
+
+  .light-table__fallback img {
+    height: 280px;
+    width: 100%;
+    object-fit: contain;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width:980px) {
+    .light-table__heading {
+      gap: 24px;
+    }
+
+    .light-table__index {
+      min-width: 150px;
+    }
+
+    .light-table__controls > span {
+      display: none;
+    }
+
+  }
+
+  @media (max-width: 620px) {
+    .light-table__heading { flex-direction: column; align-items: stretch; gap: 24px; }
+    h2 { font-size: 2.4rem; }
+    .art-kicker { margin-bottom: 18px; }
+    .light-table__intro { margin-top: 16px; font-size: .9rem; }
+    .light-table__index {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px 12px;
+      min-width: 0;
+      padding-top: 20px;
+      border-top: 1px solid #b695b85c;
+    }
+    .light-table__index > p { margin: 0; gap: 12px; }
+    .light-table__index strong { font-size: 3rem; }
+    .light-table__index p > span { padding-left: 12px; font-size: .7rem; }
+    .light-table__index > span { grid-column: 1; font-size: .7rem; }
+    .light-table__index a {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      align-self: center;
+      margin: 0;
+      gap: 10px;
+      font-size: .75rem;
+    }
+    .light-table__footer { flex-direction: column; align-items: stretch; gap: 20px; }
+    .light-table__controls { align-self: flex-end; }
+  }
+</style>

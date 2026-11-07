@@ -11,6 +11,7 @@
 }
 
 .post-header {
+  border-bottom: 1px solid var(--color-line);
   width: min(calc(100% - (2 * var(--page-inline))), 960px);
   padding: clamp(58px, 9vw, 110px) 0 clamp(34px, 6vw, 64px);
   margin-inline: auto;
@@ -78,8 +79,8 @@
   margin: 0;
   font-family: var(--font-reading);
   font-size: clamp(2.35rem, 6vw, 4.8rem);
-  font-weight: 720;
-  line-height: 1.15;
+  font-weight: 600;
+  line-height: 1.25;
   letter-spacing: 0;
   text-wrap: balance;
 }
@@ -128,6 +129,7 @@
 .post-cover {
   width: min(calc(100% - (2 * var(--page-inline))), 1120px);
   overflow: hidden;
+  border-radius: 2px;
   aspect-ratio: 16 / 9;
   margin: 0 auto clamp(56px, 8vw, 96px);
   background: var(--color-surface-soft);
@@ -611,4 +613,77 @@
     border-inline: 0;
     border-radius: 0;
   }
+}
+
+@media (min-width: 1024px) {
+  .reading-page {
+    background: var(--paper-white);
+  }
+
+  .post-opening {
+    display: grid;
+    grid-template-columns: minmax(0,1.55fr) minmax(0,.9fr);
+    width: min(calc(100% - 2 * var(--page-inline)),1120px);
+    margin: 38px auto 58px;
+    background: var(--paper-cyan);
+    border-bottom: 2px solid color-mix(in srgb,var(--color-cyan) 45%,transparent);
+  }
+
+  .post-header {
+    width: auto;
+    padding: 42px 40px 38px;
+    margin: 0;
+    border: 0;
+  }
+
+  .post-cover {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    aspect-ratio: auto;
+    min-height: 400px;
+    border-radius: 0;
+  }
+
+  .post-cover img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .post-header h1 {
+    font-size: var(--type-reading-title);
+    font-weight: 500;
+    line-height: 1.45;
+    max-width: none;
+  }
+
+  .post-catalog-path {
+    font-size: .75rem;
+    margin-bottom: 24px;
+  }
+
+  .post-header__description {
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+
+  .post-header__eyebrow {
+    font-size: .78rem;
+  }
+
+  .post-header__tags a {
+    background: color-mix(in srgb,var(--paper-white) 65%,transparent);
+    padding: 5px 10px;
+    color: var(--color-cyan);
+  }
+
+  .post-toc {
+    background: var(--paper-cyan);
+    border: 1px solid color-mix(in srgb,var(--color-cyan) 20%,transparent);
+    padding: 16px;
+  }
+
 }

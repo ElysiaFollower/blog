@@ -48,8 +48,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
           <h1>知识目录</h1>
         </div>
         <p class="library-masthead__description">
-          在这里检索全站馆藏吧～<br>
-          寻访那些闪闪发光的文字吧～ (*'▽'*)
+          按目录翻找，或直接搜索。<br />从标题到正文，都可以找到。
         </p>
       </div>
     </header>
@@ -66,7 +65,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
           <span class="visually-hidden">搜索标题、摘要、标签与正文关键词</span>
           <input
             type="search"
-            placeholder="搜索标题、摘要、标签与正文关键词…"
+            placeholder="搜索文章、标签或正文…"
             autocomplete="off"
             data-library-search-input
           />
@@ -770,6 +769,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   }
 
   .library-masthead {
+    background: radial-gradient(ellipse at 85% 0%, color-mix(in srgb, var(--color-rose) 7%, transparent), transparent 65%);
     border-bottom: 1px solid var(--color-line);
   }
 
@@ -793,7 +793,8 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   .library-masthead h1 {
     margin: 0;
     font-family: var(--font-reading);
-    font-size: clamp(3.3rem, 7vw, 6rem);
+    font-size: clamp(3rem, 6vw, 5.4rem);
+    font-weight: 500;
     line-height: 0.95;
   }
 
@@ -823,6 +824,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
 
   .library-search:focus-within {
     box-shadow: inset 0 -2px var(--color-rose);
+    background: color-mix(in srgb, var(--color-rose) 4%, transparent);
   }
 
   .library-search label,
@@ -943,7 +945,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   .library-tag-index a[data-selected="true"] {
     background: var(--color-surface-soft);
     color: var(--color-ink);
-    box-shadow: inset 2px 0 var(--color-rose);
+    box-shadow: inset 2px 0 var(--nav-accent, var(--color-rose));
   }
 
   .library-index__all small,
@@ -1337,5 +1339,133 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     .catalog-results article {
       grid-column: 2;
     }
+  }
+  @media (min-width: 1024px) {
+    .library-masthead {
+      background: var(--paper-cyan);
+      border-bottom: 1px solid color-mix(in srgb,var(--color-cyan) 25%,transparent);
+    }
+
+    .library-masthead > .page-width {
+      padding-block: 52px 48px;
+      align-items: end;
+    }
+
+    .library-masthead h1 {
+      font-size: var(--type-page-title);
+      font-weight: 400;
+      line-height: 1.1;
+    }
+
+    .library-masthead__title > p {
+      color: var(--color-cyan);
+      font-size: .7rem;
+      font-weight: 400;
+      letter-spacing: .1em;
+    }
+
+    .library-masthead__description {
+      color: var(--color-muted);
+      font: 1rem/1.95 var(--font-reading);
+    }
+
+    .library-shell {
+      margin-top: 38px;
+    }
+
+    .library-search {
+      background: var(--paper-white);
+      border: 1px solid var(--color-line);
+      border-bottom: 2px solid var(--color-cyan);
+      padding: 20px 24px;
+    }
+
+    .library-search > svg {
+      color: var(--color-cyan);
+    }
+
+    .library-search input {
+      font-size: 1.2rem;
+    }
+
+    .library-search:focus-within {
+      box-shadow: 0 0 0 3px color-mix(in srgb,var(--color-cyan) 12%,transparent);
+      background: var(--paper-white);
+    }
+
+    .library-workspace {
+      gap: 36px;
+      padding-top: 30px;
+    }
+
+    .library-index {
+      background: var(--paper-cyan);
+      border: 1px solid color-mix(in srgb,var(--color-cyan) 20%,transparent);
+      padding: 22px;
+    }
+
+    .library-index__modes {
+      background: color-mix(in srgb,var(--paper-white) 60%,transparent);
+    }
+
+    .library-index__modes button[aria-pressed="true"] {
+      background: var(--color-cyan);
+      color: var(--paper-white);
+    }
+
+    .library-index button[data-selected="true"], .library-index a[data-selected="true"] {
+      color: var(--color-cyan);
+      background: color-mix(in srgb,var(--color-cyan) 10%,transparent);
+    }
+
+    .library-results {
+      padding: 25px 28px 0;
+      background: var(--paper-white);
+      border: 1px solid var(--color-line);
+    }
+
+    .library-results__header h2 {
+      font: 400 2.1rem/1.3 var(--font-reading);
+    }
+
+    .library-results__header p {
+      color: var(--color-cyan);
+    }
+
+    .library-status {
+      font-size: .8rem;
+    }
+
+    .catalog-results > li {
+      gap: 20px;
+      padding-block: 25px;
+    }
+
+    .catalog-result__index {
+      color: var(--color-cyan);
+    }
+
+    .catalog-result__path {
+      color: var(--color-cyan);
+      font-size: .7rem;
+    }
+
+    .catalog-results h3 {
+      font: 500 1.35rem/1.65 var(--font-reading);
+    }
+
+    .catalog-result__description {
+      line-height: 1.9;
+      font-size: .85rem;
+    }
+
+    .catalog-results ul a {
+      color: var(--color-cyan);
+    }
+
+    .library-sort {
+      background: var(--color-bg);
+    }
+
   }
 </style>

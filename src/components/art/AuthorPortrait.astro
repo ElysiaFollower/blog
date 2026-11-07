@@ -1,0 +1,146 @@
+---
+import { Image } from "astro:assets";
+import { ArrowUpRight } from "@lucide/astro";
+import portrait from "../../assets/demo/elysia-portrait.webp";
+import { profileConfig } from "../../config/profile";
+const pause = profileConfig.introduction.indexOf("，");
+const introduction = pause < 0 ? [profileConfig.introduction] : [profileConfig.introduction.slice(0,pause+1),profileConfig.introduction.slice(pause+1)];
+---
+<section class="author-portrait" id="the-author" aria-labelledby="person-title" data-author-portrait>
+  <div class="author-portrait__inner page-width">
+    <figure>
+      <Image src={portrait} alt="花园茶会中的爱莉希雅" widths={[600,900,1200]} sizes="40vw" loading="lazy" />
+      <figcaption>享受生活 🌟 热爱游戏</figcaption>
+    </figure>
+    <div class="author-portrait__copy">
+      <p class="author-portrait__eyebrow">03 / ABOUT ME</p>
+      <h2 id="person-title">一个相信童话的<br /><em>妄想家</em></h2>
+      <p class="author-portrait__name">{profileConfig.handle}<span>也使用网名 {profileConfig.alias}</span></p>
+      <p class="author-portrait__introduction">{introduction.map((line,index) => <span>{line}{index === introduction.length-1 && "。"}</span>)}</p>
+      <a href="/about/">多认识我一点 <ArrowUpRight size={22} aria-hidden="true" /></a>
+    </div>
+  </div>
+</section>
+<script>
+  import { scrollScene, entryProgress, ease } from "./scroll-scene";
+  document.querySelectorAll<HTMLElement>("[data-author-portrait]").forEach(root => {
+    scrollScene(root,entryProgress,progress => {
+      const p=ease(progress);
+      root.style.setProperty("--portrait-y",`${(1-p)*55}px`);
+      root.style.setProperty("--portrait-angle",`${-5+p*3}deg`);
+      root.style.setProperty("--portrait-copy-y",`${(1-p)*25}px`);
+    });
+  });
+</script>
+<style>
+  .author-portrait {
+    background: var(--author-wash);
+    overflow: hidden;
+  }
+
+  .author-portrait__inner {
+    display: grid;
+    grid-template-columns: .95fr 1fr;
+    align-items: center;
+    gap: 115px;
+    padding-block: 85px 90px;
+  }
+
+  .author-portrait figure {
+    margin: 0 20px 0 35px;
+    padding: 14px 14px 0;
+    background: var(--paper-white, var(--color-surface));
+    box-shadow: 0 18px 40px #45382e15;
+    transform: rotate(-2deg);
+  }
+
+  .author-portrait figure :global(img) {
+    width: 100%;
+    height: 510px;
+    object-fit: cover;
+    object-position: 50% 35%;
+  }
+
+  .author-portrait figcaption {
+    padding: 19px 5px 21px;
+    color: var(--author-ink);
+    font: .85rem var(--font-reading);
+  }
+
+  .author-portrait__eyebrow {
+    margin: 0 0 32px;
+    color: var(--author-ink);
+    font: .67rem var(--font-mono);
+    letter-spacing: .1em;
+  }
+
+  .author-portrait h2 {
+    margin: 0 0 35px;
+    font: 400 clamp(2.3rem,3.2vw,3.3rem)/1.6 var(--font-reading);
+    letter-spacing: -.04em;
+  }
+
+  .author-portrait h2 em {
+    color: var(--author-ink);
+    font-style: normal;
+  }
+
+  .author-portrait__name {
+    margin: 0 0 30px;
+    font: 1.1rem var(--font-reading);
+  }
+
+  .author-portrait__name > span {
+    display: block;
+    margin-top: 9px;
+    color: var(--color-muted);
+    font: .75rem var(--font-ui);
+  }
+
+  .author-portrait__introduction {
+    max-width: 430px;
+    margin: 0;
+    color: var(--color-muted);
+    font: .95rem/1.95 var(--font-ui);
+    text-wrap: pretty;
+  }
+
+  .author-portrait__introduction > span {
+    display: block;
+  }
+
+  .author-portrait__copy > a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 300px;
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid color-mix(in srgb,var(--author-ink) 35%,transparent);
+    min-height: 44px;
+    color: var(--author-ink);
+    font-size: .85rem;
+    text-decoration: none;
+  }
+
+  [data-scene-ready] figure {
+    transform: translateY(var(--portrait-y,0px)) rotate(var(--portrait-angle,-2deg));
+  }
+
+  [data-scene-ready] .author-portrait__copy {
+    transform: translateY(var(--portrait-copy-y,0px));
+  }
+
+  @media (max-width:1023px) {
+    .author-portrait__inner {
+      grid-template-columns: 1fr;
+      gap: 50px;
+    }
+
+    .author-portrait figure {
+      max-width: 480px;
+      margin-inline: 20px;
+    }
+
+  }
+</style>

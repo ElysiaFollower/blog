@@ -11,10 +11,13 @@
     "dev": "astro dev",
     "build": "astro build && pagefind --site dist",
     "check": "astro check",
+    "test:motion": "node --experimental-strip-types scripts/test-inertia-motion.mjs",
+    "test:gallery": "pnpm test:motion && node --experimental-strip-types scripts/test-gallery-layout.mjs && node --experimental-strip-types scripts/test-gallery-playback.mjs && node --experimental-strip-types scripts/test-gallery-exhibition.mjs",
+    "test:art": "node --experimental-strip-types scripts/test-art-motion.mjs",
     "new:post": "node scripts/new-post.mjs",
     "preview": "astro preview",
     "verify:build": "node scripts/verify-build.mjs",
-    "verify": "pnpm check && pnpm build && pnpm verify:build"
+    "verify": "pnpm check && pnpm test:gallery && pnpm test:art && pnpm build && pnpm verify:build"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.2",

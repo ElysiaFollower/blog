@@ -38,7 +38,7 @@ import { siteConfig } from "../config/site";
     position: relative;
     padding: 68px 0 28px;
     overflow: hidden;
-    background: #17151a;
+    background: var(--art-night);
     color: #f8f3f6;
   }
 
@@ -46,12 +46,9 @@ import { siteConfig } from "../config/site";
     position: absolute;
     top: 0;
     left: var(--page-inline);
-    width: 38px;
-    height: 5px;
-    background: #75d4d2;
-    box-shadow:
-      38px 0 #ff78a5,
-      76px 0 #efbd43;
+    width: 112px;
+    height: 1px;
+    background: linear-gradient(90deg, #a9d5d4, #e3b2d2);
     content: "";
   }
 
@@ -69,7 +66,7 @@ import { siteConfig } from "../config/site";
   }
 
   .site-footer__brand :global(svg) {
-    color: #ff78a5;
+    color: #e3b2d2;
   }
 
   .site-footer__brand strong {
@@ -133,8 +130,8 @@ import { siteConfig } from "../config/site";
   }
 
   .site-footer__meta a:hover {
-    border-color: #ff78a5;
-    color: #ff78a5;
+    border-color: #e3b2d2;
+    color: #e3b2d2;
   }
 
   @media (max-width: 700px) {

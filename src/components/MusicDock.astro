@@ -69,8 +69,10 @@ const track = {
     display: none;
     min-height: 50px;
     align-items: stretch;
-    border: 1px solid #fff5;
-    background: #17151ae8;
+    overflow: hidden;
+    border: 1px solid #cdb6cf66;
+    border-radius: 30px;
+    background: #1b1928eb;
     box-shadow: 0 12px 30px rgb(0 0 0 / 24%);
     color: #fff;
     backdrop-filter: blur(14px);
@@ -87,7 +89,7 @@ const track = {
     place-items: center;
     border-right: 1px solid #fff4;
     background: transparent;
-    color: #ff8db3;
+    color: #e2b6d0;
     cursor: pointer;
   }
 
@@ -132,19 +134,38 @@ const track = {
     font-size: 0.64rem;
   }
 
+  @media (min-width: 1024px) {
+    .music-dock__meta {
+      width: 0;
+      min-width: 0;
+      padding: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: width 220ms, padding 220ms, opacity 180ms;
+    }
+
+    .music-dock:hover .music-dock__meta,
+    .music-dock:focus-within .music-dock__meta {
+      width: 142px;
+      padding: 7px 13px;
+      opacity: 1;
+    }
+
+    .music-dock button {
+      border-right: 0;
+    }
+  }
+
   @media (max-width: 620px) {
     .music-dock {
-      position: absolute;
-      top: 74px;
-      right: 166px;
-      bottom: auto;
-      left: auto;
+      bottom: max(18px, env(safe-area-inset-bottom));
       min-height: 46px;
     }
 
     .music-dock button {
       width: 46px;
       flex-basis: 46px;
+      border-right: 0;
     }
 
     .music-dock__meta {

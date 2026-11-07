@@ -4,6 +4,7 @@ import { ArrowLeft, BookOpenText, RadioTower } from "@lucide/astro";
 import heroNight from "../assets/demo/hero-night.webp";
 import DirectedPointer from "../components/DirectedPointer.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import OrbitSculpture from "../components/art/OrbitSculpture.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
@@ -25,15 +26,15 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       loading="eager"
     />
     <div class="not-found__shade" aria-hidden="true"></div>
-    <div class="not-found__frame" aria-hidden="true"></div>
+    <div class="not-found__orbit"><OrbitSculpture id="lost-orbit" /></div>
     <div class="not-found__content page-width">
       <div>
         <span>
           <RadioTower aria-hidden="true" size={17} stroke-width={1.8} />
           SIGNAL LOST // 404
         </span>
-        <h1>这段信号<br />还没有抵达。</h1>
-        <p>可能是地址发生了变化，也可能这里从来没有建立过航线。</p>
+        <h1>啊嘞？<br />这个页面似乎找不到了 (๑• . •๑)</h1>
+        <p>这个地址没有对应的页面。可以回到首页，或去文章里找找。</p>
         <nav aria-label="离开错误页面">
           <a href="/">
             <ArrowLeft aria-hidden="true" size={18} stroke-width={1.8} />
@@ -62,8 +63,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
 
   .not-found__art,
-  .not-found__shade,
-  .not-found__frame {
+  .not-found__shade {
     position: absolute;
     inset: 0;
   }
@@ -78,15 +78,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
   .not-found__shade {
     z-index: -2;
-    background: rgb(8 7 13 / 48%);
-    box-shadow: inset 55vw 0 180px rgb(8 7 13 / 46%);
+    background: linear-gradient(90deg, #171329dd, #17132966);
   }
 
-  .not-found__frame {
-    z-index: -1;
-    inset: 86px var(--page-inline) 44px;
-    border: 1px solid #ffffff70;
-  }
+  .not-found__orbit { position:absolute; z-index:-1; width:min(56vw,720px); top:10%; right:-4%; opacity:.45; }
+  .not-found__orbit :global(.orbit-sculpture) { color:#e1cade; }
 
   .not-found__content {
     display: grid;
@@ -104,7 +100,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     display: flex;
     align-items: center;
     gap: 9px;
-    color: #75d4d2;
+    color: #dec3e0;
     font-family: var(--font-mono);
     font-size: 0.7rem;
     font-weight: 800;
@@ -113,7 +109,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   .not-found h1 {
     margin: 20px 0 0;
     font-family: var(--font-reading);
-    font-size: 5.8rem;
+    font-size: clamp(3rem, 5.5vw, 5.4rem);
+    font-weight: 500;
     line-height: 1.02;
   }
 
@@ -142,8 +139,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
   .not-found__content > strong {
     color: #ffffff24;
-    font-family: var(--font-mono);
+    font-family: var(--font-reading);
     font-size: 10rem;
+    font-style: italic;
     line-height: 0.75;
   }
 
@@ -159,7 +157,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     }
 
     .not-found h1 {
-      font-size: 3.8rem;
+      font-size: clamp(2.3rem, 10vw, 3.5rem);
+      line-height: 1.2;
     }
 
     .not-found__content > strong {

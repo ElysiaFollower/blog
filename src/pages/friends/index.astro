@@ -1,6 +1,6 @@
 ---
 import { Image } from "astro:assets";
-import { ArrowDownRight, ArrowUpRight, Radio, Sparkles } from "@lucide/astro";
+import { ArrowUpRight } from "@lucide/astro";
 import DirectedPointer from "../../components/DirectedPointer.astro";
 import ScrollReveal from "../../components/ScrollReveal.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
@@ -17,52 +17,14 @@ const linkCount = String(friendLinks.length);
   bodyClass="friends-page"
   directedPointer
 >
-  <SiteHeader variant="overlay" />
+  <SiteHeader variant="reading" />
   <main id="main-content">
-    <section class="friends-hero" aria-labelledby="friends-title">
-      <div class="friends-hero__frame" aria-hidden="true"></div>
-      <div class="friends-hero__inner page-width">
-        <div class="friends-hero__copy">
-          <p>
-            <Radio aria-hidden="true" size={17} stroke-width={1.8} />
-            BLOGROLL · {linkCount}
-          </p>
-          <h1 id="friends-title">
-            <span>LINKS</span>
-            <strong>&amp; FRIENDS</strong>
-          </h1>
-          <p class="friends-hero__intro">
-            沿着这些轨迹，可以抵达一些很有意思的人
-          </p>
-          <a href="#received-signals">
-            <span>查看友链</span>
-            <ArrowDownRight aria-hidden="true" size={20} stroke-width={2} />
-          </a>
-        </div>
-
-        <div class="friends-hero__signal" aria-hidden="true">
-          <Sparkles size={30} stroke-width={1.4} />
-          <span>CONNECTED</span>
-          <strong>{linkCount}</strong>
-          <small>WEB NEIGHBORS</small>
-        </div>
-      </div>
-      <div class="friends-hero__footer">
-        <span>PEOPLE I MET ON THE WORLD</span>
-        <span>LOG 0017 / BLOGROLL</span>
-      </div>
-    </section>
-
+    <header class="friends-introduction page-width">
+      <div><p>BLOGROLL / {linkCount.padStart(2,"0")}</p><h1 id="friends-title">互联网上的<br /><span>邻居们</span></h1></div>
+      <div class="friends-introduction__note"><span>{linkCount.padStart(2,"0")}</span><div><small>PERSONAL WEBSITES</small><p>一些常去的小站，<br />和认真写作的人。<br />路过时，不妨进去坐坐。</p></div></div>
+    </header>
     <section id="received-signals" class="friends-signals">
       <div class="page-width">
-        <header class="friends-signals__header" data-reveal>
-          <span>01 / WEB NEIGHBORHOOD</span>
-          <h2>繁星落处<br />皆是风景</h2>
-          <p>
-            偶尔去他们的小世界逛逛吧，去看看其他正在闪烁的星星～ 🌟
-          </p>
-        </header>
-
         <div class="friends-list" aria-label="友链列表">
           {
             friendLinks.map((link, index) => (
@@ -108,7 +70,7 @@ const linkCount = String(friendLinks.length);
 
         <footer class="friends-signals__footer" data-reveal>
           <span>MORE FRIENDS MAY JOIN</span>
-          <p>旅途仍在继续， 期待下一次偶然的邂逅</p>
+          <p>期待下一次偶然的邂逅</p>
         </footer>
       </div>
     </section>
@@ -120,223 +82,41 @@ const linkCount = String(friendLinks.length);
 </BaseLayout>
 
 <style>
-  .friends-page {
-    background: var(--color-bg);
-  }
-
-  .friends-hero {
-    position: relative;
+  .friends-introduction {
     display: grid;
-    height: min(78svh, 780px);
-    min-height: 620px;
-    overflow: hidden;
-    background: #17151a;
-    color: #fff;
-    isolation: isolate;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 70px;
+    align-items: end;
+    padding-block: 80px 90px;
   }
 
-  .friends-hero::before,
-  .friends-hero::after {
-    position: absolute;
-    z-index: -1;
-    content: "";
+  .friends-introduction > div > p {
+    color: var(--color-rose);
+    margin: 0 0 28px;
+    font: .65rem var(--font-mono);
+    letter-spacing: .14em;
   }
 
-  .friends-hero::before {
-    top: 20%;
-    right: -7vw;
-    width: min(44vw, 640px);
-    aspect-ratio: 1;
-    border: 1px solid #ffffff29;
-    border-radius: 50%;
-    box-shadow:
-      0 0 0 64px #ffffff0a,
-      0 0 0 128px #ffffff08;
-  }
-
-  .friends-hero::after {
-    top: 0;
-    left: 61%;
-    width: 1px;
-    height: 100%;
-    background: #ffffff21;
-  }
-
-  .friends-hero__frame {
-    position: absolute;
-    inset: 86px var(--page-inline) 54px;
-    border: 1px solid #ffffff63;
-    pointer-events: none;
-  }
-
-  .friends-hero__frame::before,
-  .friends-hero__frame::after {
-    position: absolute;
-    height: 8px;
-    content: "";
-  }
-
-  .friends-hero__frame::before {
-    top: -4px;
-    left: 11%;
-    width: 72px;
-    background: #75d4d2;
-  }
-
-  .friends-hero__frame::after {
-    right: 14%;
-    bottom: -4px;
-    width: 48px;
-    background: #ff78a5;
-  }
-
-  .friends-hero__inner {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    padding: 118px 44px 90px;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 0.42fr);
-    align-items: center;
-    gap: 48px;
-  }
-
-  .friends-hero__copy > p:first-child {
-    display: flex;
-    width: max-content;
-    align-items: center;
-    gap: 9px;
+  h1 {
     margin: 0;
-    color: #75d4d2;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 850;
+    font: 400 clamp(3rem,6vw,6rem)/1.25 var(--font-reading);
+    letter-spacing: -.04em;
   }
 
-  .friends-hero h1 {
-    margin: 24px 0 0;
-    line-height: 0.82;
+  h1 span {
+    margin-left: 1em;
   }
 
-  .friends-hero h1 span,
-  .friends-hero h1 strong {
-    display: block;
-    letter-spacing: 0;
-  }
-
-  .friends-hero h1 span {
-    font-family: var(--font-reading);
-    font-size: clamp(4.2rem, 10vw, 9rem);
-    font-weight: 500;
-  }
-
-  .friends-hero h1 strong {
-    width: max-content;
-    padding: 10px 16px 13px;
-    margin-top: 16px;
-    background: #efbd43;
-    box-shadow: 9px 9px 0 #ff78a5;
-    color: #17151a;
-    font-size: clamp(2.2rem, 5vw, 4.8rem);
-    line-height: 0.9;
-  }
-
-  .friends-hero__intro {
-    max-width: 460px;
-    margin: 34px 0 0;
-    color: #d8cfd4;
-    line-height: 1.8;
-  }
-
-  .friends-hero__copy > a {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 0 7px;
-    margin-top: 22px;
-    border-bottom: 2px solid currentColor;
-    font-weight: 800;
-    text-decoration: none;
-  }
-
-  .friends-hero__signal {
-    display: grid;
-    width: 210px;
-    height: 210px;
-    justify-self: center;
-    place-content: center;
-    border: 1px solid #ffffff59;
-    border-radius: 50%;
-    text-align: center;
-  }
-
-  .friends-hero__signal :global(svg) {
-    margin: 0 auto 10px;
-    color: #ff78a5;
-  }
-
-  .friends-hero__signal span,
-  .friends-hero__signal small {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    font-weight: 800;
-  }
-
-  .friends-hero__signal strong {
-    margin-block: 3px;
-    font-size: 3.8rem;
-    line-height: 1;
-  }
-
-  .friends-hero__signal small {
-    color: #aaa0a6;
-  }
-
-  .friends-hero__footer {
-    position: absolute;
-    z-index: 2;
-    right: calc(var(--page-inline) + 16px);
-    bottom: 29px;
-    left: calc(var(--page-inline) + 16px);
-    display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    font-weight: 800;
+  .friends-introduction > p {
+    max-width: 400px;
+    margin: 0 0 12px;
+    color: var(--color-muted);
+    line-height: 2;
+    font-size: .9rem;
   }
 
   .friends-signals {
-    padding-block: clamp(88px, 12vw, 156px) 120px;
-  }
-
-  .friends-signals__header {
-    display: grid;
-    margin-bottom: clamp(56px, 8vw, 96px);
-    grid-template-columns: minmax(300px, 0.88fr) minmax(360px, 1.12fr);
-    align-items: end;
-    gap: 18px clamp(54px, 8vw, 120px);
-  }
-
-  .friends-signals__header > span {
-    grid-column: 1 / -1;
-    color: var(--color-cyan);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 850;
-  }
-
-  .friends-signals__header h2 {
-    margin: 0;
-    font-family: var(--font-reading);
-    font-size: clamp(3.2rem, 6.5vw, 6rem);
-    line-height: 1;
-  }
-
-  .friends-signals__header p {
-    max-width: 550px;
-    margin: 0 0 8px;
-    color: var(--color-muted);
-    line-height: 1.9;
+    padding-bottom: 110px;
   }
 
   .friends-list {
@@ -344,249 +124,261 @@ const linkCount = String(friendLinks.length);
   }
 
   .friends-list > a {
-    position: relative;
     display: grid;
-    min-height: 270px;
-    padding: 42px 12px;
-    grid-template-columns:
-      54px
-      clamp(118px, 12vw, 148px)
-      minmax(210px, 0.78fr)
-      minmax(280px, 1.22fr)
-      auto;
+    grid-template-columns: 40px 140px minmax(0,.8fr) minmax(0,1fr) 28px;
     align-items: center;
     gap: 34px;
+    padding: 44px 8px;
     border-bottom: 1px solid var(--color-line);
-    color: inherit;
     text-decoration: none;
-    transition:
-      padding 220ms ease,
-      background 220ms ease,
-      color 220ms ease;
+    transition: background 240ms;
   }
 
   .friends-list > a:hover {
-    padding-inline: 30px;
-    background: #ff78a5;
-    color: #17151a;
-  }
-
-  .friends-list__index,
-  .friends-list small {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    font-weight: 800;
+    background: var(--art-paper);
   }
 
   .friends-list__index {
     color: var(--color-rose);
+    font: italic 1rem var(--font-reading);
   }
 
   .friends-list__avatar {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1;
     margin: 0;
-    border: 1px solid var(--color-line);
+    aspect-ratio: 1;
     border-radius: 50%;
     background: var(--color-surface-soft);
-    isolation: isolate;
-    transition:
-      border-color 220ms ease,
-      transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
   }
 
-  .friends-list__avatar::after {
-    position: absolute;
-    z-index: -1;
-    inset: 8px -8px -8px 8px;
-    border: 1px solid var(--color-cyan);
-    border-radius: 50%;
-    content: "";
-    opacity: 0.72;
-    transition:
-      border-color 220ms ease,
-      transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .friends-list__avatar :global(img),
-  .friends-list__avatar > span {
-    display: grid;
+  .friends-list__avatar img {
     width: 100%;
     height: 100%;
-    place-items: center;
-    overflow: hidden;
-    border-radius: inherit;
+    object-fit: cover;
+    transition: transform 450ms var(--ease-art);
   }
 
-  .friends-list__avatar :global(img) {
-    object-fit: cover;
-    transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  .friends-list > a:hover img {
+    transform: scale(1.06);
   }
 
   .friends-list__avatar > span {
+    display: grid;
+    height: 100%;
+    place-items: center;
+    font: 3rem var(--font-reading);
+  }
+
+  .friends-list small {
+    font: .62rem var(--font-mono);
     color: var(--color-muted);
-    font-family: var(--font-reading);
-    font-size: clamp(2.5rem, 5vw, 4.8rem);
-  }
-
-  .friends-list > a:hover .friends-list__avatar {
-    border-color: #17151a;
-    transform: translate(-3px, -3px);
-  }
-
-  .friends-list > a:hover .friends-list__avatar::after {
-    border-color: #17151a;
-    transform: translate(6px, 6px);
-  }
-
-  .friends-list > a:hover .friends-list__avatar :global(img) {
-    transform: scale(1.045);
-  }
-
-  .friends-list > a:hover .friends-list__index {
-    color: #5c1b32;
   }
 
   .friends-list__identity h3 {
-    margin: 8px 0 0;
-    font-family: var(--font-reading);
-    font-size: clamp(3.6rem, 7vw, 6.8rem);
-    line-height: 0.9;
-  }
-
-  .friends-list__identity small,
-  .friends-list__note small {
-    color: var(--color-muted);
-  }
-
-  .friends-list > a:hover small {
-    color: #4c2d38;
+    margin: 12px 0 0;
+    font: 400 clamp(2.4rem,4vw,4rem)/1.2 var(--font-reading);
+    overflow-wrap: anywhere;
   }
 
   .friends-list__note p {
     margin: 0 0 16px;
-    font-size: 1.05rem;
+    font-size: .9rem;
+    line-height: 1.9;
   }
 
   .friends-signals__footer {
     display: flex;
     justify-content: space-between;
-    gap: 28px;
-    padding-top: 36px;
+    gap: 24px;
+    margin-top: 28px;
     color: var(--color-muted);
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
+    font: .65rem/1.8 var(--font-mono);
   }
 
   .friends-signals__footer p {
     margin: 0;
   }
 
-  @media (max-width: 900px) {
-    .friends-hero__inner {
-      grid-template-columns: 1fr;
-    }
-
-    .friends-hero__signal {
-      display: none;
-    }
-
-    .friends-signals__header {
-      grid-template-columns: 1fr;
-    }
-
+  @media (max-width:900px) {
     .friends-list > a {
-      grid-template-columns:
-        40px
-        108px
-        minmax(180px, 0.8fr)
-        minmax(220px, 1.2fr)
-        auto;
+      grid-template-columns: 28px 100px minmax(0,1fr) minmax(0,1fr) 24px;
       gap: 20px;
     }
+
   }
 
-  @media (max-width: 600px) {
-    .friends-hero {
-      height: 82svh;
-      min-height: 610px;
+  @media (max-width:620px) {
+    .friends-introduction {
+      grid-template-columns: 1fr;
+      gap: 32px;
+      padding-block: 50px;
     }
 
-    .friends-hero::after {
-      left: 72%;
+    h1 {
+      font-size: clamp(2.7rem,12vw,4rem);
     }
 
-    .friends-hero__frame {
-      inset: 74px 14px 42px;
-    }
-
-    .friends-hero__inner {
-      padding: 108px 0 74px;
-    }
-
-    .friends-hero h1 span {
-      font-size: clamp(3.6rem, 19vw, 5.6rem);
-    }
-
-    .friends-hero h1 strong {
-      padding: 8px 10px 10px;
-      font-size: clamp(1.65rem, 9vw, 2.5rem);
-    }
-
-    .friends-hero__footer {
-      right: 26px;
-      bottom: 23px;
-      left: 26px;
-    }
-
-    .friends-hero__footer span:last-child {
-      display: none;
-    }
-
-    .friends-signals__header {
-      margin-bottom: 44px;
-    }
-
-    .friends-signals__header h2 {
-      font-size: 3rem;
+    .friends-introduction > p {
+      font-size: .8rem;
     }
 
     .friends-list > a {
-      min-height: 230px;
-      padding: 30px 4px;
-      grid-template-columns:
-        20px
-        clamp(64px, 18vw, 72px)
-        minmax(0, 1fr)
-        28px;
+      grid-template-columns: 70px minmax(0,1fr) 24px;
       align-items: start;
-      gap: 8px;
+      gap: 18px;
+      padding-block: 30px;
     }
 
-    .friends-list > a:hover {
-      padding-inline: 12px;
+    .friends-list__index {
+      display: none;
     }
 
     .friends-list__identity h3 {
-      overflow-wrap: anywhere;
-      font-size: clamp(2rem, 10vw, 3.2rem);
+      font-size: 2.3rem;
     }
 
     .friends-list__note {
-      grid-column: 2 / -1;
-      padding-top: 8px;
+      grid-column: 2/-1;
     }
 
     .friends-list > a > :global(svg) {
-      grid-column: 4;
       grid-row: 1;
-      align-self: center;
-      justify-self: end;
+      grid-column: 3;
     }
 
     .friends-signals__footer {
-      display: grid;
+      display: block;
     }
+
+    .friends-signals__footer p {
+      margin-top: 12px;
+    }
+
+  }
+  .friends-introduction__note { display: flex; align-items: center; gap: 26px; }
+  .friends-introduction__note > span { font: italic 5rem/1 var(--font-reading); color: var(--color-cyan); }
+  .friends-introduction__note small { font: .65rem var(--font-mono); color: var(--color-cyan); letter-spacing: .1em; }
+  .friends-introduction__note p { margin: 14px 0 0; color: var(--color-muted); font: 1rem/1.95 var(--font-reading); }
+  @media (min-width: 1024px) {
+    :global(.friends-page) {
+      background: var(--paper-cyan);
+    }
+
+    .friends-introduction {
+      grid-template-columns: 1.2fr 1fr;
+      gap: 140px;
+      padding-block: 68px 70px;
+      align-items: center;
+    }
+
+    .friends-introduction h1 {
+      font-size: var(--type-page-title);
+      line-height: 1.22;
+      letter-spacing: -.04em;
+    }
+
+    .friends-introduction h1 > span {
+      margin-left: 1em;
+      color: var(--color-cyan);
+    }
+
+    .friends-introduction > div > p {
+      color: var(--color-cyan);
+      font-size: .7rem;
+      letter-spacing: .1em;
+    }
+
+    .friends-introduction__note {
+      position: relative;
+      align-items: start;
+      gap: 28px;
+      padding: 34px;
+      background: var(--paper-white);
+      border: 1px solid color-mix(in srgb,var(--color-cyan) 20%,transparent);
+      transform: rotate(3deg);
+      box-shadow: 10px 12px 0 color-mix(in srgb,var(--color-cyan) 6%,transparent);
+    }
+
+    .friends-introduction__note::before {
+      content: "";
+      position: absolute;
+      width: 64px;
+      height: 18px;
+      background: color-mix(in srgb,var(--color-gold) 20%,transparent);
+      top: -8px;
+      left: 42%;
+      transform: rotate(-5deg);
+    }
+
+    .friends-introduction__note > span {
+      font-size: 4.5rem;
+    }
+
+    .friends-signals {
+      padding-block: 10px 70px;
+    }
+
+    .friends-list {
+      border-top: 0;
+    }
+
+    .friends-list > a {
+      grid-template-columns: 40px 130px 1fr 1.15fr 40px;
+      gap: 35px;
+      padding: 38px 42px;
+      background: var(--paper-white);
+      border: 1px solid color-mix(in srgb,var(--color-cyan) 25%,transparent);
+      border-left: 4px solid var(--color-cyan);
+      box-shadow: 0 8px 30px #29423a07;
+    }
+
+    .friends-list > a + a {
+      margin-top: 20px;
+    }
+
+    .friends-list > a:hover {
+      background: color-mix(in srgb,var(--paper-white) 85%,var(--paper-cyan));
+    }
+
+    .friends-list__index {
+      color: var(--color-cyan);
+      font-size: 1.3rem;
+    }
+
+    .friends-list__avatar {
+      border: 6px solid var(--paper-cyan);
+      outline: 1px solid color-mix(in srgb,var(--color-cyan) 25%,transparent);
+    }
+
+    .friends-list__identity h3 {
+      font-size: 2.9rem;
+      margin-top: 12px;
+    }
+
+    .friends-list__note p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+    }
+
+    .friends-list small {
+      font-size: .72rem;
+      color: var(--color-cyan);
+    }
+
+    .friends-list > a > svg {
+      color: var(--color-cyan);
+      transition: transform 250ms;
+    }
+
+    .friends-list > a:hover > svg {
+      transform: translate(4px,-4px);
+    }
+
+    .friends-signals__footer {
+      padding-top: 32px;
+      border: 0;
+      color: var(--color-cyan);
+    }
+
   }
 </style>
