@@ -1,6 +1,7 @@
 import type { ImageMetadata } from "astro";
 import niuniuAvatar from "../assets/friends/牛牛.jpg";
 import hetaAvatar from "../assets/friends/小黑塔-啾咪.jpg";
+import ffyAvatar from "../assets/friends/ffy-avatar.png";
 
 export interface FriendLink {
   title: string;
@@ -16,7 +17,8 @@ export const friendLinks: readonly FriendLink[] = [
     description: "魔女教大德司教勤勉担当",
     href: "https://ffy6511.github.io/",
     label: "PERSONAL BLOG",
-    avatar: niuniuAvatar, 
+    //avatar: niuniuAvatar,
     //avatar: hetaAvatar,
+    avatar: ffyAvatar,
   },
 ] as const;
