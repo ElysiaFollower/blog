@@ -43,19 +43,16 @@
 .exhibition button { cursor: pointer; }
 .exhibition__leave { pointer-events: auto; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 0 0 16px; background: none; border: none; font-size: .72rem; color: var(--ex-muted); }
 .exhibition__leave:hover { color: var(--ex-ink); }
-.exhibition__stage { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 50% 48%; touch-action: pan-y; cursor: grab; outline-offset: -5px; user-select: none; }
+.exhibition__stage { --ex-perspective: 1400px; --ex-work-offset-y: 0%; position: absolute; inset: 0; z-index: 0; touch-action: pan-y; cursor: grab; outline-offset: -5px; user-select: none; }
 .exhibition__stage:focus:not(:focus-visible) { outline: none; }
 .exhibition.is-dragging .exhibition__stage { cursor: grabbing; }
 /* The full-size camera planes must not intercept clicks on works behind z=0. */
 .exhibition__camera, .exhibition__orbit { position: absolute; inset: 0; transform-style: preserve-3d; pointer-events: none; }
-.exhibition__camera { transform: translateZ(var(--ex-camera-depth, 0px)); }
-.exhibition__work { position: absolute; left: 50%; top: 48%; margin: 0; padding: 0; border: none; background: none; transform-style: preserve-3d; pointer-events: auto; text-decoration: none; color: inherit; will-change: transform; -webkit-user-drag: none; }
+.exhibition__work { position: absolute; left: 50%; top: calc(48% + var(--ex-work-offset-y)); margin: 0; padding: 0; border: none; background: none; transform-origin: 0 0; transform-style: preserve-3d; pointer-events: auto; text-decoration: none; color: inherit; -webkit-user-drag: none; }
 .exhibition__mount { display: block; width: 100%; height: 100%; position: relative; padding: 6px; border: 1px solid #fff8; background: #f1ebf275; box-shadow: 0 20px 45px #35213c23, 0 3px 6px #251f3526; }
 [data-theme="dark"] .exhibition__mount { border-color: #eee2ff60; background: #dcd2ee12; box-shadow: 0 25px 55px #0007, 0 0 20px #d8aff41a; }
 .exhibition__mount::after { content: ''; position: absolute; inset: 0; box-shadow: inset 0 0 0 1px #fff4; pointer-events: none; }
 .exhibition__mount img, .exhibition__mount video { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-.exhibition__work[data-active="true"] .exhibition__mount { border-color: #fff; box-shadow: 0 30px 65px #3b284a30, 0 0 35px #fff5; }
-[data-theme="dark"] .exhibition__work[data-active="true"] .exhibition__mount { box-shadow: 0 30px 65px #0008, 0 0 28px #dfb6ed33; }
 .exhibition__reflection { position: absolute; left: 0; top: calc(100% + 24px); width: 100%; height: 100%; transform: scaleY(-1); opacity: .14; filter: blur(2px); mask-image: linear-gradient(transparent 30%, #000 100%); pointer-events: none; object-fit: fill; }
 [data-theme="dark"] .exhibition__reflection { opacity: .2; }
 .exhibition__tag { position: absolute; top: calc(100% + 10px); left: 0; right: 0; text-align: center; font: .5rem var(--font-mono); letter-spacing: .2em; color: var(--ex-muted); }
@@ -107,8 +104,7 @@
 .exhibition__progress { position: absolute; bottom: 0; height: 2px; width: 100%; background: var(--ex-line); }
 .exhibition__progress > span { display: block; width: 0; height: 100%; background: var(--ex-rose); transition: width .4s; }
 .exhibition__status { position: absolute; bottom: 84px; left: 0; right: 0; text-align: center; font-size: .7rem; }
-/* Opacity on preserve-3d flattens the orbit until the fade ends. Composite the
-   perspective viewport instead, keeping the projected geometry continuous. */
+/* Fade the viewport rather than flattening the orbit's depth ordering. */
 .exhibition:not(.is-visible) .exhibition__stage { opacity: 0; }
 .exhibition__stage { transition: opacity .8s; }
 .exhibition:not(.is-visible) .exhibition__orbit { transform: translateY(35px) scale(.92); }
@@ -130,8 +126,7 @@
   .exhibition__intro { font-size: .65rem; margin-top: 7px; }
   .exhibition__leave { gap: 7px; font-size: .65rem; }
   .exhibition__leave > svg:first-child { display: none; }
-  .exhibition__stage { perspective: 1000px; }
-  .exhibition__work { top: 46%; }
+  .exhibition__stage { --ex-perspective: 1000px; --ex-work-offset-y: -2%; }
   .exhibition__caption { bottom: 164px; gap: 15px; width: 84%; }
   .exhibition__work-number { font-size: 2rem; }
   .exhibition__caption h3 { font-size: .8rem; }

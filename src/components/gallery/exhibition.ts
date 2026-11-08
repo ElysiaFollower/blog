@@ -1,6 +1,6 @@
 import type { GalleryEntry } from "../../types/gallery";
 import { InertiaMotion } from "../../lib/inertia-motion";
-import { nearestOrbitPosition, orbitPose, wrapIndex } from "./exhibition-motion";
+import { nearestOrbitPosition, orbitPose, projectedWorkMatrix, wrapIndex } from "./exhibition-motion";
 import { manageVideoPlayback } from "./video-playback";
 
 interface ExhibitionOptions {
@@ -56,7 +56,7 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
     return { width: height * item.width / item.height + 14, height: height + 14 };
   }
 
-  const perspective = () => parseFloat(getComputedStyle(stage).perspective);
+  const perspective = () => parseFloat(getComputedStyle(stage).getPropertyValue("--ex-perspective"));
   function fittedDepth() {
     const size = workSize(selected());
     const scale = Math.max(1, Math.min((stage.clientWidth - 48) / size.width, (root.clientHeight - 330) / size.height));
@@ -155,6 +155,9 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
 
   function render() {
     if (!canRender() || !entries.length) return;
+    const style = getComputedStyle(stage);
+    const lens = parseFloat(style.getPropertyValue("--ex-perspective"));
+    const originOffsetY = stage.clientHeight * parseFloat(style.getPropertyValue("--ex-work-offset-y")) / 100;
     const nearest = Math.round(motion.position);
     const current = selected();
     const wanted = new Set<number>();
@@ -170,7 +173,7 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
       const size = workSize(index);
       card.link.style.width = `${size.width}px`;
       card.link.style.height = `${size.height}px`;
-      card.link.style.transform = `translate(-50%, -50%) translate3d(${pose.x}px, ${pose.y}px, ${pose.z}px) rotateY(${pose.angle}deg)`;
+      card.link.style.transform = `matrix3d(${projectedWorkMatrix(pose, lens, cameraDepth, originOffsetY).join(",")}) translate(-50%, -50%)`;
       card.link.style.opacity = String(pose.opacity);
       const focus = Math.max(0, 1 - Math.abs(distance));
       card.link.style.setProperty("--ex-focus-opacity", String(.45 + .55 * focus * focus * (3 - 2 * focus)));

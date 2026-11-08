@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import sharp from "sharp";
 
 // Always launch a separate profile; never attach to a personal or connector browser.
 const profile = await mkdtemp(path.join(tmpdir(), "blog-gallery-test-"));
@@ -155,6 +156,44 @@ try {
   await wait(400);
   assert.equal((await state()).transform, current.transform, "manual pause persists after observation");
 
+  // Compare the real enlarged work with the same source drawn at the same size
+  // outside the 3D scene. DOM/source assertions alone cannot catch raster blur.
+  await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1000, deviceScaleFactor: 2, mobile: false });
+  await evaluate(`document.querySelector('[data-exhibition-stage]').focus({preventScroll:true})`);
+  await key("Home", 0);
+  await wait(1400);
+  await click('[data-exhibition-open]'); await wait(1800);
+  await key("w", 2400); await wait(1800);
+  assert.ok((await state()).depth > 1000, "quality check reaches a reproducible close-up");
+  const region = await evaluate(`(() => {
+    const image = document.querySelector('.exhibition__work[data-active="true"] .exhibition__mount img');
+    const r = image.getBoundingClientRect();
+    return { x: Math.ceil(r.x + r.width * .4), y: Math.max(100, Math.ceil(r.y + r.height * .2)), width: 280, height: 280 };
+  })()`);
+  const capture = async () => {
+    const result = await send("Page.captureScreenshot", { format: "png" });
+    return sharp(Buffer.from(result.data, "base64")).extract({ left: region.x * 2, top: region.y * 2, width: region.width * 2, height: region.height * 2 }).removeAlpha().raw().toBuffer();
+  };
+  const observed = await capture();
+  await evaluate(`(async () => {
+    const image = document.querySelector('.exhibition__work[data-active="true"] .exhibition__mount img');
+    const r = image.getBoundingClientRect(), reference = new Image();
+    reference.id = 'gallery-quality-reference';
+    reference.src = image.currentSrc;
+    reference.style.cssText = 'position:fixed;z-index:99999;pointer-events:none;margin:0;padding:0;border:0;max-width:none;object-fit:contain;left:'+r.x+'px;top:'+r.y+'px;width:'+r.width+'px;height:'+r.height+'px';
+    document.body.append(reference);
+    await reference.decode();
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  })()`);
+  const reference = await capture();
+  await evaluate(`document.querySelector('#gallery-quality-reference').remove()`);
+  assert.equal(observed.length, reference.length);
+  let squaredError = 0;
+  for (let i = 0; i < observed.length; i++) squaredError += (observed[i] - reference[i]) ** 2;
+  const error = Math.sqrt(squaredError / observed.length);
+  assert.ok(error < 4, `observation must retain direct-image detail (pixel RMS error ${error.toFixed(2)})`);
+  await key("Escape", 0); await wait(1800);
+
   await send("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await send("Emulation.setTouchEmulationEnabled", { enabled: true });
   // A fresh navigation avoids restoring the desktop page's scroll offset on mobile.
@@ -171,7 +210,7 @@ try {
   assert.equal((await state()).observing, false, "touch can exit observation");
   assert.equal((await state()).enabled, true);
   assert.deepEqual(exceptions, [], "no uncaught browser errors");
-  console.log("Gallery browser checks passed: real hit testing, mouse/touch observation, side-work focus, WASD camera, pause and resume.");
+  console.log(`Gallery browser checks passed: real hit testing, mouse/touch observation, side-work focus, WASD camera, pause and resume, original-image detail (pixel RMS error ${error.toFixed(2)}).`);
 } finally {
   socket?.close();
   chrome.kill("SIGTERM");
