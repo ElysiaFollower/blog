@@ -5,6 +5,7 @@ import type { CollectionEntry } from "astro:content";
 import { ArrowLeft, ArrowRight } from "@lucide/astro";
 import BaseLayout from "./BaseLayout.astro";
 import CodeCopy from "../components/content/CodeCopy.astro";
+import ReferenceNavigation from "../components/content/ReferenceNavigation.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import { contentRootLabel } from "../config/content";
@@ -241,5 +242,6 @@ const nextPost =
     </footer>
   </main>
   <CodeCopy />
+  <ReferenceNavigation />
   <SiteFooter />
 </BaseLayout>

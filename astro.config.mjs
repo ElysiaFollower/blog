@@ -7,6 +7,7 @@ import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import { legacyRoutes } from "./src/config/legacy-routes";
 import { rehypeContentImages } from "./src/lib/rehype-content-images.mjs";
+import { remarkReferenceLabels, rehypeReferences } from "./src/lib/markdown-references.mjs";
 
 const legacyPathnames = new Set(
   legacyRoutes.map(({ source }) => `/${source}/`),
@@ -24,13 +25,15 @@ export default defineConfig({
   ],
   markdown: {
     processor: unified({
-      remarkPlugins: [remarkMath],
+      smartypants: { ellipses: false },
+      remarkPlugins: [remarkMath, remarkReferenceLabels],
       rehypePlugins: [
         [rehypeKatex, { strict: "warn" }],
         rehypeContentImages,
+        rehypeReferences,
       ],
       remarkRehype: {
-        footnoteLabel: "注释",
+        footnoteLabel: "References",
         footnoteBackLabel: "返回正文",
       },
     }),

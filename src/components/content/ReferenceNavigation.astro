@@ -1,0 +1,29 @@
+<script>
+  const prose = document.querySelector<HTMLElement>(".prose");
+  const button = prose?.querySelector<HTMLButtonElement>("[data-reference-return]");
+
+  if (prose && button) {
+    let origin: { link: HTMLAnchorElement; x: number; y: number } | undefined;
+
+    prose.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element
+        ? event.target.closest<HTMLAnchorElement>("a[data-footnote-ref]")
+        : null;
+      if (!link) return;
+      origin = { link, x: window.scrollX, y: window.scrollY };
+      button.disabled = false;
+    });
+
+    button.addEventListener("click", () => {
+      if (!origin) return;
+      history.replaceState(history.state, "", `#${origin.link.id}`);
+      origin.link.focus({ preventScroll: true });
+      window.scrollTo({
+        left: origin.x,
+        top: origin.y,
+        behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+      });
+    });
+  }
+</script>

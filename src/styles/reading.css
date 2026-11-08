@@ -360,6 +360,12 @@
   accent-color: var(--color-rose);
 }
 
+.prose a[data-footnote-ref] {
+  display: inline-block;
+  margin-inline: 0.1em;
+  scroll-margin-top: 36px;
+}
+
 .prose .footnotes {
   padding-top: 1.2em;
   margin-top: 3.5em;
@@ -367,6 +373,18 @@
   color: var(--color-muted);
   font-family: var(--font-ui);
   font-size: 0.82rem;
+}
+
+.prose .footnotes--continued {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+}
+
+.prose .footnotes h2:not(.sr-only) {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
 }
 
 .prose .footnotes .sr-only {
@@ -389,9 +407,36 @@
   margin-bottom: 0;
 }
 
+.prose .footnotes li {
+  scroll-margin-top: 72px;
+}
+
 .prose .data-footnote-backref {
   margin-left: 0.3em;
   text-decoration: none;
+}
+
+.reference-return {
+  position: sticky;
+  z-index: 1;
+  top: 12px;
+  padding: 6px 10px;
+  margin-bottom: 1.2em;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  background: var(--color-surface);
+  color: var(--color-cyan);
+  font: inherit;
+  cursor: pointer;
+}
+
+.reference-return:disabled {
+  color: var(--color-muted);
+  cursor: default;
+}
+
+.reference-return:hover:enabled {
+  border-color: var(--color-cyan);
 }
 
 .prose .katex-display {
