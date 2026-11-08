@@ -1,5 +1,5 @@
 ---
-import { ArrowLeft, ArrowRight, ArrowUpRight, Grid2x2, MoveHorizontal, Play, Pause } from "@lucide/astro";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Grid2x2, MoveHorizontal, Play, Pause, X, Plus, Minus } from "@lucide/astro";
 import "./exhibition.css";
 ---
 <section class="exhibition" data-exhibition hidden aria-labelledby="exhibition-title">
@@ -19,13 +19,22 @@ import "./exhibition.css";
     </div>
     <button class="exhibition__leave" data-exhibition-browse><Grid2x2 size={15} /> 返回浏览 <ArrowUpRight size={15} /></button>
   </header>
-  <div class="exhibition__stage" data-exhibition-stage tabindex="0" role="region" aria-label="悬浮展厅，使用左右方向键选择作品，回车查看" aria-describedby="exhibition-hint">
-    <div class="exhibition__orbit" data-exhibition-orbit></div>
+  <div class="exhibition__stage" data-exhibition-stage tabindex="0" role="region" aria-label="悬浮展厅，点击作品或按回车进入观察，W S 前进后退，A D 旋转，Esc 退出观察" aria-describedby="exhibition-hint">
+    <div class="exhibition__camera" data-exhibition-camera><div class="exhibition__orbit" data-exhibition-orbit></div></div>
+  </div>
+  <div class="exhibition__observation" data-exhibition-observation hidden>
+    <button data-exhibition-observation-close type="button"><X size={16} /> 退出观察 <kbd>Esc</kbd></button>
+    <p><kbd>W</kbd> <kbd>S</kbd> 前进 / 后退 <b>·</b> <kbd>A</kbd> <kbd>D</kbd> 旋转</p>
+    <div>
+      <button data-exhibition-zoom-out type="button" aria-label="镜头后退"><Minus size={18} /></button>
+      <button data-exhibition-zoom-in type="button" aria-label="镜头前进"><Plus size={18} /></button>
+      <button data-exhibition-detail type="button">查看原图 / 原片 <ArrowUpRight size={16} /></button>
+    </div>
   </div>
   <div class="exhibition__caption">
     <span class="exhibition__work-number" data-exhibition-number>001</span>
     <div><span class="exhibition__caption-label">此刻，目光所及</span><h3 data-exhibition-title></h3></div>
-    <button class="exhibition__open" data-exhibition-open aria-label="放大查看当前作品"><ArrowUpRight size={24} /></button>
+    <button class="exhibition__open" data-exhibition-open aria-label="观察当前作品"><ArrowUpRight size={24} /></button>
   </div>
   <footer class="exhibition__navigation">
     <p id="exhibition-hint"><MoveHorizontal size={18} /><span>拖动探索 <b>·</b> 点击放大</span></p>

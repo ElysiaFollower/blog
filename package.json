@@ -13,6 +13,7 @@
     "check": "astro check",
     "test:motion": "node --experimental-strip-types scripts/test-inertia-motion.mjs",
     "test:gallery": "pnpm test:motion && node --experimental-strip-types scripts/test-gallery-layout.mjs && node --experimental-strip-types scripts/test-gallery-playback.mjs && node --experimental-strip-types scripts/test-gallery-exhibition.mjs",
+    "test:gallery:browser": "node scripts/test-gallery-interaction.mjs",
     "test:art": "node --experimental-strip-types scripts/test-art-motion.mjs",
     "new:post": "node scripts/new-post.mjs",
     "preview": "astro preview",

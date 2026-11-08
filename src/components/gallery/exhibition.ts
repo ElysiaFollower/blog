@@ -11,6 +11,8 @@ interface ExhibitionOptions {
 export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], options: ExhibitionOptions) {
   const stage = root.querySelector<HTMLElement>("[data-exhibition-stage]")!;
   const orbit = root.querySelector<HTMLElement>("[data-exhibition-orbit]")!;
+  const camera = root.querySelector<HTMLElement>("[data-exhibition-camera]")!;
+  const observation = root.querySelector<HTMLElement>("[data-exhibition-observation]")!;
   const title = root.querySelector<HTMLElement>("[data-exhibition-title]")!;
   const number = root.querySelector<HTMLElement>("[data-exhibition-number]")!;
   const count = root.querySelector<HTMLElement>("[data-exhibition-count]")!;
@@ -24,20 +26,67 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
   const mounted = new Map<number, { link: HTMLAnchorElement; release: () => void; update: () => void }>();
   const motion = new InertiaMotion();
-  let wandering = false;
+  let wandering = !reduced.matches;
   let cruiseSpeed = .1;
   let active = false;
   let visible = false;
   let viewing = false;
+  // Observation suspends cruise without changing the user's wander preference.
+  let observing = false;
+  let focusPending = false;
+  let cameraDepth = 0;
+  let cameraTarget = 0;
+  const heldKeys = new Set<string>();
   let frame = 0;
   let lastTime = 0;
   let announced = -1;
-  let gesture: { id: number; x: number; moved: boolean; caught: boolean } | undefined;
+  let gesture: { id: number; x: number; moved: boolean } | undefined;
   let suppressClick = false;
   const selected = () => wrapIndex(motion.position, entries.length);
   const canRender = () => active && visible && !document.hidden;
   const canAnimate = () => canRender() && !viewing;
+  const canCruise = () => wandering && !observing && cameraDepth === 0;
   const updateMedia = () => mounted.forEach(card => card.update());
+
+  function workSize(index: number) {
+    const item = entries[index];
+    const maxHeight = Math.min(440, root.clientHeight * .44);
+    const maxWidth = Math.min(580, stage.clientWidth * (stage.clientWidth < 700 ? .82 : .4));
+    const height = Math.min(maxHeight, maxWidth / (item.width / item.height));
+    return { width: height * item.width / item.height + 14, height: height + 14 };
+  }
+
+  const perspective = () => parseFloat(getComputedStyle(stage).perspective);
+  function fittedDepth() {
+    const size = workSize(selected());
+    const scale = Math.max(1, Math.min((stage.clientWidth - 48) / size.width, (root.clientHeight - 330) / size.height));
+    return perspective() * (1 - 1 / scale);
+  }
+
+  function moveCamera(delta: number) {
+    cameraTarget = Math.max(0, Math.min(perspective() * .72, cameraTarget + delta));
+  }
+
+  function observe(index: number) {
+    observing = true;
+    observation.hidden = false;
+    root.dataset.observing = "";
+    heldKeys.clear();
+    select(index);
+    stage.focus({ preventScroll: true });
+  }
+
+  function leaveObservation(immediate = false) {
+    observing = false;
+    focusPending = false;
+    heldKeys.clear();
+    observation.hidden = true;
+    delete root.dataset.observing;
+    cameraTarget = 0;
+    if (immediate) cameraDepth = 0;
+    motion.stop();
+    animate();
+  }
 
   function makeCard(index: number) {
     const item = entries[index];
@@ -88,8 +137,7 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
       if (event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || event.button !== 0) return;
       if (link.hasAttribute("data-failed")) return;
       event.preventDefault();
-      if (index === selected() && !motion.moving) options.open(index);
-      else select(index);
+      observe(index);
     });
     orbit.append(link);
     return {
@@ -119,19 +167,17 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
       if (!card) { card = makeCard(index); mounted.set(index, card); }
       const distance = nearestOrbitPosition(index, motion.position, entries.length) - motion.position;
       const pose = orbitPose(distance, stage.clientWidth);
-      const item = entries[index];
-      const maxHeight = Math.min(440, root.clientHeight * .44);
-      const maxWidth = Math.min(580, stage.clientWidth * (stage.clientWidth < 700 ? .82 : .4));
-      const height = Math.min(maxHeight, maxWidth / (item.width / item.height));
-      const width = height * item.width / item.height;
-      card.link.style.width = `${width + 14}px`;
-      card.link.style.height = `${height + 14}px`;
+      const size = workSize(index);
+      card.link.style.width = `${size.width}px`;
+      card.link.style.height = `${size.height}px`;
       card.link.style.transform = `translate(-50%, -50%) translate3d(${pose.x}px, ${pose.y}px, ${pose.z}px) rotateY(${pose.angle}deg)`;
       card.link.style.opacity = String(pose.opacity);
+      const focus = Math.max(0, 1 - Math.abs(distance));
+      card.link.style.setProperty("--ex-focus-opacity", String(.45 + .55 * focus * focus * (3 - 2 * focus)));
       card.link.style.filter = `brightness(${1 - Math.min(.32, Math.abs(distance) * .07)})`;
       card.link.dataset.active = String(index === current);
       card.link.tabIndex = index === current ? 0 : -1;
-      card.link.setAttribute("aria-label", `${index === current ? "放大查看" : "移近观看"}：${item.title || item.alt}`);
+      card.link.setAttribute("aria-label", `观察：${entries[index].title || entries[index].alt}`);
       card.link.setAttribute("aria-current", String(index === current));
     }
     mounted.forEach((card, index) => {
@@ -156,17 +202,35 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
     if (!canAnimate()) return;
     const elapsed = time - lastTime;
     lastTime = time;
-    motion.step(elapsed);
+    const turn = Number(heldKeys.has("d")) - Number(heldKeys.has("a"));
+    const forward = Number(heldKeys.has("w")) - Number(heldKeys.has("s"));
+    if (observing && !focusPending) {
+      if (turn) motion.select(motion.position + turn * elapsed * .0015, true);
+      if (forward) moveCamera(forward * elapsed * .45);
+    }
+    motion.step(elapsed * (focusPending ? 1.8 : 1));
+    // Finish centering before the camera approaches the selected work.
+    if (focusPending && !motion.moving) {
+      focusPending = false;
+      cameraTarget = fittedDepth();
+    }
+    cameraDepth = reduced.matches ? cameraTarget : cameraDepth + (cameraTarget - cameraDepth) * (1 - Math.exp(-elapsed / 160));
+    if (Math.abs(cameraTarget - cameraDepth) < .1) cameraDepth = cameraTarget;
+    camera.style.setProperty("--ex-camera-depth", `${cameraDepth}px`);
     render();
-    if (motion.moving) frame = requestAnimationFrame(tick);
-    else { lastTime = 0; announce(); }
+    if (motion.moving || focusPending || cameraDepth !== cameraTarget || heldKeys.size) {
+      if (!frame) frame = requestAnimationFrame(tick);
+    } else { lastTime = 0; announce(); if (canCruise()) animate(); }
   }
   function animate() {
-    if (!frame && canAnimate()) { lastTime = performance.now(); frame = requestAnimationFrame(tick); }
+    if (!frame && canAnimate() && !gesture) {
+      if (canCruise() && !motion.moving) motion.startCruise(cruiseSpeed);
+      lastTime = performance.now(); frame = requestAnimationFrame(tick);
+    }
   }
   function select(index: number, immediate = false) {
-    stopWandering();
     clearGesture();
+    if (observing) { focusPending = true; cameraTarget = 0; }
     motion.select(nearestOrbitPosition(index, motion.position, entries.length), immediate || reduced.matches);
     render();
     updateMedia();
@@ -177,8 +241,8 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
 
   function stopWandering() {
     if (!wandering) return;
+    if (canCruise() && !gesture) motion.stop();
     wandering = false;
-    motion.stop();
     wander.setAttribute("aria-pressed", "false");
     wanderState.textContent = "开启";
     count.setAttribute("aria-live", "polite");
@@ -191,13 +255,16 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
     speedControl.setAttribute("aria-valuetext", `${multiplier} 倍，约每 ${Number((10 / multiplier).toFixed(1))} 秒经过一幅`);
     const progress = (multiplier - Number(speedControl.min)) / (Number(speedControl.max) - Number(speedControl.min));
     speedControl.style.setProperty("--speed-progress", `${progress * 100}%`);
-    if (wandering) { motion.startCruise(cruiseSpeed); animate(); }
+    if (canCruise() && !gesture) { motion.startCruise(cruiseSpeed); animate(); }
   }
 
   try {
     const saved = Number(localStorage.getItem("gallery-wander-speed"));
     if (Number.isFinite(saved) && saved >= Number(speedControl.min) && saved <= Number(speedControl.max)) speedControl.value = String(saved);
   } catch { /* Speed controls remain usable when storage is unavailable. */ }
+  wander.setAttribute("aria-pressed", String(wandering));
+  wanderState.textContent = wandering ? "暂停" : "开启";
+  count.setAttribute("aria-live", wandering ? "off" : "polite");
   updateSpeed();
   speedControl.addEventListener("input", updateSpeed);
   speedControl.addEventListener("change", () => {
@@ -212,7 +279,7 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
       wander.setAttribute("aria-pressed", "true");
       wanderState.textContent = "暂停";
       count.setAttribute("aria-live", "off");
-      motion.startCruise(cruiseSpeed);
+      if (canCruise()) motion.startCruise(cruiseSpeed);
     }
     animate();
   });
@@ -233,7 +300,13 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
   scrub.addEventListener("input", () => select(Number(scrub.value) - 1, true));
   root.querySelector("[data-exhibition-prev]")!.addEventListener("click", () => step(-1));
   root.querySelector("[data-exhibition-next]")!.addEventListener("click", () => step(1));
-  root.querySelector("[data-exhibition-open]")!.addEventListener("click", () => options.open(selected()));
+  root.querySelector("[data-exhibition-open]")!.addEventListener("click", () => observe(selected()));
+  root.querySelector("[data-exhibition-observation-close]")!.addEventListener("click", () => {
+    leaveObservation(); stage.focus({ preventScroll: true });
+  });
+  root.querySelector("[data-exhibition-zoom-in]")!.addEventListener("click", () => { moveCamera(100); animate(); });
+  root.querySelector("[data-exhibition-zoom-out]")!.addEventListener("click", () => { moveCamera(-100); animate(); });
+  root.querySelector("[data-exhibition-detail]")!.addEventListener("click", () => options.open(selected()));
   root.querySelector("[data-exhibition-browse]")!.addEventListener("click", () => options.browse(selected()));
   stage.addEventListener("keydown", event => {
     if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
@@ -241,17 +314,26 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
     } else if (event.key === "Home" || event.key === "End") {
       event.preventDefault(); select(event.key === "Home" ? 0 : entries.length - 1);
     } else if (event.key === "Enter" && event.target === stage) {
-      event.preventDefault(); options.open(selected());
+      event.preventDefault(); observe(selected());
     }
   });
+  root.addEventListener("keydown", event => {
+    if (!observing || viewing || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key === "Escape") {
+      event.preventDefault(); leaveObservation(); stage.focus({ preventScroll: true });
+    } else if ("wasd".includes(event.key.toLowerCase()) && event.key.length === 1 && !(event.target instanceof HTMLInputElement)) {
+      event.preventDefault(); heldKeys.add(event.key.toLowerCase()); animate();
+    }
+  });
+  window.addEventListener("keyup", event => heldKeys.delete(event.key.toLowerCase()));
+  window.addEventListener("blur", () => heldKeys.clear());
   stage.addEventListener("dragstart", event => event.preventDefault());
   stage.addEventListener("pointerdown", event => {
     if (!event.isPrimary || event.button !== 0) return;
-    const caught = motion.moving;
-    stopWandering();
+    if (observing) { focusPending = false; heldKeys.clear(); }
     cancelAnimationFrame(frame); frame = 0;
     suppressClick = false;
-    gesture = { id: event.pointerId, x: event.clientX, moved: false, caught };
+    gesture = { id: event.pointerId, x: event.clientX, moved: false };
     motion.begin(event.clientX, event.timeStamp, Math.min(420, stage.clientWidth * .7));
   });
   stage.addEventListener("pointermove", event => {
@@ -266,7 +348,8 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
     if (!gesture || gesture.id !== event.pointerId) return;
     if (!cancelled && Math.abs(gesture.x - event.clientX) >= 4) gesture.moved = true;
     motion.end(event.clientX, event.timeStamp, cancelled || !gesture.moved, reduced.matches);
-    suppressClick = gesture.moved || gesture.caught;
+    if (canCruise()) motion.startCruise(cruiseSpeed);
+    suppressClick = cancelled || gesture.moved;
     if (suppressClick) setTimeout(() => { suppressClick = false; }, 0);
     clearGesture();
     animate();
@@ -276,13 +359,17 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
   // Touch capture transfers from the artwork to the stage; its bubbled loss is not a cancellation.
   stage.addEventListener("lostpointercapture", event => { if (event.target === stage) release(event, true); });
   stage.addEventListener("pointerleave", event => { if (gesture && !gesture.moved) release(event, true); });
-  reduced.addEventListener("change", () => { stopWandering(); cancelGesture(); motion.stop(); updateMedia(); animate(); });
+  reduced.addEventListener("change", () => { cancelGesture(); motion.stop(); cancelAnimationFrame(frame); frame = 0; updateMedia(); if (!reduced.matches) animate(); });
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) { cancelGesture(); cancelAnimationFrame(frame); frame = 0; }
+    if (document.hidden) { heldKeys.clear(); cancelGesture(); cancelAnimationFrame(frame); frame = 0; }
     updateMedia();
     animate();
   });
-  new ResizeObserver(render).observe(stage);
+  new ResizeObserver(() => {
+    cameraTarget = Math.min(cameraTarget, perspective() * .72);
+    cameraDepth = Math.min(cameraDepth, perspective() * .72);
+    render(); animate();
+  }).observe(stage);
   new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
     root.classList.toggle("is-visible", visible);
@@ -295,13 +382,14 @@ export function mountExhibition(root: HTMLElement, entries: GalleryEntry[], opti
     thumbnail: (index: number) => mounted.get(index)?.link ?? null,
     setViewing(value: boolean) {
       viewing = value;
-      if (value) { stopWandering(); cancelGesture(); motion.stop(); cancelAnimationFrame(frame); frame = 0; }
+      if (value) { heldKeys.clear(); cancelGesture(); motion.stop(); cancelAnimationFrame(frame); frame = 0; }
       updateMedia();
+      if (!value) animate();
     },
     activate(value: boolean) {
       active = value;
       if (active) { render(); updateMedia(); animate(); }
-      else { stopWandering(); cancelGesture(); motion.stop(); cancelAnimationFrame(frame); frame = 0; releaseCards(); }
+      else { leaveObservation(true); camera.style.setProperty("--ex-camera-depth", "0px"); cancelGesture(); motion.stop(); cancelAnimationFrame(frame); frame = 0; releaseCards(); }
     },
   };
 }
