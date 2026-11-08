@@ -1,12 +1,13 @@
 ---
+import { Image } from "astro:assets";
 import {
   BookOpenText,
   CircleUserRound,
   House,
   Images,
   Link2,
-  Sparkles,
 } from "@lucide/astro";
+import siteLogo from "../assets/brand/pardofelis.png";
 import { siteConfig } from "../config/site";
 import ThemeToggle from "./ThemeToggle.astro";
 
@@ -28,7 +29,15 @@ const icons = {
 <header class="site-header" data-variant={variant}>
   <div class="site-header__inner">
     <a class="site-brand" href="/" aria-label={`${siteConfig.title}首页`}>
-      <Sparkles aria-hidden="true" size={19} stroke-width={1.8} />
+      <Image
+        class="site-brand__logo"
+        src={siteLogo}
+        alt=""
+        width={32}
+        height={32}
+        densities={[1, 2, 3]}
+        loading="eager"
+      />
       <span>{siteConfig.shortTitle}</span>
     </a>
 
@@ -116,6 +125,12 @@ const icons = {
 
   .site-brand span {
     padding-top: 1px;
+  }
+
+  .site-brand__logo {
+    width: 32px;
+    height: 32px;
+    flex: none;
   }
 
   .site-nav {
