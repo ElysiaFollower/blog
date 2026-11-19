@@ -11,7 +11,9 @@ ElysiaFollower 的个人博客，也是一个强主见的 Astro 博客主题。
 
 ## 本地开发
 
-需要 Node.js 22.12 或更高版本，以及 pnpm 9。
+需要 Node.js 22.12 或更高版本，以及 pnpm 9.15.9 或更高版本。推荐使用 CI 的
+pnpm 9.15.9。使用较新版 pnpm 时如遇到安装问题，欢迎提 Issue，并附上 Node.js
+版本、pnpm 版本和安装报错。
 
 ```bash
 pnpm install
