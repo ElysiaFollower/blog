@@ -86,6 +86,7 @@ const frontmatter = `---
 title: "TODO: 文章标题"
 description: "TODO: 用一两句话说明这篇文章解决什么问题。"
 pubDate: ${date}
+updatedDate: auto
 tags: []
 cover: "./${coverName}"
 coverAlt: "TODO: 描述封面内容"

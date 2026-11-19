@@ -15,6 +15,7 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import {
   buildCatalogTree,
   getCatalogBreadcrumbs,
+  getPostUpdatedDate,
   getSourcePath,
   getTagEntries,
   getVisiblePosts,
@@ -155,6 +156,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
                 <option value="relevance" disabled>相关度</option>
                 <option value="date-desc" selected>最新发布</option>
                 <option value="date-asc">最早发布</option>
+                <option value="updated-desc">最近更新</option>
                 <option value="title-asc">标题 A–Z</option>
                 <option value="title-desc">标题 Z–A</option>
               </select>
@@ -177,6 +179,8 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
           <ol class="catalog-results" data-catalog-results>
             {
               posts.map((post, index) => {
+                const updatedDate = getPostUpdatedDate(post);
+                const activityDate = updatedDate ?? post.data.pubDate;
                 const breadcrumbs = getCatalogBreadcrumbs(post, false);
                 const breadcrumbLabel = breadcrumbs
                   .map((entry) => entry.label)
@@ -189,6 +193,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
                     data-tags={JSON.stringify(post.data.tags)}
                     data-title={post.data.title}
                     data-date={post.data.pubDate.valueOf()}
+                    data-updated={activityDate.valueOf()}
                   >
                     <span class="catalog-result__index" data-result-index>
                       {String(index + 1).padStart(2, "0")}
@@ -229,8 +234,18 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
                       </code>
                     </article>
                     <div class="catalog-result__tail">
-                      <time datetime={post.data.pubDate.toISOString()}>
+                      <time
+                        data-result-date="published"
+                        datetime={post.data.pubDate.toISOString()}
+                      >
                         {dateFormatter.format(post.data.pubDate)}
+                      </time>
+                      <time
+                        data-result-date="updated"
+                        datetime={activityDate.toISOString()}
+                        title={updatedDate ? "最后更新" : "发布日期"}
+                      >
+                        {dateFormatter.format(activityDate)}
                       </time>
                       <a
                         href={postHref(post)}
@@ -304,6 +319,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     | "relevance"
     | "date-desc"
     | "date-asc"
+    | "updated-desc"
     | "title-asc"
     | "title-desc";
 
@@ -405,6 +421,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     const sort = getSortMode();
     if (sort === "date-desc") return { date: "desc" as const };
     if (sort === "date-asc") return { date: "asc" as const };
+    if (sort === "updated-desc") return { updated: "desc" as const };
     if (sort === "title-asc") return { title: "asc" as const };
     if (sort === "title-desc") return { title: "desc" as const };
     return undefined;
@@ -485,6 +502,10 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     const titleB = b.dataset.title ?? "";
 
     if (sort === "date-asc") return dateA - dateB;
+    if (sort === "updated-desc") {
+      const updatedDifference = Number(b.dataset.updated) - Number(a.dataset.updated);
+      return updatedDifference || dateB - dateA;
+    }
     if (sort === "title-asc") return collator.compare(titleA, titleB);
     if (sort === "title-desc") return -collator.compare(titleA, titleB);
     return dateB - dateA;
@@ -493,6 +514,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   const renderBrowse = (reset = true) => {
     if (!catalogResults || !searchResults) return;
     if (reset) renderedBrowseResults = pageSize;
+    catalogResults.dataset.sort = getSortMode();
     const visible = rows.filter(matchesScope).sort(compareRows);
     const hidden = rows.filter((row) => !matchesScope(row));
 
@@ -518,6 +540,10 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
 
   const createSearchResult = (entry: SearchResultData, index: number) => {
     const item = document.createElement("li");
+    const published = entry.meta.date ?? "";
+    const date = getSortMode() === "updated-desc"
+      ? entry.meta.updated ?? published
+      : published;
     const section = entry.sub_results?.find((candidate) =>
       candidate.url.includes("#"),
     );
@@ -551,8 +577,8 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
         <code>${escapeHtml(entry.meta.source || "")}</code>
       </article>
       <div class="catalog-result__tail">
-        <time datetime="${escapeHtml(entry.meta.date || "")}">
-          ${escapeHtml(formatSearchDate(entry.meta.date || ""))}
+        <time datetime="${escapeHtml(date)}">
+          ${escapeHtml(formatSearchDate(date))}
         </time>
         <a href="${escapeHtml(entry.url)}" aria-label="阅读文章">
           <span aria-hidden="true">↗</span>
@@ -587,6 +613,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
 
   const runSearch = async () => {
     if (!root || !input || !catalogResults || !searchResults) return;
+    const sequence = ++searchSequence;
     const query = input.value.trim();
     clearSearch?.toggleAttribute("hidden", !query);
 
@@ -623,7 +650,6 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
       return;
     }
 
-    const sequence = ++searchSequence;
     if (status) status.textContent = "正在查找…";
     if (empty) empty.hidden = true;
 
@@ -649,6 +675,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
       if (empty) empty.hidden = searchReferences.length > 0;
       await renderMoreSearchResults();
     } catch (error) {
+      if (sequence !== searchSequence) return;
       console.error(error);
       searchResults.replaceChildren();
       if (status) status.textContent = "搜索索引加载失败，请刷新页面后重试。";
@@ -1210,6 +1237,11 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     color: var(--color-muted);
     font-family: var(--font-mono);
     font-size: 0.62rem;
+  }
+
+  .catalog-results[data-sort="updated-desc"] [data-result-date="published"],
+  .catalog-results:not([data-sort="updated-desc"]) [data-result-date="updated"] {
+    display: none;
   }
 
   .catalog-result__tail > a {

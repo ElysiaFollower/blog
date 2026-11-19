@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { getCollection, type CollectionEntry } from "astro:content";
 import {
   contentRootIds,
@@ -153,6 +154,30 @@ export function getCatalogBreadcrumbs(
 
 export function getSourcePath(post: PublishedPost) {
   return `src/content/posts/${post.id}/index.mdx`;
+}
+
+export function getPostUpdatedDate(post: PublishedPost): Date | undefined {
+  const { updatedDate } = post.data;
+  if (updatedDate !== "auto") return updatedDate;
+
+  const result = spawnSync(
+    "git",
+    [
+      "--literal-pathspecs",
+      "log",
+      "-1",
+      "--no-show-signature",
+      "--format=%cI",
+      "HEAD",
+      "--",
+      getSourcePath(post),
+    ],
+    { encoding: "utf8", timeout: 5000 },
+  );
+  if (result.status !== 0) return undefined;
+
+  const timestamp = Date.parse(result.stdout.trim());
+  return Number.isFinite(timestamp) ? new Date(timestamp) : undefined;
 }
 
 export function buildCatalogTree(posts: PublishedPost[]): CatalogNode[] {

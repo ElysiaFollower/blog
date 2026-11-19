@@ -55,7 +55,7 @@ pnpm new:post notes/ai/neural-networks/backpropagation ~/Desktop/cover.png
 title: "反向传播：从计算图到梯度"
 description: "从局部导数和链式法则出发，理解反向传播如何复用中间结果。"
 pubDate: 2026-07-30
-updatedDate: 2026-08-02
+updatedDate: auto
 tags: ["Deep Learning", "Autograd", "Optimization"]
 cover: "./cover.png"
 coverAlt: "计算图中沿边反向传播的梯度"
@@ -68,12 +68,14 @@ draft: true
 
 - `tags`：跨目录关系，例如 `GRPO`、`Information Theory`、`AIGC`。同一篇文章
   可以有多个 Tag。
-- `updatedDate`：内容有实质修改时记录；可以省略。
+- `updatedDate` 支持 `auto`、手填日期或省略。新文章默认使用 `auto`，构建时读取最近
+  一次修改该文章 `index.mdx` 的 Git 提交时间，首次提交也计入。手填日期可用于记录
+  迁移前的更新时间。省略字段或没有可用的提交记录时，页头只显示发布日期。
 - `coverPosition`：封面裁切焦点；默认 `50% 50%`。
 - `draft`：是否为草稿；默认 `false`，脚手架生成时设为 `true`。
 
 没有 `aliases`、手工排序或系列序号。需要被搜索到的术语自然写进标题、摘要、
-小节、正文或 Tags；日期和标题排序由文章页上的控件完成。
+小节、正文或 Tags。
 
 ## 正文格式
 
@@ -163,7 +165,8 @@ import diagram from "./computation-graph.png";
    `Reinforcement Learning`。
 3. **搜索**：搜索标题、摘要、正文和小节；可以与当前目录或 Tag 范围组合使用。
 
-文章列表可以按发布日期或标题排序。排序只改变当前视图，不要求作者维护顺序。
+知识目录的文章列表和全文搜索结果支持「最近更新」排序。没有更新时间的文章按
+发布日期参与排序。目录列表也可以按发布日期或标题排序。
 全文搜索使用构建期静态索引，不需要服务器或数据库；开发服务器不生成索引，
 验证真实搜索行为时运行：
 

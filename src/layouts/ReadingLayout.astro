@@ -16,6 +16,7 @@ import {
   getCatalogBreadcrumbs,
   getContentRoot,
   getParentCatalogPath,
+  getPostUpdatedDate,
   getSourcePath,
   getVisiblePosts,
   postHref,
@@ -48,12 +49,13 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
   month: "long",
   day: "numeric",
 }).format(data.pubDate);
-const formattedUpdatedDate = data.updatedDate
+const updatedDate = getPostUpdatedDate(post);
+const formattedUpdatedDate = updatedDate
   ? new Intl.DateTimeFormat("zh-CN", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    }).format(data.updatedDate)
+    }).format(updatedDate)
   : undefined;
 const readingMinutes = estimateReadingMinutes(post);
 const posts = await getVisiblePosts();
@@ -81,7 +83,7 @@ const nextPost =
   noIndex={data.draft}
   pageType="article"
   publishedDate={data.pubDate}
-  updatedDate={data.updatedDate}
+  updatedDate={updatedDate}
   tags={data.tags}
 >
   <SiteHeader variant="reading" />
@@ -93,6 +95,9 @@ const nextPost =
         </span>
         <span data-pagefind-meta="catalog">{catalogLabel}</span>
         <span data-pagefind-meta="source">{sourcePath}</span>
+        <span data-pagefind-meta="updated" data-pagefind-sort="updated">
+          {(updatedDate ?? data.pubDate).toISOString()}
+        </span>
         <Image
           src={data.cover}
           alt=""
@@ -144,10 +149,10 @@ const nextPost =
             </time>
             <span>约 {readingMinutes} 分钟阅读</span>
             {
-              data.updatedDate && (
+              updatedDate && (
                 <span>
                   更新于{" "}
-                  <time datetime={data.updatedDate.toISOString()}>
+                  <time datetime={updatedDate.toISOString()}>
                     {formattedUpdatedDate}
                   </time>
                 </span>
