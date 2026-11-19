@@ -36,14 +36,17 @@ src/content/posts/
 
 ## 新建文章
 
-准备一张封面后运行：
+可以直接创建草稿，也可以提供本地图片路径或图床直链：
 
 ```bash
+pnpm new:post notes/ai/neural-networks/backpropagation
 pnpm new:post notes/ai/neural-networks/backpropagation ~/Desktop/cover.png
+pnpm new:post notes/ai/neural-networks/backpropagation 'https://images.example.com/cover.webp'
 ```
 
-路径必须从六个固定根目录之一开始，每一段使用小写 kebab-case。脚手架会创建
-目录、复制封面，并生成默认处于草稿状态的正文。
+路径必须从六个固定根目录之一开始，每一段使用小写 kebab-case。脚手架会创建目录
+和草稿。如果提供本地图片，脚手架会复制图片。如果提供图床直链，脚手架会将 URL
+写进 `cover`，文章目录只需一份 `index.mdx`。
 
 本地开发会显示 Draft 标记；生产构建、RSS 和站点地图不包含草稿。写完后把
 `draft` 改为 `false` 即可发布。
@@ -64,13 +67,17 @@ draft: true
 ---
 ```
 
-作者通常只需要填写标题、摘要、发布日期、Tags、封面及替代文本。
+手动创建文章时，标题、摘要和发布日期为必填项。
 
 - `tags`：跨目录关系，例如 `GRPO`、`Information Theory`、`AIGC`。同一篇文章
   可以有多个 Tag。
 - `updatedDate` 支持 `auto`、手填日期或省略。新文章默认使用 `auto`，构建时读取最近
   一次修改该文章 `index.mdx` 的 Git 提交时间，首次提交也计入。手填日期可用于记录
   迁移前的更新时间。省略字段或没有可用的提交记录时，页头只显示发布日期。
+- `cover` 支持仓库内图片的相对路径，也支持 R2 或其他图床的 HTTP(S) 图片直链。
+  省略时，站点按文章路径从 Gallery 图片中稳定地挑选一张，同一篇文章的列表、阅读页和分享卡片共用该图。
+  手选本地封面由 Astro 优化，自动封面沿用 Gallery 的图片地址。
+- `coverAlt` 可填写封面图的替代文本。自动选图时默认沿用 Gallery 的替代文本。
 - `coverPosition`：封面裁切焦点；默认 `50% 50%`。
 - `draft`：是否为草稿；默认 `false`，脚手架生成时设为 `true`。
 

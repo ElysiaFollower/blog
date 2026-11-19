@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import CoverImage from "../../components/content/CoverImage.astro";
 import {
   ArrowUpRight,
   ListTree,
@@ -109,7 +109,7 @@ const directoryLabel = (post: (typeof posts)[number]) =>
                           href={postHref(post)}
                           aria-label={`阅读《${post.data.title}》`}
                         >
-                          <Image
+                          <CoverImage
                             src={post.data.cover}
                             alt={post.data.coverAlt}
                             widths={[360, 540, 720, 960]}

@@ -7,7 +7,7 @@ import {
   Search,
   X,
 } from "@lucide/astro";
-import { Image } from "astro:assets";
+import CoverImage from "../../components/content/CoverImage.astro";
 import ArticleSectionNav from "../../components/content/ArticleSectionNav.astro";
 import CatalogTree from "../../components/content/CatalogTree.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
@@ -204,7 +204,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
                       tabindex="-1"
                       aria-hidden="true"
                     >
-                      <Image
+                      <CoverImage
                         src={post.data.cover}
                         alt=""
                         widths={[180, 280]}

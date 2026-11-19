@@ -1,0 +1,25 @@
+---
+import type { ImageMetadata } from "astro";
+import { Image } from "astro:assets";
+import type { HTMLAttributes } from "astro/types";
+
+interface Props
+  extends Omit<HTMLAttributes<"img">, "src" | "alt" | "width" | "height" | "sizes"> {
+  src: ImageMetadata | string;
+  alt: string;
+  width?: number;
+  height?: number;
+  widths?: number[];
+  sizes?: string;
+}
+
+const { src, widths, sizes, ...attributes } = Astro.props;
+---
+
+{
+  typeof src === "string" ? (
+    <img {src} decoding="async" {...attributes} />
+  ) : (
+    <Image {src} {widths} {sizes} {...attributes} />
+  )
+}

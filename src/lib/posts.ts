@@ -1,5 +1,9 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { getCollection, type CollectionEntry } from "astro:content";
+import defaultCover from "../assets/demo/hero-day.webp";
+import type { GalleryEntry } from "../types/gallery";
+import { getGalleryEntries } from "./gallery";
 import {
   contentRootIds,
   contentRootLabel,
@@ -7,6 +11,12 @@ import {
 } from "../config/content";
 
 export type PublishedPost = CollectionEntry<"posts">;
+export type PostWithCover = PublishedPost & {
+  data: PublishedPost["data"] & {
+    cover: NonNullable<PublishedPost["data"]["cover"]>;
+    coverAlt: string;
+  };
+};
 export type PostSort =
   | "date-desc"
   | "date-asc"
@@ -87,14 +97,40 @@ export async function getPublishedPosts() {
   );
 }
 
-export async function getVisiblePosts() {
-  return sortPosts(
+function pickGalleryCover(post: PublishedPost, images: GalleryEntry[]) {
+  if (images.length === 0) return undefined;
+
+  // Seed the choice by article ID so every page uses the same cover.
+  const index = createHash("sha256").update(post.id).digest().readUInt32BE();
+  return images[index % images.length];
+}
+
+export async function getVisiblePosts(): Promise<PostWithCover[]> {
+  const posts = sortPosts(
     await getCollection(
       "posts",
       ({ data }) => import.meta.env.DEV || !data.draft,
     ),
     "date-desc",
   );
+  const images = posts.some(({ data }) => !data.cover)
+    ? (await getGalleryEntries())
+        .filter(({ kind }) => kind === "image")
+        .sort((a, b) => a.id.localeCompare(b.id))
+    : [];
+
+  return posts.map((post) => {
+    const { data } = post;
+    const selected = data.cover ? undefined : pickGalleryCover(post, images);
+    return {
+      ...post,
+      data: {
+        ...data,
+        cover: data.cover ?? selected?.src ?? defaultCover,
+        coverAlt: data.coverAlt ?? selected?.alt ?? "",
+      },
+    };
+  });
 }
 
 function encodeCatalogPath(path: string) {

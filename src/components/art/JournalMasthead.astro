@@ -1,9 +1,9 @@
 ---
-import { Image } from "astro:assets";
+import CoverImage from "../content/CoverImage.astro";
 import { ArrowDownRight } from "@lucide/astro";
-import type { PublishedPost } from "../../lib/posts";
+import type { PostWithCover } from "../../lib/posts";
 
-interface Props { posts: PublishedPost[] }
+interface Props { posts: PostWithCover[] }
 const { posts } = Astro.props;
 const placements = [
   { left: "21%", top: "12px", angle: "-7deg", layer: 3 },
@@ -25,7 +25,7 @@ const placements = [
       {posts.slice(0,3).map((post,index) => {
         const pose = placements[index];
         return <div class="journal-masthead__cover" style={`--card-left:${pose.left};--card-top:${pose.top};--card-angle:${pose.angle};--card-layer:${pose.layer};--card-delay:${(2-index)*70}ms`}>
-          <Image src={post.data.cover} alt="" widths={[360,540,720]} sizes="(min-width: 1024px) 20vw, 40vw" loading="eager" style={`object-position:${post.data.coverPosition}`} />
+          <CoverImage src={post.data.cover} alt="" widths={[360,540,720]} sizes="(min-width: 1024px) 20vw, 40vw" loading="eager" style={`object-position:${post.data.coverPosition}`} />
         </div>;
       })}
     </div>

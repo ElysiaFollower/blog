@@ -1,6 +1,5 @@
 ---
-import { Image } from "astro:assets";
-import type { CollectionEntry } from "astro:content";
+import CoverImage from "./content/CoverImage.astro";
 import { ArrowUpRight } from "@lucide/astro";
 import { contentRootLabel } from "../config/content";
 import {
@@ -9,10 +8,11 @@ import {
   getContentRoot,
   postHref,
   tagHref,
+  type PostWithCover,
 } from "../lib/posts";
 
 interface Props {
-  post: CollectionEntry<"posts">;
+  post: PostWithCover;
   variant?: "standard" | "compact" | "graphic";
   eager?: boolean;
 }
@@ -34,7 +34,7 @@ const formattedDate = new Intl.DateTimeFormat("zh-CN", {
 
 <article class="article-card" data-variant={variant}>
   <a class="article-card__cover" href={postHref(post)}>
-    <Image
+    <CoverImage
       src={data.cover}
       alt={data.coverAlt}
       widths={[480, 720, 960]}

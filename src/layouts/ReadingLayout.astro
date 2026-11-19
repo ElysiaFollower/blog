@@ -1,7 +1,6 @@
 ---
-import { Image } from "astro:assets";
+import CoverImage from "../components/content/CoverImage.astro";
 import type { MarkdownHeading } from "astro";
-import type { CollectionEntry } from "astro:content";
 import { ArrowLeft, ArrowRight } from "@lucide/astro";
 import BaseLayout from "./BaseLayout.astro";
 import CodeCopy from "../components/content/CodeCopy.astro";
@@ -22,12 +21,13 @@ import {
   postHref,
   sortPosts,
   tagHref,
+  type PostWithCover,
 } from "../lib/posts";
 import "katex/dist/katex.min.css";
 import "../styles/reading.css";
 
 interface Props {
-  post: CollectionEntry<"posts">;
+  post: PostWithCover;
   headings: MarkdownHeading[];
 }
 
@@ -98,7 +98,7 @@ const nextPost =
         <span data-pagefind-meta="updated" data-pagefind-sort="updated">
           {(updatedDate ?? data.pubDate).toISOString()}
         </span>
-        <Image
+        <CoverImage
           src={data.cover}
           alt=""
           width={320}
@@ -181,7 +181,7 @@ const nextPost =
         </header>
 
         <div class="post-cover" data-pagefind-ignore>
-          <Image
+          <CoverImage
             src={data.cover}
             alt={data.coverAlt}
             widths={[720, 960, 1280, 1600]}

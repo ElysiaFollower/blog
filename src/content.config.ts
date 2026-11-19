@@ -48,8 +48,23 @@ const posts = defineCollection({
         pubDate: z.coerce.date(),
         updatedDate: z.union([z.literal("auto"), z.coerce.date()]).optional(),
         tags: z.array(z.string()).default([]),
-        cover: image(),
-        coverAlt: z.string(),
+        cover: z.union([
+          z.url({ protocol: /^https?$/ }),
+          z.preprocess((source, context) => {
+            if (
+              typeof source === "string" &&
+              /^(?:[a-z][a-z\d+.-]*:|[/\\]{2})/i.test(source.trim())
+            ) {
+              context.addIssue({
+                code: "custom",
+                message: "Cover must be a local image path or an HTTP(S) URL.",
+              });
+              return z.NEVER;
+            }
+            return source;
+          }, image()),
+        ]).optional(),
+        coverAlt: z.string().optional(),
         coverPosition: z.string().default("50% 50%"),
         draft: z.boolean().default(false),
       }),

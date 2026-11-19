@@ -45,7 +45,7 @@ src/content/posts/
 ```
 
 目录结构就是网站的知识目录和文章 URL，不再额外维护分类或
-`slug`。使用 `pnpm new:post <catalog-path> <cover-path>` 新建文章。所有正文
+`slug`。使用 `pnpm new:post <catalog-path> [cover-path-or-url]` 新建文章。所有正文
 统一使用 `index.mdx`：平时直接写普通 Markdown，需要旁注、视频或交互解释器
 时再插入已注册组件。`/posts/` 按时间展示全部公开文章，
 `/posts/catalog/` 统一承载目录树、Tags、全文搜索与排序；RSS 与同目录导航也

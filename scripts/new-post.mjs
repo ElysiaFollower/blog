@@ -25,13 +25,13 @@ const supportedCoverExtensions = new Set([
 function fail(message) {
   console.error(`Error: ${message}`);
   console.error(
-    "Usage: pnpm new:post <catalog-path> <cover-path>",
+    "Usage: pnpm new:post <catalog-path> [cover-path-or-url]",
   );
   process.exit(1);
 }
 
-if (args.length !== 2 || !catalogPath || !coverInput) {
-  fail("需要文章目录路径和封面路径。");
+if (args.length > 2 || !catalogPath || coverInput === "") {
+  fail("需要文章目录路径，可选填封面路径或 URL。");
 }
 
 const catalogSegments = catalogPath.split("/");
@@ -47,8 +47,6 @@ if (
 }
 
 const root = process.cwd();
-const coverSource = path.resolve(coverInput);
-const coverExtension = path.extname(coverSource).toLowerCase();
 const postDirectory = path.join(
   root,
   "src",
@@ -57,24 +55,38 @@ const postDirectory = path.join(
   ...catalogSegments,
 );
 const entryName = "index.mdx";
-const coverName = `cover${coverExtension}`;
 
-if (!supportedCoverExtensions.has(coverExtension)) {
-  fail(`不支持封面格式 "${coverExtension || "(无扩展名)"}"。`);
+let cover;
+let localCover;
+if (coverInput && /^https?:\/\//i.test(coverInput)) {
+  const url = URL.parse(coverInput);
+  if (!url) fail("封面 URL 无效。");
+  cover = url.href;
+} else if (coverInput) {
+  const source = path.resolve(coverInput);
+  const extension = path.extname(source).toLowerCase();
+  if (!supportedCoverExtensions.has(extension)) {
+    fail(`不支持封面格式 "${extension || "(无扩展名)"}"。`);
+  }
+
+  try {
+    const sourceStat = await stat(source);
+    if (!sourceStat.isFile()) fail("封面路径不是文件。");
+  } catch {
+    fail(`找不到封面文件：${source}`);
+  }
+
+  const name = `cover${extension}`;
+  cover = `./${name}`;
+  localCover = { source, name };
 }
 
+await mkdir(path.dirname(postDirectory), { recursive: true });
 try {
-  const sourceStat = await stat(coverSource);
-  if (!sourceStat.isFile()) fail("封面路径不是文件。");
-} catch {
-  fail(`找不到封面文件：${coverSource}`);
-}
-
-try {
-  await stat(postDirectory);
-  fail(`文章目录已经存在：${postDirectory}`);
+  await mkdir(postDirectory);
 } catch (error) {
-  if (error?.code !== "ENOENT") throw error;
+  if (error?.code === "EEXIST") fail(`文章目录已经存在：${postDirectory}`);
+  throw error;
 }
 
 const date = new Intl.DateTimeFormat("en-CA", {
@@ -88,21 +100,17 @@ description: "TODO: 用一两句话说明这篇文章解决什么问题。"
 pubDate: ${date}
 updatedDate: auto
 tags: []
-cover: "./${coverName}"
-coverAlt: "TODO: 描述封面内容"
-draft: true
+${cover ? `cover: ${JSON.stringify(cover)}\ncoverAlt: "TODO: 描述封面内容"\n` : ""}draft: true
 ---
 
 从这里开始写正文。正文不需要重复一级标题。
 `;
 
-await mkdir(postDirectory, { recursive: true });
-
 try {
-  await Promise.all([
-    copyFile(coverSource, path.join(postDirectory, coverName)),
-    writeFile(path.join(postDirectory, entryName), frontmatter, "utf8"),
-  ]);
+  if (localCover) {
+    await copyFile(localCover.source, path.join(postDirectory, localCover.name));
+  }
+  await writeFile(path.join(postDirectory, entryName), frontmatter, "utf8");
 } catch (error) {
   await rm(postDirectory, { recursive: true, force: true });
   throw error;
