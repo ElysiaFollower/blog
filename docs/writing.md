@@ -6,7 +6,7 @@
 ```text
 src/content/posts/
 ├── notes/                       # 系统知识笔记
-│   ├── ai/
+│   ├── ai/                   # example
 │   │   └── neural-networks/
 │   │       └── backpropagation/
 │   │           ├── index.mdx
@@ -20,7 +20,7 @@ src/content/posts/
 └── projects/                    # 游戏、MMD 与项目记录
 ```
 
-最外层六个目录是稳定的内容类型；里面的领域和子领域可以按知识结构自由嵌套。
+**最外层六个目录是稳定的内容类型,不改**；里面的领域和子领域可以按知识结构自由嵌套。
 一篇文章必须使用独立目录和 `index.mdx`，文章专属素材放在同一目录。
 
 文章路径同时决定三个东西：
@@ -30,7 +30,7 @@ src/content/posts/
 - URL：`/posts/notes/ai/neural-networks/backpropagation/`
 
 因此不需要再填写分类或 `slug`。移动目录就是重新分类，也会改变 URL；已经公开
-并被外部引用的文章应谨慎移动。确实需要移动时，在
+并被外部引用的文章应谨慎移动，没被引用过的就完全无所谓了。对于有所谓的情况，确实需要移动时，在
 `src/config/legacy-routes.ts` 中保留旧路径到新路径的映射；构建过程会生成
 `noindex` 的静态重定向页，并把这些兼容页面排除在站点地图之外。
 
