@@ -71,8 +71,8 @@ About 单独承担身份、研究方向、兴趣与联系入口。它可以比�
 src/content/posts/<类型>/<领域...>/<文章>/index.mdx
 ```
 
-固定类型为 `notes`、`papers`、`engineering`、`problems`、`reflections`
-和 `projects`。更深层的知识结构由目录自由表达；Tags 只承担交叉关系。
+固定类型为 `notes`、`papers`、`engineering`、`problems`、`reflections`、
+`projects` 和 `jot`。更深层的知识结构由目录自由表达，Tags 用于交叉检索。
 
 所有文章统一使用 MDX。普通文章直接写 Markdown，需要时再插入集中注册的
 旁注、图示、视频、舞台或交互组件。

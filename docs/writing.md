@@ -17,10 +17,11 @@ src/content/posts/
 ├── engineering/                 # 工程记录
 ├── problems/                    # 算法题解
 ├── reflections/                 # 随想
-└── projects/                    # 游戏、MMD 与项目记录
+├── projects/                    # 游戏、MMD 与项目记录
+└── jot/                         # 手记
 ```
 
-**最外层六个目录是稳定的内容类型,不改**；里面的领域和子领域可以按知识结构自由嵌套。
+最外层七个目录对应固定的内容类型，里面的领域和子领域可以按知识结构自由嵌套。
 一篇文章必须使用独立目录和 `index.mdx`，文章专属素材放在同一目录。
 
 文章路径同时决定三个东西：
@@ -40,16 +41,20 @@ src/content/posts/
 
 ```bash
 pnpm new:post notes/ai/neural-networks/backpropagation
+pnpm new:post jot/an-idea
 pnpm new:post notes/ai/neural-networks/backpropagation ~/Desktop/cover.png
 pnpm new:post notes/ai/neural-networks/backpropagation 'https://images.example.com/cover.webp'
 ```
 
-路径必须从六个固定根目录之一开始，每一段使用小写 kebab-case。脚手架会创建目录
+路径必须从七个固定根目录之一开始，每一段使用小写 kebab-case。脚手架会创建目录
 和草稿。如果提供本地图片，脚手架会复制图片。如果提供图床直链，脚手架会将 URL
 写进 `cover`，文章目录只需一份 `index.mdx`。
 
 本地开发会显示 Draft 标记；生产构建、RSS 和站点地图不包含草稿。写完后把
 `draft` 改为 `false` 即可发布。
+
+手记和其他文章一起出现在文章时间线，也会进入知识目录。知识目录的「排除手记」
+同时作用于目录、Tags 和全文搜索。首页精选和主 RSS 排除手记。
 
 ## Frontmatter
 

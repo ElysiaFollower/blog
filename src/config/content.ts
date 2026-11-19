@@ -5,6 +5,7 @@ export const contentRootIds = [
   "problems",
   "reflections",
   "projects",
+  "jot",
 ] as const;
 
 export type ContentRootId = (typeof contentRootIds)[number];
@@ -36,6 +37,10 @@ export const contentRoots: Record<
   projects: {
     label: "作品",
     description: "游戏、MMD 与其他个人创作。",
+  },
+  jot: {
+    label: "手记",
+    description: "随手记下的片段、观察和想法。",
   },
 };
 

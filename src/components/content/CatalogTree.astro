@@ -14,7 +14,7 @@ const { nodes, depth = 0 } = Astro.props;
 <ul class="catalog-tree" data-depth={depth}>
   {
     nodes.map((node) => (
-      <li>
+      <li data-catalog-root={depth === 0 ? node.path : undefined}>
         {node.type === "directory" ? (
           <details open={depth < 2}>
             <summary

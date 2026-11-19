@@ -97,6 +97,10 @@ export async function getPublishedPosts() {
   );
 }
 
+export function isEditorialPost(post: PublishedPost) {
+  return getContentRoot(post) !== "jot";
+}
+
 function pickGalleryCover(post: PublishedPost, images: GalleryEntry[]) {
   if (images.length === 0) return undefined;
 

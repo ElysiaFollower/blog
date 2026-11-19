@@ -1,9 +1,9 @@
 import rss from "@astrojs/rss";
 import { siteConfig } from "../config/site";
-import { getPublishedPosts, postHref } from "../lib/posts";
+import { getPublishedPosts, isEditorialPost, postHref } from "../lib/posts";
 
 export async function GET(context: { site?: URL }) {
-  const posts = await getPublishedPosts();
+  const posts = (await getPublishedPosts()).filter(isEditorialPost);
 
   return rss({
     title: siteConfig.title,

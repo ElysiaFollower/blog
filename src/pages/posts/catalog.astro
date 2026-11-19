@@ -117,7 +117,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
               data-selected="true"
             >
               <span>全部文章</span>
-              <small>{String(posts.length).padStart(2, "0")}</small>
+              <small data-post-count>{String(posts.length).padStart(2, "0")}</small>
             </button>
             <CatalogTree nodes={catalog} />
           </div>
@@ -129,13 +129,13 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
           >
             <a href="/posts/catalog/" data-tag="">
               <span>全部 Tags</span>
-              <small>{String(tags.length).padStart(2, "0")}</small>
+              <small data-tag-count>{String(tags.length).padStart(2, "0")}</small>
             </a>
             {
               tags.map((tag) => (
                 <a href={tagHref(tag.name)} data-tag={tag.name}>
                   <span>{tag.name}</span>
-                  <small>{String(tag.count).padStart(2, "0")}</small>
+                  <small data-tag-count>{String(tag.count).padStart(2, "0")}</small>
                 </a>
               ))
             }
@@ -164,6 +164,10 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
           </header>
 
           <div class="library-status">
+            <label class="library-exclusion">
+              <input type="checkbox" data-library-exclude value="jot" />
+              排除手记
+            </label>
             <p aria-live="polite" data-library-status>
               当前目录共 <strong>{posts.length}</strong> 篇文章
             </p>
@@ -305,11 +309,17 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     data(): Promise<SearchResultData>;
   }
 
+  interface PagefindFilters {
+    directory?: string;
+    tag?: string;
+    not?: { directory: string };
+  }
+
   interface PagefindApi {
     search(
       query: string,
       options?: {
-        filters?: Record<string, string>;
+        filters?: PagefindFilters;
         sort?: Record<string, "asc" | "desc">;
       },
     ): Promise<{ results: SearchResultReference[] }>;
@@ -340,6 +350,9 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   const clearScope = root?.querySelector<HTMLButtonElement>(
     "[data-library-clear-scope]",
   );
+  const exclusion = root?.querySelector<HTMLInputElement>("[data-library-exclude]");
+  const catalogRoots = root?.querySelectorAll<HTMLElement>("[data-catalog-root]");
+  const postCount = root?.querySelector<HTMLElement>("[data-post-count]");
   const catalogResults = root?.querySelector<HTMLOListElement>(
     "[data-catalog-results]",
   );
@@ -372,6 +385,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   let selectedPath = "";
   let selectedPathLabel = "全部文章";
   let selectedTag = "";
+  let excludedRoot = "";
   let searchSequence = 0;
   let debounceTimer: number | undefined;
   let pagefindPromise: Promise<PagefindApi> | undefined;
@@ -436,6 +450,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     if (query) url.searchParams.set("q", query);
     if (selectedPath) url.searchParams.set("path", selectedPath);
     if (selectedTag) url.searchParams.set("tag", selectedTag);
+    if (excludedRoot) url.searchParams.set("exclude", excludedRoot);
     if (
       (query && sort !== "relevance") ||
       (!query && sort !== "date-desc")
@@ -446,7 +461,41 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     window.history.replaceState({}, "", url);
   };
 
+  const isExcluded = (path: string) =>
+    Boolean(excludedRoot && (path === excludedRoot || path.startsWith(`${excludedRoot}/`)));
+
+  const normalizeTag = (tag: string) => tag.normalize("NFKC").toLocaleLowerCase("en-US");
+  const rowTags = (row: HTMLElement) => JSON.parse(row.dataset.tags ?? "[]") as string[];
+
+  const updateExclusion = () => {
+    catalogRoots?.forEach((entry) => {
+      entry.hidden = isExcluded(entry.dataset.catalogRoot ?? "");
+    });
+    const included = rows.filter((row) => !isExcluded(row.dataset.path ?? ""));
+    if (postCount) postCount.textContent = String(included.length).padStart(2, "0");
+
+    const counts = new Map<string, number>();
+    for (const row of included) {
+      for (const tag of rowTags(row)) {
+        const key = normalizeTag(tag);
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
+    }
+    for (const control of tagControls) {
+      const tag = control.dataset.tag ?? "";
+      const count = tag ? counts.get(normalizeTag(tag)) ?? 0 : counts.size;
+      control.hidden = Boolean(tag && count === 0 && tag !== selectedTag);
+      const label = control.querySelector("[data-tag-count]");
+      if (label) label.textContent = String(count).padStart(2, "0");
+    }
+  };
+
   const updateSelection = () => {
+    if (isExcluded(selectedPath)) {
+      selectedPath = "";
+      selectedPathLabel = "全部文章";
+    }
+    updateExclusion();
     directoryControls.forEach((control) =>
       control.setAttribute(
         "data-selected",
@@ -480,12 +529,13 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
         ? "跨目录关联"
         : `src/content/posts/${selectedPath ? `${selectedPath}/` : ""}`;
     }
-    if (clearScope) clearScope.hidden = !selectedPath && !selectedTag;
+    if (clearScope) clearScope.hidden = !selectedPath && !selectedTag && !excludedRoot;
   };
 
   const matchesScope = (row: HTMLElement) => {
     const path = row.dataset.path ?? "";
-    const tags = JSON.parse(row.dataset.tags ?? "[]") as string[];
+    if (isExcluded(path)) return false;
+    const tags = rowTags(row);
     const pathMatches =
       !selectedPath ||
       path === selectedPath ||
@@ -655,9 +705,10 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
 
     try {
       const pagefind = await loadPagefind();
-      const filters: Record<string, string> = {};
+      const filters: PagefindFilters = {};
       if (selectedPath) filters.directory = selectedPath;
       if (selectedTag) filters.tag = selectedTag;
+      if (excludedRoot) filters.not = { directory: excludedRoot };
       const response = await pagefind.search(query, {
         filters: Object.keys(filters).length > 0 ? filters : undefined,
         sort: getPagefindSort(),
@@ -727,6 +778,13 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
     selectedPath = "";
     selectedPathLabel = "全部文章";
     selectedTag = "";
+    excludedRoot = "";
+    if (exclusion) exclusion.checked = false;
+    applyState();
+  });
+
+  exclusion?.addEventListener("change", () => {
+    excludedRoot = exclusion.checked ? exclusion.value : "";
     applyState();
   });
 
@@ -764,6 +822,10 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   const initialPath = initialParams.get("path") ?? "";
   const initialTag = initialParams.get("tag") ?? "";
   const initialSort = initialParams.get("sort");
+  if (exclusion) {
+    exclusion.checked = initialParams.get("exclude") === exclusion.value;
+    excludedRoot = exclusion.checked ? exclusion.value : "";
+  }
   const initialDirectory = directoryControls.find(
     (control) => control.dataset.catalogPath === initialPath,
   );
@@ -1059,6 +1121,18 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
 
   .library-status p {
     margin: 0;
+  }
+
+  .library-exclusion {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .library-tag-index a[hidden] {
+    display: none;
   }
 
   .library-status strong {

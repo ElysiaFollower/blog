@@ -12,6 +12,7 @@ const contentRoots = new Set([
   "problems",
   "reflections",
   "projects",
+  "jot",
 ]);
 const supportedCoverExtensions = new Set([
   ".avif",
