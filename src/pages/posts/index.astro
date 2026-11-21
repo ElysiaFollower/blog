@@ -1,5 +1,6 @@
 ---
 import CoverImage from "../../components/content/CoverImage.astro";
+import { getPostDescription } from "../../lib/post-description";
 import {
   ArrowUpRight,
   ListTree,
@@ -128,7 +129,7 @@ const directoryLabel = (post: (typeof posts)[number]) =>
                             <a href={postHref(post)}>{post.data.title}</a>
                           </h3>
                           <p class="journal-entry__description">
-                            {post.data.description}
+                            {getPostDescription(post)}
                           </p>
                           <ul aria-label="标签">
                             {post.data.tags.slice(0, 4).map((tag) => (

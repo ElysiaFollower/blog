@@ -44,7 +44,7 @@ const posts = defineCollection({
     z
       .object({
         title: z.string(),
-        description: z.string(),
+        description: z.string().optional(),
         pubDate: z.coerce.date(),
         updatedDate: z.union([z.literal("auto"), z.coerce.date()]).optional(),
         tags: z.array(z.string()).default([]),

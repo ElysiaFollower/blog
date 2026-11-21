@@ -23,6 +23,7 @@ import {
   tagHref,
 } from "../../lib/posts";
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPostDescription } from "../../lib/post-description";
 
 const posts = await getVisiblePosts();
 const catalog = buildCatalogTree(posts);
@@ -224,7 +225,7 @@ const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
                         <a href={postHref(post)}>{post.data.title}</a>
                       </h3>
                       <p class="catalog-result__description">
-                        {post.data.description}
+                        {getPostDescription(post)}
                       </p>
                       <ul aria-label="标签">
                         {post.data.tags.map((tag) => (

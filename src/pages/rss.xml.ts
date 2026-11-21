@@ -1,5 +1,6 @@
 import rss from "@astrojs/rss";
 import { siteConfig } from "../config/site";
+import { getPostDescription } from "../lib/post-description";
 import { getPublishedPosts, isEditorialPost, postHref } from "../lib/posts";
 
 export async function GET(context: { site?: URL }) {
@@ -11,7 +12,7 @@ export async function GET(context: { site?: URL }) {
     site: context.site ?? new URL("https://elysiafollower.github.io"),
     items: posts.map((post) => ({
       title: post.data.title,
-      description: post.data.description,
+      description: getPostDescription(post),
       pubDate: post.data.pubDate,
       link: postHref(post),
       categories: post.data.tags,

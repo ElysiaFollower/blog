@@ -1,6 +1,7 @@
 ---
 import { writingPageProgress } from "./writing-path";
 import CoverImage from "../content/CoverImage.astro";
+import { getPostDescription } from "../../lib/post-description";
 import { ArrowUpRight, ArrowDown } from "@lucide/astro";
 import { postHref, getCatalogBreadcrumbs, type PostWithCover } from "../../lib/posts";
 interface Props { posts: PostWithCover[] }
@@ -29,7 +30,7 @@ const date = new Intl.DateTimeFormat("zh-CN", { year:"numeric", month:"2-digit",
           <div class="writing-story__paper">
             <p class="writing-story__meta"><span>{getCatalogBreadcrumbs(post,false).map(item=>item.label).join(" / ")}</span><time datetime={post.data.pubDate.toISOString()}>{date.format(post.data.pubDate)}</time>{post.data.draft && <span>草稿预览</span>}</p>
             <h3><a href={postHref(post)}>{separator >= 0 ? <><span>{qualifiedLead ? <>{qualifiedLead[1]}<small>{qualifiedLead[2]}{qualifiedLead[3]}</small></> : lead}</span><span>{post.data.title.slice(separator+1)}</span></> : post.data.title}</a></h3>
-            <p class="writing-story__description">{post.data.description}</p>
+            <p class="writing-story__description">{getPostDescription(post)}</p>
             <a class="writing-story__read" href={postHref(post)}>读这一篇 <ArrowUpRight size={20} aria-hidden="true" /></a>
             <div class="writing-story__folio"><span>{post.data.pubDate.getFullYear()}</span><span>航行手记 / {String(index+1).padStart(2,"0")}</span></div>
           </div>

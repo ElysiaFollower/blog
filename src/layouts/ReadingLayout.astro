@@ -1,5 +1,6 @@
 ---
 import CoverImage from "../components/content/CoverImage.astro";
+import { getPostDescription } from "../lib/post-description";
 import type { MarkdownHeading } from "astro";
 import { ArrowLeft, ArrowRight } from "@lucide/astro";
 import BaseLayout from "./BaseLayout.astro";
@@ -32,6 +33,7 @@ interface Props {
 }
 
 const { post, headings } = Astro.props;
+const description = getPostDescription(post);
 const { data } = post;
 const root = getContentRoot(post);
 const rootLabel = contentRootLabel(root);
@@ -76,7 +78,7 @@ const nextPost =
 
 <BaseLayout
   title={data.title}
-  description={data.description}
+  description={description}
   bodyClass="reading-page"
   image={data.cover}
   imageAlt={data.coverAlt}
@@ -161,7 +163,7 @@ const nextPost =
           </div>
           <h1 data-pagefind-ignore>{data.title}</h1>
           <p class="post-header__description" data-pagefind-meta="description">
-            {data.description}
+            {description}
           </p>
           <ul class="post-header__tags" aria-label="标签" data-pagefind-ignore>
             {
